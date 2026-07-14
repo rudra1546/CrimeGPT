@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Text, ForeignKey
+from sqlalchemy import Column, Integer, Text, String, ForeignKey
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -12,6 +12,8 @@ class CaseDetails(Base):
     incident_description = Column(Text, nullable=True)
     ipc_sections = Column(Text, nullable=True)  # Comma-separated or serialized list of IPC sections
     evidence_details = Column(Text, nullable=True)
+    witnesses = Column(Text, nullable=True)
+    investigating_officer = Column(String, nullable=True)
 
     # Relationships
     case = relationship("Case", back_populates="details")

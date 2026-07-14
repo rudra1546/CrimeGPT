@@ -1,3 +1,4 @@
+import json
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
@@ -250,5 +251,94 @@ def get_timeline(case_id: int, db: Session = Depends(get_db)):
             detail=f"Case with ID {case_id} not found."
         )
     return db.query(CaseTimeline).filter(CaseTimeline.case_id == case_id).order_by(CaseTimeline.timestamp.asc()).all()
+
+@router.get("/{case_id}/analysis")
+def analyze_case(case_id: int, db: Session = Depends(get_db)):
+    """
+    Audits the current case files and details using Gemini to identify missing fields,
+    witness/evidence gaps, and suggest relevant legal sections (IPC/BNS).
+    """
+    case = case_service.get_case_by_id(db, case_id)
+    if not case:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Case with ID {case_id} not found."
+        )
+
+    details = case.details
+    
+    # Helper to parse text columns back to readable format if they are JSON
+    def get_readable_details(val):
+        if not val:
+            return "None"
+        try:
+            parsed = json.loads(val)
+            return json.dumps(parsed, indent=2)
+        except Exception:
+            return str(val)
+
+    prompt = (
+        "You are CrimeGPT, an expert criminal investigator and legal audit AI assistant.\n"
+        "You are auditing the following case dossier for completeness, legal sections, timeline inconsistencies, and investigation gaps.\n\n"
+        f"--- CASE PROFILE ---\n"
+        f"FIR Number: {case.fir_number}\n"
+        f"Police Station: {case.police_station}\n"
+        f"Crime Category: {case.crime_type}\n"
+        f"Date of Incident: {case.incident_date}\n"
+        f"Investigation Status: {case.status}\n"
+        f"Investigating Officer: {get_readable_details(details.investigating_officer) if details else 'None'}\n"
+        f"Victim Details: {get_readable_details(details.victim_details) if details else 'None'}\n"
+        f"Accused Details: {get_readable_details(details.accused_details) if details else 'None'}\n"
+        f"Witnesses: {get_readable_details(details.witnesses) if details else 'None'}\n"
+        f"Evidence Details: {get_readable_details(details.evidence_details) if details else 'None'}\n"
+        f"Incident Narrative: {details.incident_description if details else 'None'}\n"
+        f"Applicable Sections: {details.ipc_sections if details else 'None'}\n"
+        f"Physical Evidence Files Uploaded: {', '.join([ev.file_name for ev in case.evidence]) if case.evidence else 'None'}\n"
+        "--- END CASE PROFILE ---\n\n"
+        "Audit the case dossier and identify:\n"
+        "1. Missing victim details (e.g., name, age, contact number, father/mother name)\n"
+        "2. Missing accused details (e.g., age, aliases, address)\n"
+        "3. Missing witness information (e.g., statements, phone numbers, addresses)\n"
+        "4. Missing evidence details (e.g., recovery date, recovered location, officer remarks)\n"
+        "5. Missing legal sections (any applicable sections of IPC or BNS matching the narrative)\n"
+        "6. Inconsistencies or logical gaps in the timeline of events (e.g., arrest before recovery, missing dates)\n"
+        "7. Investigation gaps (e.g., weapon not recovered, CCTV not secured)\n\n"
+        "Generate concrete, short warning recommendations (prefixed with ⚠) like:\n"
+        "- ⚠ Missing witness phone number\n"
+        "- ⚠ Recovery location missing\n"
+        "- ⚠ No seizure date recorded\n\n"
+        "Provide your analysis in a valid JSON format with the following keys:\n"
+        "{\n"
+        '  "recommendations": ["list of warning string items starting with ⚠"],\n'
+        '  "suggested_sections": "A string recommending applicable IPC/BNS sections based on facts",\n'
+        '  "suggested_steps": ["list of recommended next investigation steps"],\n'
+        '  "detailed_analysis": "A detailed Markdown report explaining the timeline inconsistencies, gaps, and legal reasoning"\n'
+        "}\n\n"
+        "Return ONLY the JSON string. Do not include markdown code block formatting (like ```json ... ```)."
+    )
+
+    try:
+        from app.ai.gemini import generate_document
+        raw_text = generate_document(prompt)
+        clean_text = raw_text.strip()
+        if clean_text.startswith("```"):
+            first_line_end = clean_text.find("\n")
+            if first_line_end != -1:
+                clean_text = clean_text[first_line_end:].strip()
+            if clean_text.endswith("```"):
+                clean_text = clean_text[:-3].strip()
+        
+        parsed = json.loads(clean_text)
+        return parsed
+    except Exception as e:
+        logger.error(f"Failed to generate case analysis: {e}")
+        # Return fallback structured object if JSON load fails
+        raw_output = raw_text if 'raw_text' in locals() else str(e)
+        return {
+            "recommendations": ["⚠ Case analysis generated in unstructured format"],
+            "suggested_sections": "Refer to detailed analysis report.",
+            "suggested_steps": ["Review full report"],
+            "detailed_analysis": raw_output
+        }
 
 

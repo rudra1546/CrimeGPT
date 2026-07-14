@@ -6,6 +6,7 @@ class DocumentType(str, Enum):
     SEIZURE_MEMO = "seizure_memo"
     REMAND_APPLICATION = "remand_application"
     CHARGE_SHEET = "charge_sheet"
+    CASE_SUMMARY = "case_summary"
 
 class DocumentGenerateRequest(BaseModel):
     case_id: int = Field(..., description="ID of the case to generate a document for")

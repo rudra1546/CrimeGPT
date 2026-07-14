@@ -1,8 +1,22 @@
+import json
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from app.models.case import Case
 from app.models.case_details import CaseDetails
 from app.schemas.case import CaseCreate, CaseUpdate
+
+def serialize_field(val):
+    if val is None:
+        return None
+    if isinstance(val, str):
+        return val
+    if isinstance(val, list):
+        return json.dumps([item.model_dump() if hasattr(item, "model_dump") else item for item in val])
+    if hasattr(val, "model_dump"):
+        return json.dumps(val.model_dump())
+    if isinstance(val, dict):
+        return json.dumps(val)
+    return str(val)
 
 def create_case(db: Session, case_data: CaseCreate, user_id: int) -> Case:
     """
@@ -33,11 +47,13 @@ def create_case(db: Session, case_data: CaseCreate, user_id: int) -> Case:
     details_data = case_data.details
     db_details = CaseDetails(
         case_id=db_case.id,
-        victim_details=details_data.victim_details if details_data else None,
-        accused_details=details_data.accused_details if details_data else None,
+        victim_details=serialize_field(details_data.victim_details) if details_data else None,
+        accused_details=serialize_field(details_data.accused_details) if details_data else None,
         incident_description=details_data.incident_description if details_data else None,
         ipc_sections=details_data.ipc_sections if details_data else None,
-        evidence_details=details_data.evidence_details if details_data else None
+        evidence_details=serialize_field(details_data.evidence_details) if details_data else None,
+        witnesses=serialize_field(details_data.witnesses) if details_data else None,
+        investigating_officer=details_data.investigating_officer if details_data else None
     )
     db.add(db_details)
     db.flush()
@@ -93,7 +109,10 @@ def update_case(db: Session, case_id: int, case_data: CaseUpdate) -> Case | None
 
         details_update_dict = case_data.details.model_dump(exclude_unset=True)
         for key, value in details_update_dict.items():
-            setattr(db_case.details, key, value)
+            if key in ["victim_details", "accused_details", "evidence_details", "witnesses"]:
+                setattr(db_case.details, key, serialize_field(value))
+            else:
+                setattr(db_case.details, key, value)
 
     db.commit()
     db.refresh(db_case)
