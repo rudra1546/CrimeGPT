@@ -1,0 +1,39 @@
+# ── Python / Backend ──
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+*.egg
+dist/
+build/
+.venv/
+venv/
+env/
+.env
+*.db
+*.sqlite3
+crimegpt_production.log
+
+# Uploaded files
+uploaded_evidence/
+temp_uploads/
+
+# ChromaDB vector store
+chroma_db/
+
+# ── Node / Frontend ──
+node_modules/
+frontend/dist/
+frontend/.env
+.DS_Store
+
+# ── IDE / Editor ──
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── OS ──
+Thumbs.db
+Desktop.ini
