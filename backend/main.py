@@ -56,6 +56,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+print("CORS ORIGINS:", origins)
 
 # Automatically create database tables (for development convenience)
 Base.metadata.create_all(bind=engine)
