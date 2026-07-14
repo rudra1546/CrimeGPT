@@ -3,7 +3,7 @@ import { parseApiError } from '../utils/errorParser';
 
 // API instance targeted at our /api endpoint (configured via VITE_API_URL in production)
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: import.meta.env.VITE_API_URL,
 });
 
 // Interceptor to inject standard Bearer token if session exists
