@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
         return;
       }
       try {
-        const response = await api.get('/auth/me');
+        const response = await api.get('/api/auth/me');
         setUser(response.data);
       } catch (error) {
         console.error("Session restoration failed:", error);
@@ -30,19 +30,19 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    const response = await api.post('/auth/login', { email, password });
+    const response = await api.post('/api/auth/login', { email, password });
 
     const { access_token } = response.data;
     localStorage.setItem('token', access_token);
-    
+
     // Fetch profile
-    const profileResponse = await api.get('/auth/me');
+    const profileResponse = await api.get('/api/auth/me');
     setUser(profileResponse.data);
     return profileResponse.data;
   };
 
   const register = async (name, email, password, role) => {
-    const response = await api.post('/auth/register', {
+    const response = await api.post('/api/auth/register', {
       name,
       email,
       password,
