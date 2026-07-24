@@ -268,8 +268,8 @@ def query_legal_case_database(
     )
 
     try:
-        from app.services.ollama_service import generate_ollama_response
-        response = generate_ollama_response(prompt=prompt)
+        from app.services.ai_service import generate_ai_response
+        response = generate_ai_response(prompt=prompt)
         return {
             "case_id": request.case_id,
             "response": response

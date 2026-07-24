@@ -59,47 +59,8 @@ def handle_gemini_exception(e: Exception, action_name: str = "generation"):
 
 def generate_document(prompt: str) -> str:
     """
-    Calls the Gemini API (Primary Model) to generate documentation or analytical reports based on a prompt.
-    If Gemini fails for any reason (429 quota, 503 service unavailable, timeout, network error, or missing key),
-    automatically falls back to the local Ollama model (qwen2.5 or configured model) using the EXACT SAME prompt.
-    Logs which model generated the document (Gemini or Ollama).
+    Delegates document generation to the centralized AI service layer
+    (supporting Groq primary model with automatic Ollama fallback).
     """
-    gemini_error = None
-
-    # Step 1: Attempt Primary Generation via Gemini API
-    if client is not None and not IS_MOCK:
-        try:
-            logger.info(f"[Primary - Gemini] Sending document generation request using model '{GEMINI_CHAT_MODEL}'...")
-            response = client.models.generate_content(
-                model=GEMINI_CHAT_MODEL,
-                contents=prompt,
-            )
-            if response and response.text:
-                logger.info(f"Document generated successfully using Primary model (Gemini - {GEMINI_CHAT_MODEL}).")
-                return response.text
-            else:
-                gemini_error = "Gemini returned empty response text"
-        except Exception as e:
-            gemini_error = str(e)
-            logger.warning(f"Primary Gemini generation failed ({gemini_error}). Switching to local Ollama fallback model...")
-    else:
-        gemini_error = "Gemini API key is not configured or in mock mode"
-        logger.warning(f"Gemini primary model unavailable ({gemini_error}). Switching to local Ollama fallback model...")
-
-    # Step 2: Fallback Generation via Local Ollama Model
-    try:
-        ollama_model = os.getenv("OLLAMA_MODEL", "qwen2.5:3b")
-        logger.info(f"[Fallback - Ollama] Sending document generation request to local Ollama model '{ollama_model}'...")
-        ollama_response = generate_ollama_response(prompt=prompt)
-        if ollama_response and len(ollama_response.strip()) > 0:
-            logger.info(f"Document generated successfully using Fallback model (Ollama - {ollama_model}).")
-            return ollama_response
-        else:
-            raise Exception("Ollama returned empty response content")
-    except Exception as ollama_err:
-        logger.error(f"Fallback Ollama model generation failed: {ollama_err}")
-        # Step 3: Handle double failure
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Document generation failed: Both Primary model (Gemini: {gemini_error}) and Fallback model (Ollama: {str(ollama_err)}) encountered errors."
-        )
+    from app.services.ai_service import generate_ai_response
+    return generate_ai_response(prompt=prompt)

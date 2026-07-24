@@ -4,7 +4,7 @@ import json
 import time
 import logging
 from app.rag.vectorstore import get_vectorstore, reset_vectorstore
-from app.services.ollama_service import generate_ollama_response
+from app.services.ai_service import generate_ai_response
 
 logger = logging.getLogger("crimegpt.rag.retriever")
 
@@ -387,8 +387,8 @@ def answer_query_with_rag(query: str, k: int = None) -> dict:
         "Answer:"
     )
 
-    logger.info(f"\n[OLLAMA]\nModel:\n{model_name}")
-    answer_text = generate_ollama_response(prompt=prompt, system_prompt=system_prompt)
+    logger.info("[RAG] Sending query to AI Provider Service Layer...")
+    answer_text = generate_ai_response(prompt=prompt, system_prompt=system_prompt)
     elapsed_time = round(time.time() - start_llm_time, 2)
     logger.info(f"\n[OLLAMA]\nResponse time:\n{elapsed_time} seconds")
 
