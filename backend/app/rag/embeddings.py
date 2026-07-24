@@ -1,69 +1,94 @@
 import os
 import logging
+from typing import List
 from langchain_core.embeddings import Embeddings
+from google import genai
 
 logger = logging.getLogger("crimegpt.rag.embeddings")
 
-_LOCAL_TRANSFORMER_MODEL = None
-
-def get_sentence_transformer_model():
+class GeminiEmbeddings(Embeddings):
     """
-    Loads the local SentenceTransformer embedding model once during application execution.
-    Prevents reloading the model on every upload or query request.
-    """
-    global _LOCAL_TRANSFORMER_MODEL
-    if _LOCAL_TRANSFORMER_MODEL is None:
-        model_name = os.getenv("EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5")
-        logger.info(f"[Local Embeddings] Initializing SentenceTransformer model '{model_name}'...")
-        try:
-            from sentence_transformers import SentenceTransformer
-            _LOCAL_TRANSFORMER_MODEL = SentenceTransformer(model_name)
-            logger.info(f"[Local Embeddings] Successfully loaded local embedding model '{model_name}'.")
-        except Exception as e:
-            logger.error(f"[Local Embeddings] Failed loading SentenceTransformer '{model_name}': {e}")
-            raise e
-    return _LOCAL_TRANSFORMER_MODEL
-
-class LocalEmbeddings(Embeddings):
-    """
-    Local SentenceTransformers Embeddings implementation (BAAI/bge-small-en-v1.5).
-    Runs completely offline with zero external API calls or Gemini dependencies.
+    Production Gemini Embeddings implementation using google-genai SDK (text-embedding-004).
+    Ultra-lightweight with zero PyTorch, Transformers, or SentenceTransformer dependencies.
     """
     def __init__(self, model_name: str = None):
-        self.model_name = model_name or os.getenv("EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5")
-        self._dim = None
+        self.model_name = model_name or os.getenv("GEMINI_EMBEDDING_MODEL", "text-embedding-004")
+        self._client = None
 
     @property
     def dimension(self) -> int:
-        if self._dim is None:
-            model = get_sentence_transformer_model()
-            self._dim = getattr(model, "get_embedding_dimension", lambda: 384)()
-        return self._dim
+        return 768
 
-    def embed_documents(self, texts: list[str]) -> list[list[float]]:
+    def _get_client(self):
+        if self._client is None:
+            key = os.getenv("GEMINI_API_KEY", "").strip()
+            if not key or key.lower() in ["your-gemini-api-key-here", "mock"]:
+                logger.warning("[Gemini Embeddings] GEMINI_API_KEY is not configured or in mock mode.")
+                return None
+            try:
+                self._client = genai.Client(api_key=key)
+            except Exception as e:
+                logger.error(f"[Gemini Embeddings] Failed to initialize genai Client: {e}")
+                return None
+        return self._client
+
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
         """
-        Embed a list of document text chunks locally using SentenceTransformers.
+        Embed a list of document text chunks using Gemini text-embedding-004 API.
         """
         if not texts:
             return []
 
-        logger.info(f"[Local Embeddings] Generating local embeddings for {len(texts)} chunks...")
-        model = get_sentence_transformer_model()
-        vectors = model.encode(texts, show_progress_bar=False, normalize_embeddings=True)
-        logger.info(f"[Local Embeddings] Successfully generated {len(vectors)} local embedding vectors.")
-        return vectors.tolist()
+        client = self._get_client()
+        if not client:
+            logger.warning("[Gemini Embeddings] Client unavailable, returning default zero vectors.")
+            return [[0.0] * 768 for _ in texts]
 
-    def embed_query(self, text: str) -> list[float]:
+        logger.info(f"[Gemini Embeddings] Requesting Gemini embeddings ({self.model_name}) for {len(texts)} text chunks...")
+        try:
+            all_embeddings = []
+            batch_size = 50
+            for i in range(0, len(texts), batch_size):
+                batch = texts[i:i + batch_size]
+                response = client.models.embed_content(
+                    model=self.model_name,
+                    contents=batch
+                )
+                if response and response.embeddings:
+                    all_embeddings.extend([e.values for e in response.embeddings])
+                else:
+                    logger.error(f"[Gemini Embeddings] Empty response for batch starting at index {i}")
+                    all_embeddings.extend([[0.0] * 768 for _ in batch])
+            logger.info(f"[Gemini Embeddings] Successfully generated {len(all_embeddings)} embedding vectors.")
+            return all_embeddings
+        except Exception as e:
+            logger.error(f"[Gemini Embeddings] Failed to generate document embeddings: {e}")
+            return [[0.0] * 768 for _ in texts]
+
+    def embed_query(self, text: str) -> List[float]:
         """
-        Embed a single search query locally using SentenceTransformers.
+        Embed a single search query text using Gemini text-embedding-004 API.
         """
         if not text or not text.strip():
-            return [0.0] * self.dimension
+            return [0.0] * 768
 
-        logger.info(f"[Local Embeddings] Generating local query embedding...")
-        model = get_sentence_transformer_model()
-        vector = model.encode(text.strip(), show_progress_bar=False, normalize_embeddings=True)
-        return vector.tolist()
+        client = self._get_client()
+        if not client:
+            logger.warning("[Gemini Embeddings] Client unavailable, returning zero vector.")
+            return [0.0] * 768
 
-# Alias for backward compatibility
-GeminiEmbeddings = LocalEmbeddings
+        try:
+            logger.info(f"[Gemini Embeddings] Generating query embedding ({self.model_name})...")
+            response = client.models.embed_content(
+                model=self.model_name,
+                contents=text.strip()
+            )
+            if response and response.embeddings and len(response.embeddings) > 0:
+                return response.embeddings[0].values
+            return [0.0] * 768
+        except Exception as e:
+            logger.error(f"[Gemini Embeddings] Failed to generate query embedding: {e}")
+            return [0.0] * 768
+
+# Aliases for clean backward compatibility
+LocalEmbeddings = GeminiEmbeddings

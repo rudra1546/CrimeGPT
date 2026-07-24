@@ -65,45 +65,7 @@ def generate_groq_response(prompt: str, system_prompt: Optional[str] = None) -> 
 
 def generate_ai_response(prompt: str, system_prompt: Optional[str] = None) -> str:
     """
-    Centralized AI Provider entrypoint for all CrimeGPT AI features.
-
-    Behavior based on AI_PROVIDER environment variable:
-    - AI_PROVIDER=groq -> Use Groq first. If Groq fails (network error, timeout, rate limit, invalid key, or exception), automatically fall back to Ollama.
-    - AI_PROVIDER=ollama -> Always use Ollama and never attempt Groq.
-    - Not set / default -> Default to Groq first, then automatically fall back to Ollama.
+    Centralized Production AI Service Layer entrypoint for all CrimeGPT AI features.
+    Uses Groq as the single production cloud LLM provider.
     """
-    from app.services.ollama_service import generate_ollama_response
-
-    provider = os.getenv("AI_PROVIDER", "groq").lower().strip()
-
-    # Case 1: Explicitly configured to use Ollama only
-    if provider == "ollama":
-        logger.info("[AI Provider] Mode: AI_PROVIDER=ollama. Serving request via Ollama...")
-        return generate_ollama_response(prompt=prompt, system_prompt=system_prompt)
-
-    # Case 2: Groq first (AI_PROVIDER=groq or default/unconfigured)
-    logger.info(f"[AI Provider] Mode: AI_PROVIDER={provider or 'groq'}. Attempting generation via Groq...")
-    groq_error = None
-
-    try:
-        return generate_groq_response(prompt=prompt, system_prompt=system_prompt)
-    except Exception as e:
-        groq_error = str(e)
-        logger.warning(f"[AI Provider - Fallback Triggered] Groq request failed ({groq_error}). Switching to Ollama fallback...")
-
-    # Fallback to Ollama
-    try:
-        ollama_model = os.getenv("OLLAMA_MODEL", "qwen2.5:3b")
-        logger.info(f"[AI Provider - Fallback] Serving request via Fallback Ollama (model: '{ollama_model}')...")
-        ollama_resp = generate_ollama_response(prompt=prompt, system_prompt=system_prompt)
-        if ollama_resp and len(ollama_resp.strip()) > 0:
-            logger.info(f"[AI Provider - Fallback] Request successfully served by Fallback Ollama model '{ollama_model}'.")
-            return ollama_resp
-        else:
-            raise Exception("Ollama returned empty response content")
-    except Exception as ollama_err:
-        logger.error(f"[AI Provider - Double Failure] Both Primary (Groq: {groq_error}) and Fallback (Ollama: {ollama_err}) failed.")
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"AI service unavailable. Groq error: {groq_error}; Ollama error: {str(ollama_err)}"
-        )
+    return generate_groq_response(prompt=prompt, system_prompt=system_prompt)

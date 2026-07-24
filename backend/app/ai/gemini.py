@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai.errors import APIError
 from fastapi import HTTPException, status
-from app.services.ollama_service import generate_ollama_response
 
 # Ensure environment variables are loaded
 load_dotenv(override=True)
