@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-police-dark text-slate-100 font-sans antialiased min-h-screen;
+    @apply bg-police-background text-police-primary font-sans antialiased min-h-screen;
   }
 }
 
@@ -14,12 +14,54 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0b132b;
+  background: #ffffff;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1c2541;
+  background: #e5e7eb;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3a506b;
+  background: #d1d5db;
+}
+
+@media print {
+  aside, button, select, form:not(.printable-form), .no-print {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+}
+
+/* Custom docx-preview rendering styles */
+.docx-rendered {
+  background-color: transparent !important;
+  padding: 0 !important;
+  width: 100% !important;
+}
+
+.docx-wrapper {
+  background-color: transparent !important;
+  padding: 0.75rem 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  width: 100% !important;
+}
+
+.docx-wrapper > section.docx {
+  box-shadow: 0 4px 10px -1px rgba(0, 0, 0, 0.12), 0 2px 6px -1px rgba(0, 0, 0, 0.08) !important;
+  margin-bottom: 2rem !important;
+  border-radius: 4px !important;
+  background-color: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  padding: 2.5rem !important;
+  box-sizing: border-box !important;
+  max-width: 100% !important;
 }

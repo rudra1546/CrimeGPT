@@ -11,6 +11,7 @@ class CaseDetails(Base):
     accused_details = Column(Text, nullable=True)
     incident_description = Column(Text, nullable=True)
     ipc_sections = Column(Text, nullable=True)  # Comma-separated or serialized list of IPC sections
+    legal_sections = Column(Text, nullable=True)
     evidence_details = Column(Text, nullable=True)
     witnesses = Column(Text, nullable=True)
     investigating_officer = Column(String, nullable=True)

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import api from '../services/api';
 import { 
   Search, 
@@ -16,6 +16,8 @@ const Cases = () => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [error, setError] = useState('');
+  const [searchParams] = useSearchParams();
+  const queryParam = searchParams.get('search') || '';
 
   const fetchCases = async () => {
     setLoading(true);
@@ -33,6 +35,12 @@ const Cases = () => {
   useEffect(() => {
     fetchCases();
   }, []);
+
+  useEffect(() => {
+    if (queryParam) {
+      setSearch(queryParam);
+    }
+  }, [queryParam]);
 
   const handleDelete = async (id, firNumber) => {
     if (!window.confirm(`CONFIRMATION REQUIRED:\nAre you sure you want to permanently delete Case ${firNumber}?\nThis action cannot be undone and will delete all associated document drafts.`)) {
@@ -62,34 +70,34 @@ const Cases = () => {
   });
 
   return (
-    <div className="p-8 space-y-8 w-full max-w-7xl mx-auto">
+    <div className="p-8 space-y-8 w-full max-w-7xl mx-auto bg-white min-h-screen">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-police-border pb-6 gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-200 pb-6 gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-wider text-slate-100">National Case Registry</h1>
-          <p className="text-sm text-slate-400 mt-1">Index of registered FIRs, ongoing investigations, and legal records.</p>
+          <h1 className="text-xl font-black tracking-wide text-gray-900 uppercase">National Case Registry</h1>
+          <p className="text-xs text-gray-500 mt-1">Index of registered FIRs, ongoing investigations, and legal records.</p>
         </div>
         <Link 
           to="/cases/create"
-          className="bg-police-accent hover:bg-police-accent/90 text-police-dark font-bold px-5 py-3 rounded-xl flex items-center justify-center gap-2 hover:-translate-y-0.5 transition-all shadow-lg shadow-police-accent/15 self-start sm:self-auto"
+          className="bg-gray-900 hover:bg-gray-800 text-white font-bold px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 hover:-translate-y-0.5 transition-all text-xs uppercase tracking-wider"
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-4 h-4" />
           <span>Register New Case</span>
         </Link>
       </div>
 
       {error && (
-        <div className="bg-rose-950/20 border border-rose-900/50 text-rose-300 p-4 rounded-xl flex items-center gap-3 text-sm">
+        <div className="bg-red-50 border border-red-200 text-red-750 p-4 rounded-lg flex items-center gap-3 text-xs font-bold" role="alert">
           <AlertTriangle className="w-5 h-5 flex-shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       {/* Filter and Search Bar Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-police-card border border-police-border p-4 rounded-xl shadow-lg">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white border border-gray-200 p-4 rounded-lg shadow-sm">
         {/* Search */}
         <div className="relative md:col-span-2">
-          <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500">
+          <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400">
             <Search className="w-4 h-4" />
           </span>
           <input
@@ -97,19 +105,21 @@ const Cases = () => {
             placeholder="Search by FIR number, crime type, or police station..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-police-dark border border-police-border focus:border-police-accent text-slate-100 placeholder-slate-650 pl-10 pr-4 py-2.5 rounded-xl text-sm transition-all duration-200 outline-none"
+            className="w-full bg-white border border-gray-350 focus:border-gray-900 text-gray-900 placeholder-gray-400 pl-10 pr-4 py-2 rounded-lg text-xs outline-none focus:ring-1 focus:ring-gray-900 transition-all"
+            aria-label="Filter cases search query"
           />
         </div>
 
         {/* Filter */}
         <div className="relative">
-          <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500">
+          <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400">
             <Filter className="w-4 h-4" />
           </span>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full bg-police-dark border border-police-border focus:border-police-accent text-slate-100 pl-10 pr-4 py-2.5 rounded-xl text-sm transition-all duration-200 outline-none appearance-none"
+            className="w-full bg-white border border-gray-350 focus:border-gray-900 text-gray-900 pl-10 pr-4 py-2 rounded-lg text-xs outline-none focus:ring-1 focus:ring-gray-900 transition-all appearance-none"
+            aria-label="Filter cases by status"
           >
             <option value="All">All Investigation Statuses</option>
             <option value="Active">Active Case files</option>
@@ -119,49 +129,49 @@ const Cases = () => {
       </div>
 
       {/* Case table */}
-      <div className="bg-police-card border border-police-border rounded-2xl shadow-xl overflow-hidden">
+      <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
         {loading ? (
-          <div className="py-24 text-center text-slate-500 text-sm">Fetching registry folders...</div>
+          <div className="py-24 text-center text-gray-400 text-xs font-bold">Fetching registry folders...</div>
         ) : filteredCases.length === 0 ? (
-          <div className="py-24 text-center text-slate-500 text-sm">
+          <div className="py-24 text-center text-gray-400 text-xs font-bold">
             No matching case records found.
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm border-collapse">
+            <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-police-border/60 text-slate-400 text-xs uppercase tracking-wider bg-police-dark/30">
-                  <th className="py-3 px-4 font-bold">FIR Number</th>
-                  <th className="py-3 px-4 font-bold">Crime Category</th>
-                  <th className="py-3 px-4 font-bold">Police Station</th>
-                  <th className="py-3 px-4 font-bold">Incident Date</th>
-                  <th className="py-3 px-4 font-bold">Status</th>
-                  <th className="py-3 px-4 font-bold text-center">Action Options</th>
+                <tr className="border-b border-gray-200 text-gray-500 font-extrabold uppercase tracking-wider bg-gray-50">
+                  <th className="py-3 px-4">FIR Number</th>
+                  <th className="py-3 px-4">Crime Category</th>
+                  <th className="py-3 px-4">Police Station</th>
+                  <th className="py-3 px-4">Incident Date</th>
+                  <th className="py-3 px-4">Status</th>
+                  <th className="py-3 px-4 text-center">Action Options</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-police-border/40">
+              <tbody className="divide-y divide-gray-200">
                 {filteredCases.map((c) => (
-                  <tr key={c.id} className="hover:bg-police-dark/20 transition-all">
-                    <td className="py-4.5 px-4 font-bold text-police-glow">{c.fir_number}</td>
-                    <td className="py-4.5 px-4 text-slate-300 font-medium">{c.crime_type}</td>
-                    <td className="py-4.5 px-4 text-slate-400">{c.police_station}</td>
-                    <td className="py-4.5 px-4 text-slate-400">
+                  <tr key={c.id} className="hover:bg-gray-50 transition-all">
+                    <td className="py-4 px-4 font-black text-gray-900">{c.fir_number}</td>
+                    <td className="py-4 px-4 text-gray-700 font-medium">{c.crime_type}</td>
+                    <td className="py-4 px-4 text-gray-500">{c.police_station}</td>
+                    <td className="py-4 px-4 text-gray-400 font-medium">
                       {new Date(c.incident_date).toLocaleDateString()}
                     </td>
-                    <td className="py-4.5 px-4">
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-wider ${
+                    <td className="py-4 px-4">
+                      <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider ${
                         c.status.toLowerCase() === 'active' 
-                          ? 'bg-amber-950/40 border border-amber-900/50 text-amber-400' 
-                          : 'bg-emerald-950/40 border border-emerald-900/50 text-emerald-400'
+                          ? 'bg-green-50 text-green-700 border border-green-200' 
+                          : 'bg-gray-100 text-gray-700 border border-gray-300'
                       }`}>
                         {c.status}
                       </span>
                     </td>
-                    <td className="py-4.5 px-4">
+                    <td className="py-4 px-4">
                       <div className="flex justify-center items-center gap-3">
                         <Link 
                           to={`/cases/${c.id}`}
-                          className="bg-police-border/40 hover:bg-police-border border border-police-border/80 hover:border-police-accent/30 text-slate-200 px-3 py-1.5 rounded-lg text-xs flex items-center gap-1 transition-all"
+                          className="bg-white border border-gray-350 hover:bg-gray-50 text-gray-850 px-3 py-1.5 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all"
                         >
                           <FolderOpen className="w-3.5 h-3.5" />
                           <span>Open File</span>
@@ -169,7 +179,7 @@ const Cases = () => {
                         
                         <button
                           onClick={() => handleDelete(c.id, c.fir_number)}
-                          className="bg-rose-950/20 hover:bg-rose-950/50 border border-rose-900/30 hover:border-rose-700/50 text-rose-400 hover:text-rose-300 p-1.5 rounded-lg transition-all"
+                          className="bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 p-1.5 rounded-lg transition-all"
                           title="Delete Case Draft"
                         >
                           <Trash2 className="w-3.5 h-3.5" />

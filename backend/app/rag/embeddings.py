@@ -1,63 +1,69 @@
-import hashlib
-import random
+import os
 import logging
 from langchain_core.embeddings import Embeddings
-from app.ai.gemini import client, IS_MOCK
 
-logger = logging.getLogger("crimegpt.rag")
+logger = logging.getLogger("crimegpt.rag.embeddings")
 
-class GeminiEmbeddings(Embeddings):
+_LOCAL_TRANSFORMER_MODEL = None
+
+def get_sentence_transformer_model():
     """
-    Custom LangChain Embeddings implementation using the Google Gemini API (text-embedding-004).
-    If GEMINI_API_KEY is not configured, generates deterministic mock embedding vectors
-    for development and testing purposes.
+    Loads the local SentenceTransformer embedding model once during application execution.
+    Prevents reloading the model on every upload or query request.
     """
-    def __init__(self, dimension: int = 768):
-        self.dimension = dimension
+    global _LOCAL_TRANSFORMER_MODEL
+    if _LOCAL_TRANSFORMER_MODEL is None:
+        model_name = os.getenv("EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5")
+        logger.info(f"[Local Embeddings] Initializing SentenceTransformer model '{model_name}'...")
+        try:
+            from sentence_transformers import SentenceTransformer
+            _LOCAL_TRANSFORMER_MODEL = SentenceTransformer(model_name)
+            logger.info(f"[Local Embeddings] Successfully loaded local embedding model '{model_name}'.")
+        except Exception as e:
+            logger.error(f"[Local Embeddings] Failed loading SentenceTransformer '{model_name}': {e}")
+            raise e
+    return _LOCAL_TRANSFORMER_MODEL
 
-    def _generate_mock_vector(self, text: str) -> list[float]:
-        """
-        Generates a deterministic pseudo-random float vector based on the SHA256 hash of the text.
-        """
-        sha = hashlib.sha256(text.encode("utf-8")).hexdigest()
-        seed = int(sha, 16) % (2**32)
-        rng = random.Random(seed)
-        return [rng.uniform(-1.0, 1.0) for _ in range(self.dimension)]
+class LocalEmbeddings(Embeddings):
+    """
+    Local SentenceTransformers Embeddings implementation (BAAI/bge-small-en-v1.5).
+    Runs completely offline with zero external API calls or Gemini dependencies.
+    """
+    def __init__(self, model_name: str = None):
+        self.model_name = model_name or os.getenv("EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5")
+        self._dim = None
+
+    @property
+    def dimension(self) -> int:
+        if self._dim is None:
+            model = get_sentence_transformer_model()
+            self._dim = getattr(model, "get_embedding_dimension", lambda: 384)()
+        return self._dim
 
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
         """
-        Embed a list of documents.
+        Embed a list of document text chunks locally using SentenceTransformers.
         """
-        if IS_MOCK or client is None:
-            logger.warning("Mocking embeddings for documents (Gemini API key not configured).")
-            return [self._generate_mock_vector(text) for text in texts]
-        
-        try:
-            # Batch request embeddings from Gemini API
-            response = client.models.embed_content(
-                model="text-embedding-004",
-                contents=texts
-            )
-            return [embedding.values for embedding in response.embeddings]
-        except Exception as e:
-            logger.error(f"Failed to generate Gemini embeddings for documents: {e}. Falling back to mock vectors.")
-            return [self._generate_mock_vector(text) for text in texts]
+        if not texts:
+            return []
+
+        logger.info(f"[Local Embeddings] Generating local embeddings for {len(texts)} chunks...")
+        model = get_sentence_transformer_model()
+        vectors = model.encode(texts, show_progress_bar=False, normalize_embeddings=True)
+        logger.info(f"[Local Embeddings] Successfully generated {len(vectors)} local embedding vectors.")
+        return vectors.tolist()
 
     def embed_query(self, text: str) -> list[float]:
         """
-        Embed a single search query.
+        Embed a single search query locally using SentenceTransformers.
         """
-        if IS_MOCK or client is None:
-            logger.warning("Mocking embedding for query (Gemini API key not configured).")
-            return self._generate_mock_vector(text)
+        if not text or not text.strip():
+            return [0.0] * self.dimension
 
-        try:
-            # Request embedding for a single query text
-            response = client.models.embed_content(
-                model="text-embedding-004",
-                contents=[text]
-            )
-            return response.embeddings[0].values
-        except Exception as e:
-            logger.error(f"Failed to generate Gemini embedding for query: {e}. Falling back to mock vector.")
-            return self._generate_mock_vector(text)
+        logger.info(f"[Local Embeddings] Generating local query embedding...")
+        model = get_sentence_transformer_model()
+        vector = model.encode(text.strip(), show_progress_bar=False, normalize_embeddings=True)
+        return vector.tolist()
+
+# Alias for backward compatibility
+GeminiEmbeddings = LocalEmbeddings

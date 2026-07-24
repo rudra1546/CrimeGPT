@@ -36,6 +36,7 @@ def create_case(db: Session, case_data: CaseCreate, user_id: int) -> Case:
         fir_number=case_data.fir_number,
         police_station=case_data.police_station,
         crime_type=case_data.crime_type,
+        crime_category=case_data.crime_category or case_data.crime_type,
         incident_date=case_data.incident_date,
         status=case_data.status,
         created_by=user_id
@@ -51,6 +52,7 @@ def create_case(db: Session, case_data: CaseCreate, user_id: int) -> Case:
         accused_details=serialize_field(details_data.accused_details) if details_data else None,
         incident_description=details_data.incident_description if details_data else None,
         ipc_sections=details_data.ipc_sections if details_data else None,
+        legal_sections=serialize_field(details_data.legal_sections) if details_data else None,
         evidence_details=serialize_field(details_data.evidence_details) if details_data else None,
         witnesses=serialize_field(details_data.witnesses) if details_data else None,
         investigating_officer=details_data.investigating_officer if details_data else None
@@ -62,8 +64,8 @@ def create_case(db: Session, case_data: CaseCreate, user_id: int) -> Case:
     from app.models.timeline import CaseTimeline
     db_timeline = CaseTimeline(
         case_id=db_case.id,
-        event_name="FIR Registered",
-        description=f"FIR registered for Case FIR No. {db_case.fir_number} at Police Station {db_case.police_station}.",
+        event_name="CASE_CREATED",
+        description=f"Dossier workspace created for FIR No. {db_case.fir_number} registered at {db_case.police_station}.",
         created_by=user_id
     )
     db.add(db_timeline)
@@ -81,9 +83,23 @@ def get_all_cases(db: Session) -> list[Case]:
 
 def get_case_by_id(db: Session, case_id: int) -> Case | None:
     """
-    Fetches a single case by its ID.
+    Fetches a single case by its ID with eager loaded relationships.
     """
-    return db.query(Case).filter(Case.id == case_id).first()
+    from sqlalchemy.orm import joinedload, selectinload
+    return (
+        db.query(Case)
+        .options(
+            joinedload(Case.details),
+            selectinload(Case.witness_records),
+            selectinload(Case.suspect_records),
+            selectinload(Case.evidence),
+            selectinload(Case.task_records),
+            selectinload(Case.timeline),
+            selectinload(Case.documents),
+        )
+        .filter(Case.id == case_id)
+        .first()
+    )
 
 def update_case(db: Session, case_id: int, case_data: CaseUpdate) -> Case | None:
     """
@@ -98,6 +114,12 @@ def update_case(db: Session, case_id: int, case_data: CaseUpdate) -> Case | None
     case_update_dict = case_data.model_dump(exclude_unset=True, exclude={"details"})
     for key, value in case_update_dict.items():
         setattr(db_case, key, value)
+    
+    # Sync crime_category and crime_type
+    if "crime_category" in case_update_dict:
+        db_case.crime_type = case_update_dict["crime_category"]
+    elif "crime_type" in case_update_dict:
+        db_case.crime_category = case_update_dict["crime_type"]
 
     # Update associated CaseDetails if specified
     if case_data.details is not None:
@@ -109,7 +131,7 @@ def update_case(db: Session, case_id: int, case_data: CaseUpdate) -> Case | None
 
         details_update_dict = case_data.details.model_dump(exclude_unset=True)
         for key, value in details_update_dict.items():
-            if key in ["victim_details", "accused_details", "evidence_details", "witnesses"]:
+            if key in ["victim_details", "accused_details", "evidence_details", "witnesses", "legal_sections"]:
                 setattr(db_case.details, key, serialize_field(value))
             else:
                 setattr(db_case.details, key, value)

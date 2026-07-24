@@ -4,6 +4,8 @@ from pydantic import BaseModel, EmailStr, Field
 class UserRole(str, Enum):
     ADMIN = "ADMIN"
     POLICE_OFFICER = "POLICE_OFFICER"
+    SHO = "SHO"
+    LEGAL_ADVISOR = "LEGAL_ADVISOR"
 
 class UserRegister(BaseModel):
     name: str = Field(..., min_length=2, max_length=100)

@@ -1,0 +1,67 @@
+[
+  {
+    "crime_type": "Murder",
+    "cases": [
+      {
+        "citation": "K.M. Nanavati v. State of Maharashtra (1962)",
+        "summary": "Established parameters for grave and sudden provocation defense in homicide cases.",
+        "significance": "Crucial for determining culpable homicide vs murder."
+      },
+      {
+        "citation": "Bachan Singh v. State of Punjab (1980)",
+        "summary": "Formulated the 'rarest of rare cases' doctrine for awarding the death sentence.",
+        "significance": "Governs judicial sentencing guidelines in murder cases."
+      }
+    ]
+  },
+  {
+    "crime_type": "Attempt to Murder",
+    "cases": [
+      {
+        "citation": "State of Maharashtra v. Kashirao (2003)",
+        "summary": "Clarified that actual physical injury is not necessary to constitute an attempt to murder, provided intent and act are present.",
+        "significance": "Establishes standard of proof for attempt charges."
+      }
+    ]
+  },
+  {
+    "crime_type": "Theft",
+    "cases": [
+      {
+        "citation": "K.N. Mehra v. State of Rajasthan (1957)",
+        "summary": "Confirmed that temporary deprivation of property is sufficient to constitute theft; permanent intention to deprive is not required.",
+        "significance": "Defines parameters of possession and dishonest intent."
+      }
+    ]
+  },
+  {
+    "crime_type": "Domestic Violence",
+    "cases": [
+      {
+        "citation": "Lalita Toppo v. State of Jharkhand (2018)",
+        "summary": "Ruled that live-in partners can claim maintenance under the Domestic Violence Act, 2005.",
+        "significance": "Expands protection rights of victims."
+      }
+    ]
+  },
+  {
+    "crime_type": "Cheating",
+    "cases": [
+      {
+        "citation": "State of Haryana v. Bhajan Lal (1992)",
+        "summary": "Guidelines on quashing of FIRs where allegations do not prima facie constitute cheating or fraud.",
+        "significance": "Vital reference during chargesheet filing."
+      }
+    ]
+  },
+  {
+    "crime_type": "Drug Offences",
+    "cases": [
+      {
+        "citation": "State of Punjab v. Baldev Singh (1999)",
+        "summary": "Declared that compliance with search provisions under Section 50 of the NDPS Act is mandatory.",
+        "significance": "Secures admissibility standards of seized contraband."
+      }
+    ]
+  }
+]

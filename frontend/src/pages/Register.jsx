@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { ShieldCheck, Mail, Lock, User, RefreshCw } from 'lucide-react';
+import { Shield, Mail, Lock, User, RefreshCw } from 'lucide-react';
 
 const Register = () => {
   const [name, setName] = useState('');
@@ -37,31 +37,27 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-police-dark flex flex-col justify-center items-center px-4 relative overflow-hidden">
-      {/* Decorative Grid and Glow Backgrounds */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#0b132b_1px,transparent_1px),linear-gradient(to_bottom,#0b132b_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-30"></div>
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-police-accent/10 rounded-full blur-[120px] pointer-events-none"></div>
-
-      <div className="w-full max-w-md bg-police-card border border-police-border p-8 rounded-2xl shadow-2xl relative z-10">
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center px-4">
+      <div className="w-full max-w-md bg-white border border-gray-250 p-8 rounded-xl shadow-sm">
         {/* Brand Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-3">
-            <div className="w-14 h-14 bg-police-border rounded-2xl flex items-center justify-center border border-police-accent/30 shadow-lg shadow-police-accent/10">
-              <ShieldCheck className="w-8 h-8 text-police-accent" />
+            <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center border border-gray-300">
+              <Shield className="w-6 h-6 text-gray-900" />
             </div>
           </div>
-          <h2 className="text-2xl font-bold text-slate-100 tracking-wider">Register Officer Credentials</h2>
-          <p className="text-xs text-slate-400 mt-1 uppercase tracking-widest font-semibold">CrimeGPT Agency Authentication System</p>
+          <h2 className="text-xl font-black text-gray-900 uppercase tracking-wide">Register Officer Credentials</h2>
+          <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-widest font-bold">CrimeGPT Agency Authentication System</p>
         </div>
 
         {error && (
-          <div className="bg-rose-950/30 border border-rose-900/50 text-rose-300 p-4 rounded-xl text-xs mb-6 font-medium">
+          <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg text-xs mb-6 font-bold" role="alert">
             {error}
           </div>
         )}
 
         {success && (
-          <div className="bg-emerald-950/30 border border-emerald-900/50 text-emerald-300 p-4 rounded-xl text-xs mb-6 font-medium">
+          <div className="bg-green-50 border border-green-200 text-green-700 p-4 rounded-lg text-xs mb-6 font-bold" role="alert">
             Onboarding successful! Redirecting to secure login portal...
           </div>
         )}
@@ -69,90 +65,95 @@ const Register = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Name Field */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block">Full Officer Name</label>
+            <label htmlFor="reg-name" className="text-xs font-bold text-gray-700 uppercase tracking-wider block">Full Officer Name</label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
                 <User className="w-4 h-4" />
               </span>
               <input
+                id="reg-name"
                 type="text"
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Inspector Watson"
-                className="w-full bg-police-dark border border-police-border hover:border-police-accent/50 focus:border-police-accent text-slate-100 placeholder-slate-600 pl-10 pr-4 py-2.5 rounded-xl text-sm transition-all duration-200 outline-none"
+                className="w-full bg-white border border-gray-300 hover:border-gray-400 focus:border-gray-900 text-gray-900 placeholder-gray-400 pl-9 pr-4 py-2 rounded-lg text-xs outline-none focus:ring-1 focus:ring-gray-900 transition-all"
               />
             </div>
           </div>
 
           {/* Email field */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block">Authorized Email</label>
+            <label htmlFor="reg-email" className="text-xs font-bold text-gray-700 uppercase tracking-wider block">Authorized Email</label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
                 <Mail className="w-4 h-4" />
               </span>
               <input
+                id="reg-email"
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="officer@department.gov"
-                className="w-full bg-police-dark border border-police-border hover:border-police-accent/50 focus:border-police-accent text-slate-100 placeholder-slate-600 pl-10 pr-4 py-2.5 rounded-xl text-sm transition-all duration-200 outline-none"
+                className="w-full bg-white border border-gray-300 hover:border-gray-400 focus:border-gray-900 text-gray-900 placeholder-gray-400 pl-9 pr-4 py-2 rounded-lg text-xs outline-none focus:ring-1 focus:ring-gray-900 transition-all"
               />
             </div>
           </div>
 
           {/* Password field */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block">Security Password</label>
+            <label htmlFor="reg-password" className="text-xs font-bold text-gray-700 uppercase tracking-wider block">Security Password</label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
                 <Lock className="w-4 h-4" />
               </span>
               <input
+                id="reg-password"
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••••••"
-                className="w-full bg-police-dark border border-police-border hover:border-police-accent/50 focus:border-police-accent text-slate-100 placeholder-slate-600 pl-10 pr-4 py-2.5 rounded-xl text-sm transition-all duration-200 outline-none"
+                className="w-full bg-white border border-gray-300 hover:border-gray-400 focus:border-gray-900 text-gray-900 placeholder-gray-400 pl-9 pr-4 py-2 rounded-lg text-xs outline-none focus:ring-1 focus:ring-gray-900 transition-all"
               />
             </div>
           </div>
 
           {/* Role selector field */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block">Authorized Clearance Role</label>
+            <label htmlFor="reg-role" className="text-xs font-bold text-gray-700 uppercase tracking-wider block">Assigned Role</label>
             <select
+              id="reg-role"
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="w-full bg-police-dark border border-police-border hover:border-police-accent/50 focus:border-police-accent text-slate-100 py-2.5 px-3.5 rounded-xl text-sm transition-all duration-200 outline-none"
+              className="w-full bg-white border border-gray-300 hover:border-gray-400 focus:border-gray-900 text-gray-900 py-2 px-3 rounded-lg text-xs outline-none focus:ring-1 focus:ring-gray-900 transition-all"
             >
-              <option value="POLICE_OFFICER">POLICE_OFFICER (Standard Clearance)</option>
-              <option value="ADMIN">ADMIN (System Administrator)</option>
+              <option value="POLICE_OFFICER">Police Officer / Investigator</option>
+              <option value="SHO">Station House Officer (SHO)</option>
+              <option value="LEGAL_ADVISOR">Legal Advisor</option>
+              <option value="ADMIN">Administrative Officer</option>
             </select>
           </div>
 
-          {/* Register button */}
+          {/* Sign Up button */}
           <button
             type="submit"
             disabled={submitting}
-            className="w-full bg-police-accent hover:bg-police-accent/90 text-police-dark font-bold py-3 px-4 rounded-xl transition-all duration-200 shadow-lg shadow-police-accent/20 flex items-center justify-center gap-2 hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-50 mt-4"
+            className="w-full bg-gray-900 hover:bg-gray-800 text-white font-bold py-2.5 px-4 rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 text-xs uppercase tracking-wider mt-2"
           >
             {submitting ? (
-              <RefreshCw className="w-5 h-5 animate-spin" />
+              <RefreshCw className="w-4 h-4 animate-spin" />
             ) : (
-              'Submit Registry Form'
+              <span>Submit Request</span>
             )}
           </button>
         </form>
 
-        {/* Footer Link */}
-        <div className="mt-6 text-center border-t border-police-border/40 pt-4">
-          <p className="text-xs text-slate-400">
-            Already have credentials?{' '}
-            <Link to="/login" className="text-police-accent hover:text-police-glow font-semibold transition-all">
+        <div className="mt-6 pt-6 border-t border-gray-200 text-center">
+          <p className="text-xs text-gray-500">
+            Already registered?{' '}
+            <Link to="/login" className="font-bold text-gray-900 hover:underline">
               Sign In Portal
             </Link>
           </p>

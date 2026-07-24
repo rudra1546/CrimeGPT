@@ -26,6 +26,13 @@ from app.routes.cases import router as cases_router
 from app.routes.documents import router as documents_router
 from app.routes.legal import router as legal_router
 from app.routes.admin import router as admin_router
+from app.routes.witnesses import router as witnesses_router
+from app.routes.suspects import router as suspects_router
+from app.routes.tasks import router as tasks_router
+from app.routes.audit import router as audit_router
+from app.routes.legal_advisor import router as legal_advisor_router
+from app.routes.crimes import router as crimes_router
+from app.routes.investigation import router as investigation_router
 
 # Load environment variables from .env
 load_dotenv(override=True)
@@ -38,16 +45,28 @@ app = FastAPI(
 
 # Setup CORS for React frontend
 allowed_origins_str = os.getenv("ALLOWED_ORIGINS")
+origins = []
+
 if allowed_origins_str:
     try:
-        origins = json.loads(allowed_origins_str)
+        parsed = json.loads(allowed_origins_str)
+        if isinstance(parsed, list):
+            origins.extend(parsed)
+        elif isinstance(parsed, str):
+            origins.extend([o.strip() for o in parsed.split(",") if o.strip()])
     except Exception:
-        origins = [allowed_origins_str]
-else:
-    origins = [
-        "http://localhost:3000",  # Default React development port
-        "http://localhost:5173",  # Default Vite + React development port
-    ]
+        origins.extend([o.strip() for o in allowed_origins_str.split(",") if o.strip()])
+
+# Ensure essential development origins are included
+default_dev_origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+for dev_origin in default_dev_origins:
+    if dev_origin not in origins:
+        origins.append(dev_origin)
 
 app.add_middleware(
     CORSMiddleware,
@@ -67,6 +86,13 @@ app.include_router(cases_router, prefix="/api/cases", tags=["Cases"])
 app.include_router(documents_router, prefix="/api/documents", tags=["Documents"])
 app.include_router(legal_router, prefix="/api/legal", tags=["Legal Knowledge RAG"])
 app.include_router(admin_router, prefix="/api/admin", tags=["Admin Control"])
+app.include_router(witnesses_router, prefix="/api/witnesses", tags=["Witnesses"])
+app.include_router(suspects_router, prefix="/api/suspects", tags=["Suspects"])
+app.include_router(tasks_router, prefix="/api/tasks", tags=["Investigation Tasks"])
+app.include_router(audit_router, prefix="/api/audit", tags=["Audit Log"])
+app.include_router(legal_advisor_router, prefix="/api/legal-advisor", tags=["Legal Advisor"])
+app.include_router(crimes_router, prefix="/api/crimes", tags=["Crimes"])
+app.include_router(investigation_router)
 
 
 @app.get("/")

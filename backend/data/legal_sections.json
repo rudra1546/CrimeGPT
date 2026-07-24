@@ -1,0 +1,316 @@
+[
+  {
+    "crime_type": "Murder",
+    "sections": [
+      {
+        "law": "BNS",
+        "section": "103",
+        "title": "Punishment for Murder",
+        "description": "Prescribes punishment for committing murder, which is death or imprisonment for life and fine."
+      }
+    ]
+  },
+  {
+    "crime_type": "Attempt to Murder",
+    "sections": [
+      {
+        "law": "BNS",
+        "section": "109",
+        "title": "Attempt to Murder",
+        "description": "Defines the offense and punishment for attempting to commit murder."
+      }
+    ]
+  },
+  {
+    "crime_type": "Theft",
+    "sections": [
+      {
+        "law": "BNS",
+        "section": "303",
+        "title": "Theft",
+        "description": "Defines theft (dishonest moving of movable property out of possession without consent) and its punishment."
+      }
+    ]
+  },
+  {
+    "crime_type": "Robbery",
+    "sections": [
+      {
+        "law": "BNS",
+        "section": "309",
+        "title": "Robbery",
+        "description": "Defines robbery, which includes theft or extortion accompanied by causing hurt, fear, or death."
+      }
+    ]
+  },
+  {
+    "crime_type": "Dacoity",
+    "sections": [
+      {
+        "law": "BNS",
+        "section": "310",
+        "title": "Dacoity",
+        "description": "Defines dacoity, which is robbery committed by five or more persons conjointly."
+      }
+    ]
+  },
+  {
+    "crime_type": "Burglary",
+    "sections": [
+      {
+        "law": "BNS",
+        "section": "331",
+        "title": "Lurking House-trespass or House-breaking",
+        "description": "Defines lurking house-trespass and house-breaking by night."
+      }
+    ]
+  },
+  {
+    "crime_type": "Kidnapping",
+    "sections": [
+      {
+        "law": "BNS",
+        "section": "137",
+        "title": "Kidnapping",
+        "description": "Defines kidnapping from India or from lawful guardianship."
+      }
+    ]
+  },
+  {
+    "crime_type": "Assault",
+    "sections": [
+      {
+        "law": "BNS",
+        "section": "131",
+        "title": "Assault or Criminal Force",
+        "description": "Punishment for assault or use of criminal force otherwise than on grave provocation."
+      }
+    ]
+  },
+  {
+    "crime_type": "Domestic Violence",
+    "sections": [
+      {
+        "law": "BNS",
+        "section": "85",
+        "title": "Cruelty by Husband or Relatives",
+        "description": "Defines cruelty toward a woman by her husband or his relatives."
+      }
+    ]
+  },
+  {
+    "crime_type": "Dowry",
+    "sections": [
+      {
+        "law": "BNS",
+        "section": "80",
+        "title": "Dowry Death",
+        "description": "Defines dowry death, occurring within 7 years of marriage due to harassment for dowry."
+      }
+    ]
+  },
+  {
+    "crime_type": "Rape",
+    "sections": [
+      {
+        "law": "BNS",
+        "section": "64",
+        "title": "Punishment for Rape",
+        "description": "Defines rape and details mandatory minimum punishments under BNS."
+      }
+    ]
+  },
+  {
+    "crime_type": "Sexual Harassment",
+    "sections": [
+      {
+        "law": "BNS",
+        "section": "75",
+        "title": "Sexual Harassment",
+        "description": "Defines and punishes sexual harassment including physical contact, demands, or showing pornography."
+      }
+    ]
+  },
+  {
+    "crime_type": "Cyber Fraud",
+    "sections": [
+      {
+        "law": "BNS",
+        "section": "319",
+        "title": "Cheating by Personation using Computer Resource",
+        "description": "Cheating by pretending to be someone else using digital resources."
+      }
+    ]
+  },
+  {
+    "crime_type": "Cheating",
+    "sections": [
+      {
+        "law": "BNS",
+        "section": "318",
+        "title": "Cheating",
+        "description": "Defines cheating and dishonestly inducing delivery of property."
+      }
+    ]
+  },
+  {
+    "crime_type": "Forgery",
+    "sections": [
+      {
+        "law": "BNS",
+        "section": "336",
+        "title": "Forgery",
+        "description": "Defines making a false document with intent to cause damage or fraud."
+      }
+    ]
+  },
+  {
+    "crime_type": "Extortion",
+    "sections": [
+      {
+        "law": "BNS",
+        "section": "308",
+        "title": "Extortion",
+        "description": "Defines extortion, inducing a person to deliver property under fear of injury."
+      }
+    ]
+  },
+  {
+    "crime_type": "Criminal Breach of Trust",
+    "sections": [
+      {
+        "law": "BNS",
+        "section": "316",
+        "title": "Criminal Breach of Trust",
+        "description": "Punishment for dishonest misappropriation of property entrusted to a person."
+      }
+    ]
+  },
+  {
+    "crime_type": "Drug Offences",
+    "sections": [
+      {
+        "law": "NDPS Act",
+        "section": "21",
+        "title": "Manufacture, Possession or Sale of Drugs",
+        "description": "Punishment for contravention in relation to psychotropic substances."
+      }
+    ]
+  },
+  {
+    "crime_type": "Arms Act Offences",
+    "sections": [
+      {
+        "law": "Arms Act",
+        "section": "25",
+        "title": "Possession of unlicensed arms",
+        "description": "Punishment for acquisition, possession, manufacture, or sale of prohibited arms."
+      }
+    ]
+  },
+  {
+    "crime_type": "Traffic Offences",
+    "sections": [
+      {
+        "law": "BNS",
+        "section": "281",
+        "title": "Rash Driving",
+        "description": "Driving or riding on a public way in a rash or negligent manner endangering human life."
+      }
+    ]
+  },
+  {
+    "crime_type": "Missing Person",
+    "sections": [
+      {
+        "law": "BNSS",
+        "section": "173",
+        "title": "Information in cognizable cases",
+        "description": "General reporting and entry of a missing person report."
+      }
+    ]
+  },
+  {
+    "crime_type": "Accident",
+    "sections": [
+      {
+        "law": "BNS",
+        "section": "106",
+        "title": "Causing Death by Negligence",
+        "description": "Causing death of any person by doing any rash or negligent act not amounting to culpable homicide."
+      }
+    ]
+  },
+  {
+    "crime_type": "Fraud",
+    "sections": [
+      {
+        "law": "BNS",
+        "section": "318",
+        "title": "Cheating and Dishonestly Inducing Delivery of Property",
+        "description": "Deceiving any person and inducing them to deliver property."
+      }
+    ]
+  },
+  {
+    "crime_type": "Financial Crime",
+    "sections": [
+      {
+        "law": "BNS",
+        "section": "318",
+        "title": "Cheating",
+        "description": "Dishonest inducement in financial dealings."
+      },
+      {
+        "law": "BNS",
+        "section": "336",
+        "title": "Forgery",
+        "description": "Creating forged accounts or securities."
+      }
+    ]
+  },
+  {
+    "crime_type": "Juvenile Crime",
+    "sections": [
+      {
+        "law": "JJ Act",
+        "section": "15",
+        "title": "Preliminary Assessment in Heinous Offences",
+        "description": "Assessment of child's mental and physical capacity to commit offense."
+      }
+    ]
+  },
+  {
+    "crime_type": "Trespassing",
+    "sections": [
+      {
+        "law": "BNS",
+        "section": "329",
+        "title": "Criminal Trespass",
+        "description": "Entering into or upon property in possession of another with intent to commit an offense."
+      }
+    ]
+  },
+  {
+    "crime_type": "Rioting",
+    "sections": [
+      {
+        "law": "BNS",
+        "section": "191",
+        "title": "Rioting",
+        "description": "Guilty of rioting when force or violence is used by an unlawful assembly."
+      }
+    ]
+  },
+  {
+    "crime_type": "Public Nuisance",
+    "sections": [
+      {
+        "law": "BNS",
+        "section": "270",
+        "title": "Public Nuisance",
+        "description": "Doing any act that causes common injury, danger, or annoyance to the public."
+      }
+    ]
+  }
+]

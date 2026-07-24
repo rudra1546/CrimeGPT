@@ -6,9 +6,12 @@ from app.schemas.case import CaseCreate, CaseUpdate, CaseResponse
 from app.services import case_service
 from app.routes.deps import RoleChecker, get_current_user
 from app.models.user import User
+from app.utils.audit_helper import log_audit
+from app.models.evidence_movement import EvidenceMovement
+from app.schemas.evidence import EvidenceMovementCreate, EvidenceMovementResponse
 
 # Secure all routes in this router to only allow ADMIN and POLICE_OFFICER roles
-router = APIRouter(dependencies=[Depends(RoleChecker(["ADMIN", "POLICE_OFFICER"]))])
+router = APIRouter(dependencies=[Depends(RoleChecker(["ADMIN", "POLICE_OFFICER", "SHO", "LEGAL_ADVISOR"]))])
 
 @router.post("/", response_model=CaseResponse, status_code=status.HTTP_201_CREATED)
 def create(
@@ -19,7 +22,21 @@ def create(
     """
     Registers a new case file and details.
     """
-    return case_service.create_case(db, case_data, user_id=current_user.id)
+    res = case_service.create_case(db, case_data, user_id=current_user.id)
+    log_audit(
+        db,
+        user_id=current_user.id,
+        user_name=current_user.name,
+        action="Create Case",
+        details=f"Registered Case FIR No. {res.fir_number} at Police Station {res.police_station}"
+    )
+
+    # Build validated response — do NOT assign arbitrary attrs to ORM object
+    from app.models.audit_log import AuditLog
+    audit_logs = db.query(AuditLog).filter(AuditLog.details.like(f"%{res.fir_number}%")).all()
+    response = CaseResponse.model_validate(res)
+    response.audit_logs = audit_logs
+    return response
 
 @router.get("/", response_model=list[CaseResponse])
 def get_all(db: Session = Depends(get_db)):
@@ -31,7 +48,7 @@ def get_all(db: Session = Depends(get_db)):
 @router.get("/{case_id}", response_model=CaseResponse)
 def get_one(case_id: int, db: Session = Depends(get_db)):
     """
-    Retrieves details of a single case by ID.
+    Retrieves details of a single case by ID with nested modules.
     """
     db_case = case_service.get_case_by_id(db, case_id)
     if not db_case:
@@ -39,32 +56,78 @@ def get_one(case_id: int, db: Session = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Case with ID {case_id} not found."
         )
-    return db_case
+
+    # Build validated response — do NOT assign arbitrary attrs to ORM object
+    from app.models.audit_log import AuditLog
+    audit_logs = db.query(AuditLog).filter(AuditLog.details.like(f"%{db_case.fir_number}%")).all()
+    response = CaseResponse.model_validate(db_case)
+    response.audit_logs = audit_logs
+    return response
 
 @router.put("/{case_id}", response_model=CaseResponse)
-def update(case_id: int, case_data: CaseUpdate, db: Session = Depends(get_db)):
+def update(
+    case_id: int,
+    case_data: CaseUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """
     Updates base case parameter fields and/or case details.
     """
+    db_case_before = case_service.get_case_by_id(db, case_id)
+    prev_legal_sections = db_case_before.details.legal_sections if (db_case_before and db_case_before.details) else None
+
     updated_case = case_service.update_case(db, case_id, case_data)
     if not updated_case:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Case with ID {case_id} not found."
         )
+    
+    if case_data.details is not None and case_data.details.legal_sections is not None:
+        new_legal_sections = case_service.serialize_field(case_data.details.legal_sections)
+        if prev_legal_sections != new_legal_sections:
+            log_audit(
+                db,
+                user_id=current_user.id,
+                user_name=current_user.name,
+                action="LEGAL_SECTION_UPDATED",
+                details=f"Case FIR No. {updated_case.fir_number} | Previous: {prev_legal_sections or 'None'} | Updated: {new_legal_sections or 'None'}"
+            )
+
+    log_audit(
+        db,
+        user_id=current_user.id,
+        user_name=current_user.name,
+        action="Update Case",
+        details=f"Updated Case FIR No. {updated_case.fir_number}"
+    )
     return updated_case
 
 @router.delete("/{case_id}", status_code=status.HTTP_200_OK)
-def delete(case_id: int, db: Session = Depends(get_db)):
+def delete(
+    case_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """
     Deletes a case file and all cascade items.
     """
-    success = case_service.delete_case(db, case_id)
-    if not success:
+    case = case_service.get_case_by_id(db, case_id)
+    if not case:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Case with ID {case_id} not found."
         )
+    fir_number = case.fir_number
+    success = case_service.delete_case(db, case_id)
+    log_audit(
+        db,
+        user_id=current_user.id,
+        user_name=current_user.name,
+        action="Delete Case",
+        details=f"Purged Case FIR No. {fir_number}"
+    )
     return {"message": f"Case with ID {case_id} has been successfully deleted."}
 
 import os
@@ -340,5 +403,185 @@ def analyze_case(case_id: int, db: Session = Depends(get_db)):
             "suggested_steps": ["Review full report"],
             "detailed_analysis": raw_output
         }
+
+@router.get("/search/global")
+def global_search(query: str, db: Session = Depends(get_db)):
+    """
+    Search cases by FIR, suspect name, victim name, witness name, officer name, or evidence ID.
+    """
+    from app.models.case import Case
+    from app.models.case_details import CaseDetails
+    from app.models.witness import Witness
+    from app.models.suspect import Suspect
+    from app.models.evidence import Evidence
+    
+    query_lower = f"%{query.lower()}%"
+    
+    # 1. Search in Case (FIR number, Police station, Crime type)
+    cases_match = db.query(Case).filter(
+        (Case.fir_number.ilike(query_lower)) |
+        (Case.police_station.ilike(query_lower)) |
+        (Case.crime_type.ilike(query_lower))
+    ).all()
+    
+    matched_ids = {c.id for c in cases_match}
+    
+    # 2. Search in CaseDetails (victim_details, investigating_officer)
+    details_match = db.query(CaseDetails).filter(
+        (CaseDetails.victim_details.ilike(query_lower)) |
+        (CaseDetails.investigating_officer.ilike(query_lower))
+    ).all()
+    for d in details_match:
+        matched_ids.add(d.case_id)
+        
+    # 3. Search in Witnesses
+    witness_match = db.query(Witness).filter(
+        (Witness.name.ilike(query_lower)) |
+        (Witness.phone.ilike(query_lower))
+    ).all()
+    for w in witness_match:
+        matched_ids.add(w.case_id)
+        
+    # 4. Search in Suspects
+    suspect_match = db.query(Suspect).filter(
+        (Suspect.name.ilike(query_lower)) |
+        (Suspect.alias.ilike(query_lower))
+    ).all()
+    for s in suspect_match:
+        matched_ids.add(s.case_id)
+        
+    # 5. Search in Evidence
+    evidence_match = db.query(Evidence).filter(
+        (Evidence.file_name.ilike(query_lower)) |
+        (Evidence.description.ilike(query_lower)) |
+        (Evidence.collecting_officer.ilike(query_lower))
+    ).all()
+    for ev in evidence_match:
+        matched_ids.add(ev.case_id)
+        
+    # Retrieve all matched Case objects
+    results = db.query(Case).filter(Case.id.in_(list(matched_ids))).all() if matched_ids else []
+    return results
+
+@router.post("/evidence/{evidence_id}/movement", response_model=EvidenceMovementResponse, status_code=status.HTTP_201_CREATED)
+def record_evidence_movement(
+    evidence_id: int,
+    movement_data: EvidenceMovementCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    from app.models.evidence import Evidence
+    evidence = db.query(Evidence).filter(Evidence.id == evidence_id).first()
+    if not evidence:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Evidence record with ID {evidence_id} not found."
+        )
+        
+    db_movement = EvidenceMovement(
+        evidence_id=evidence_id,
+        **movement_data.model_dump()
+    )
+    db.add(db_movement)
+    db.commit()
+    db.refresh(db_movement)
+    
+    # Audit log
+    log_audit(
+        db,
+        user_id=current_user.id,
+        user_name=current_user.name,
+        action="Transfer Evidence",
+        details=f"Transferred evidence ID {evidence_id} ({evidence.file_name}) from {db_movement.from_officer} (Badge: {db_movement.from_officer_badge}) to {db_movement.to_officer} (Badge: {db_movement.to_officer_badge}). Reason: {db_movement.transfer_reason}"
+    )
+    
+    return db_movement
+
+@router.get("/evidence/{evidence_id}/movement", response_model=list[EvidenceMovementResponse])
+def get_evidence_movement_history(evidence_id: int, db: Session = Depends(get_db)):
+    return db.query(EvidenceMovement).filter(EvidenceMovement.evidence_id == evidence_id).order_by(EvidenceMovement.timestamp.asc()).all()
+
+@router.post("/{case_id}/close", response_model=CaseResponse)
+def close_case(
+    case_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Closes an active case file after completing mandatory checklist validation.
+    """
+    from app.models.case import Case
+    from app.models.timeline import CaseTimeline
+    
+    case = db.query(Case).filter(Case.id == case_id).first()
+    if not case:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Case {case_id} not found.")
+
+    if case.status.lower() == "closed":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Case is already closed.")
+
+    case.status = "closed"
+    
+    # Add timeline event
+    tl = CaseTimeline(
+        case_id=case_id,
+        event_title="Case Closed",
+        event_description=f"Case officially closed by {current_user.name} ({current_user.role}). All checklist requirements verified or marked N/A."
+    )
+    db.add(tl)
+    
+    log_audit(
+        db,
+        user_id=current_user.id,
+        user_name=current_user.name,
+        action="Close Case",
+        details=f"Closed Case FIR No. {case.fir_number} at Police Station {case.police_station}"
+    )
+
+    db.commit()
+    db.refresh(case)
+    return case_service.get_case_by_id(db, case_id)
+
+@router.post("/{case_id}/reopen", response_model=CaseResponse)
+def reopen_case(
+    case_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Reopens a closed case file. Restricted to ADMIN users only.
+    """
+    if current_user.role != "ADMIN":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only Administrative Officers (ADMIN) can reopen closed cases.")
+
+    from app.models.case import Case
+    from app.models.timeline import CaseTimeline
+
+    case = db.query(Case).filter(Case.id == case_id).first()
+    if not case:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Case {case_id} not found.")
+
+    case.status = "active"
+
+    # Add timeline event
+    tl = CaseTimeline(
+        case_id=case_id,
+        event_title="Case Reopened",
+        event_description=f"Case reopened by Administrative Officer {current_user.name}."
+    )
+    db.add(tl)
+
+    log_audit(
+        db,
+        user_id=current_user.id,
+        user_name=current_user.name,
+        action="Reopen Case",
+        details=f"Reopened Case FIR No. {case.fir_number}"
+    )
+
+    db.commit()
+    db.refresh(case)
+    return case_service.get_case_by_id(db, case_id)
+
 
 

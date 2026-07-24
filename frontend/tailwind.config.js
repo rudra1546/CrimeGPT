@@ -6,14 +6,26 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: [
+          'system-ui',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          '"Segoe UI"',
+          'Roboto',
+          '"Helvetica Neue"',
+          'Arial',
+          'sans-serif'
+        ],
+      },
       colors: {
         police: {
-          dark: "#0b132b",      // Deep navy background
-          card: "#1c2541",      // Card navy background
-          border: "#3a506b",    // Steel blue border
-          accent: "#5bc0be",    // Teal primary accent
-          glow: "#6fffe9",      // Ice green highlight
-          light: "#e2e8f0"      // Light gray text
+          background: "#ffffff",
+          surface: "#ffffff",
+          border: "#e5e7eb",
+          primary: "#111827",
+          secondary: "#6b7280",
+          muted: "#9ca3af"
         }
       }
     },

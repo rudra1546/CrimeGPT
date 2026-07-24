@@ -2,10 +2,24 @@ import axios from 'axios';
 import { parseApiError } from '../utils/errorParser';
 
 // API instance targeted at our /api endpoint (configured via VITE_API_URL in production)
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
-});
+console.log("API URL =", import.meta.env.VITE_API_URL);
+console.log(import.meta.env);
+console.log(import.meta.env.VITE_API_URL);
+const getBaseURL = () => {
+  let url = import.meta.env.VITE_API_URL;
+  if (!url) {
+    return '/api';
+  }
+  url = url.trim();
+  if (!url.endsWith('/api') && !url.endsWith('/api/')) {
+    url = url.replace(/\/+$/, '') + '/api';
+  }
+  return url;
+};
 
+const api = axios.create({
+  baseURL: getBaseURL(),
+});
 // Interceptor to inject standard Bearer token if session exists
 api.interceptors.request.use(
   (config) => {

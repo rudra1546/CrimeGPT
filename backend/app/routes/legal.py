@@ -1,32 +1,62 @@
 import os
 import shutil
 import logging
+import json
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.rag import load_pdf_text, split_text_to_chunks, add_documents_to_store, answer_query_with_rag
-from app.rag.retriever import retrieve_context
+from app.rag.loader import load_and_chunk_file
+from app.rag.vectorstore import add_documents_to_store
+from app.rag.retriever import answer_query_with_rag, retrieve_context
 from app.routes.deps import RoleChecker
 
 logger = logging.getLogger("crimegpt.routes.legal")
 
 # Secure legal search/indexing to ADMIN and POLICE_OFFICER roles
-router = APIRouter(dependencies=[Depends(RoleChecker(["ADMIN", "POLICE_OFFICER"]))])
+router = APIRouter(dependencies=[Depends(RoleChecker(["ADMIN", "POLICE_OFFICER", "SHO", "LEGAL_ADVISOR"]))])
+
+@router.get("/recommendations")
+def get_recommendations(crime_type: str):
+    """
+    Get legal recommendations mapped in legal_sections.json by crime_type.
+    """
+    import json
+    data_dir = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+        "data"
+    )
+    filepath = os.path.join(data_dir, "legal_sections.json")
+    if not os.path.exists(filepath):
+        return []
+    try:
+        with open(filepath, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            for item in data:
+                if item.get("crime_type").lower() == crime_type.lower():
+                    return item.get("sections", [])
+            return []
+    except Exception as e:
+        logger.error(f"Error reading recommendations: {e}")
+        return []
 
 class QueryRequest(BaseModel):
     query: str
 
+ALLOWED_EXTENSIONS = {".pdf", ".csv", ".docx", ".doc", ".txt", ".json", ".md", ".markdown"}
+
 @router.post("/upload", status_code=status.HTTP_201_CREATED)
 def upload_legal_document(file: UploadFile = File(...)):
     """
-    Upload a legal PDF document, parse it, chunk its content, 
-    generate embeddings, and index it inside ChromaDB.
+    Upload a legal reference document (PDF, CSV, DOCX, TXT, JSON, MD), parse it, chunk content,
+    generate local embeddings, and index it inside ChromaDB with source metadata.
     """
-    if not file.filename.lower().endswith(".pdf"):
+    filename = file.filename or "document"
+    ext = os.path.splitext(filename)[1].lower()
+    if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Unsupported file format. Only PDF files are allowed."
+            detail=f"Unsupported file format '{ext}'. Allowed formats: PDF, CSV, DOCX, TXT, JSON, MD."
         )
 
     # Save to a local temporary directory inside the workspace
@@ -35,39 +65,37 @@ def upload_legal_document(file: UploadFile = File(...)):
         "temp_uploads"
     )
     os.makedirs(temp_dir, exist_ok=True)
-    temp_file_path = os.path.join(temp_dir, file.filename)
+    temp_file_path = os.path.join(temp_dir, filename)
 
     try:
         # Write binary stream to file
         with open(temp_file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        # Extract text content
-        text = load_pdf_text(temp_file_path)
-        if not text.strip():
+        # Extract structured text documents with format-specific metadata
+        chunks = load_and_chunk_file(temp_file_path, filename)
+        if not chunks:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="The uploaded PDF does not contain any extractable text."
+                detail=f"The uploaded file '{filename}' does not contain any extractable text."
             )
 
-        # Split text into overlapping semantic chunks
-        chunks = split_text_to_chunks(text)
-
-        # Embed and index chunks inside ChromaDB
+        # Embed locally using SentenceTransformers and index chunks inside ChromaDB
         add_documents_to_store(chunks)
 
         return {
-            "filename": file.filename,
+            "filename": filename,
+            "file_type": ext[1:],
             "chunks_added": len(chunks),
             "status": "indexed successfully"
         }
     except HTTPException as he:
         raise he
     except Exception as e:
-        logger.error(f"Failed processing PDF upload: {e}")
+        logger.error(f"Failed processing document upload: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"An error occurred while parsing and indexing the PDF: {str(e)}"
+            detail=f"An error occurred while parsing and indexing the document: {str(e)}"
         )
     finally:
         # Cleanup temporary uploaded file
@@ -80,15 +108,33 @@ def upload_legal_document(file: UploadFile = File(...)):
 @router.post("/query")
 def query_legal_database(request: QueryRequest):
     """
-    Accepts an analytical query, retrieves relevant legal context from ChromaDB, 
-    and returns a Gemini-generated answer grounded in the retrieved details.
+    Accepts an analytical query, retrieves relevant legal context from ChromaDB using local query embeddings,
+    and returns an Ollama-generated answer strictly grounded in retrieved context along with source citations.
     """
     try:
-        answer = answer_query_with_rag(request.query)
+        rag_result = answer_query_with_rag(request.query)
+        model_name = os.getenv("OLLAMA_MODEL", "qwen2.5:3b")
+        if isinstance(rag_result, dict):
+            return {
+                "query": request.query,
+                "answer": rag_result.get("answer", ""),
+                "response": rag_result.get("answer", ""),
+                "sources": rag_result.get("sources", []),
+                "matched_sections": rag_result.get("matched_sections", []),
+                "confidence": rag_result.get("confidence", "low"),
+                "model": rag_result.get("model", model_name)
+            }
         return {
             "query": request.query,
-            "response": answer
+            "answer": str(rag_result),
+            "response": str(rag_result),
+            "sources": [],
+            "matched_sections": [],
+            "confidence": "low",
+            "model": model_name
         }
+    except HTTPException as he:
+        raise he
     except Exception as e:
         logger.error(f"RAG query execution failed: {e}")
         raise HTTPException(
@@ -126,6 +172,44 @@ def query_legal_case_database(
     doc_types = [doc.document_type for doc in case.documents]
     timeline_logs = [f"[{t.event_name}] {t.description} ({t.timestamp.strftime('%Y-%m-%d')})" for t in case.timeline]
 
+    # Format BNS Legal Sections
+    legal_sections_str = "None"
+    if details and details.legal_sections:
+        try:
+            sec_list = json.loads(details.legal_sections)
+            if isinstance(sec_list, list):
+                legal_sections_str = ", ".join([f"{sec.get('law')} {sec.get('section')} ({sec.get('title')})" for sec in sec_list])
+        except Exception:
+            pass
+
+    # Format Witnesses from both JSON column and Witnesses table
+    witnesses_list = []
+    if details and details.witnesses:
+        try:
+            parsed_w = json.loads(details.witnesses)
+            if isinstance(parsed_w, list):
+                for w in parsed_w:
+                    witnesses_list.append(f"{w.get('name')} (Statement: {w.get('statement')})")
+        except Exception:
+            pass
+    for w in case.witness_records:
+        witnesses_list.append(f"{w.name} (Status: {w.status}, Statement: {w.statement})")
+
+    # Format Suspects from both JSON column and Suspects table
+    suspects_list = []
+    if details and details.accused_details:
+        try:
+            parsed_a = json.loads(details.accused_details)
+            if isinstance(parsed_a, dict):
+                suspects_list.append(f"{parsed_a.get('name')} (Age: {parsed_a.get('age')})")
+            elif isinstance(parsed_a, list):
+                for a in parsed_a:
+                    suspects_list.append(f"{a.get('name')}")
+        except Exception:
+            pass
+    for s in case.suspect_records:
+        suspects_list.append(f"{s.name} (Alias: {s.alias}, Status: {s.status}, Notes: {s.notes})")
+
     case_profile = (
         f"CASE DETAILS PROFILE:\n"
         f"- FIR Number: {case.fir_number}\n"
@@ -134,10 +218,11 @@ def query_legal_case_database(
         f"- Occurrence Date/Time: {case.incident_date}\n"
         f"- Status: {case.status}\n"
         f"- Complainant / Victim: {details.victim_details if details else 'None'}\n"
-        f"- Accused Person(s): {details.accused_details if details else 'None'}\n"
+        f"- Accused / Suspect Person(s): {', '.join(suspects_list) if suspects_list else 'None'}\n"
         f"- Narrative Summary: {details.incident_description if details else 'None'}\n"
-        f"- Penal Code Sections: {details.ipc_sections if details else 'None'}\n"
-        f"- Listed Evidence: {details.evidence_details if details else 'None'}\n"
+        f"- Penal Code Sections (IPC): {details.ipc_sections if details else 'None'}\n"
+        f"- BNS Legal Sections: {legal_sections_str}\n"
+        f"- Witnesses: {', '.join(witnesses_list) if witnesses_list else 'None'}\n"
         f"- Physical Evidence Files Uploaded: {', '.join(evidence_names) if evidence_names else 'No files uploaded'}\n"
         f"- Generated AI Documents: {', '.join(doc_types) if doc_types else 'No documents generated'}\n"
         f"- Case Timeline Milestones:\n  * " + "\n  * ".join(timeline_logs) if timeline_logs else "No timeline logs registered"
@@ -183,8 +268,8 @@ def query_legal_case_database(
     )
 
     try:
-        from app.ai.gemini import generate_document
-        response = generate_document(prompt)
+        from app.services.ollama_service import generate_ollama_response
+        response = generate_ollama_response(prompt=prompt)
         return {
             "case_id": request.case_id,
             "response": response
@@ -195,4 +280,3 @@ def query_legal_case_database(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"AI resolution failed: {str(e)}"
         )
-
