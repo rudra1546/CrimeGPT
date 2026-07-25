@@ -3,7 +3,7 @@ import re
 import json
 import time
 import logging
-from app.rag.vectorstore import get_vectorstore, reset_vectorstore
+from app.rag.vectorstore import get_vectorstore
 from app.services.ai_service import generate_ai_response
 
 logger = logging.getLogger("crimegpt.rag.retriever")
@@ -110,7 +110,7 @@ def compute_chunk_intent_score(query: str, doc, raw_score: float, det_sec: str =
 
 def retrieve_context_with_metadata(query: str, k: int = None) -> tuple[str, list[dict]]:
     """
-    Retrieves top k relevant text chunks from ChromaDB.
+    Retrieves top k relevant text chunks from Supabase pgvector.
     Disables semantic search for exact section queries and directly returns exact metadata matches.
     """
     if k is None:
@@ -130,14 +130,8 @@ def retrieve_context_with_metadata(query: str, k: int = None) -> tuple[str, list
             
             exact_docs = []
             try:
-                # Direct metadata lookup in ChromaDB
-                exact_results = db.get(where={"section": str(det_sec)})
-                if exact_results and exact_results.get("documents"):
-                    contents = exact_results.get("documents", [])
-                    metadatas = exact_results.get("metadatas", [])
-                    from langchain_core.documents import Document
-                    for c, m in zip(contents, metadatas):
-                        exact_docs.append(Document(page_content=c, metadata=m))
+                # Metadata lookup using filter in PGVector
+                exact_docs = db.similarity_search(f"Section {det_sec}", k=k, filter={"section": str(det_sec)})
             except Exception as ex:
                 logger.warning(f"[RAG] Metadata query filter failed, falling back to similarity search scan: {ex}")
 
@@ -200,17 +194,12 @@ def retrieve_context_with_metadata(query: str, k: int = None) -> tuple[str, list
         try:
             results_with_scores = db.similarity_search_with_score(query, k=k*3)
         except Exception as se:
-            err_str = str(se).lower()
-            if "dimension" in err_str or "expecting embedding" in err_str:
-                logger.warning(f"[RAG Retriever] Dimension mismatch during search ({se}). Rebuilding vectorstore.")
-                db = reset_vectorstore()
-                results_with_scores = []
-            else:
-                try:
-                    results = db.similarity_search(query, k=k*3)
-                    results_with_scores = [(doc, 0.85) for doc in results]
-                except Exception:
-                    raise se
+            logger.warning(f"[RAG Retriever] Similarity search with score note: {se}")
+            try:
+                results = db.similarity_search(query, k=k*3)
+                results_with_scores = [(doc, 0.85) for doc in results]
+            except Exception:
+                raise se
 
         if not results_with_scores:
             logger.info("[RAG] 0 matching chunks retrieved from ChromaDB.")

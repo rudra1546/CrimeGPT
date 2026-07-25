@@ -525,8 +525,9 @@ def close_case(
     # Add timeline event
     tl = CaseTimeline(
         case_id=case_id,
-        event_title="Case Closed",
-        event_description=f"Case officially closed by {current_user.name} ({current_user.role}). All checklist requirements verified or marked N/A."
+        event_name="Case Closed",
+        description=f"Case officially closed by {current_user.name} ({current_user.role}). All checklist requirements verified or marked N/A.",
+        created_by=current_user.id
     )
     db.add(tl)
     
@@ -566,8 +567,9 @@ def reopen_case(
     # Add timeline event
     tl = CaseTimeline(
         case_id=case_id,
-        event_title="Case Reopened",
-        event_description=f"Case reopened by Administrative Officer {current_user.name}."
+        event_name="Case Reopened",
+        description=f"Case reopened by Administrative Officer {current_user.name}.",
+        created_by=current_user.id
     )
     db.add(tl)
 
