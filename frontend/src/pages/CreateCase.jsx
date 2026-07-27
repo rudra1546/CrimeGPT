@@ -47,7 +47,7 @@ const CreateCase = () => {
 
   // Structured Accused Info
   const [accused, setAccused] = useState({
-    name: '', age: '', gender: 'Male', address: '', known_aliases: '', previous_record: ''
+    name: '', age: '', gender: 'Male', address: '', known_aliases: '', previous_record: '', accused_mobile_number: '', mobile_number: ''
   });
 
   // Witnesses list (multiple)
@@ -190,25 +190,25 @@ const CreateCase = () => {
     cat.toLowerCase().includes(searchCategory.toLowerCase())
   );
 
-  const inputClass = "w-full bg-white border border-gray-300 focus:border-gray-900 text-gray-900 placeholder-gray-400 px-3 py-2 rounded-lg text-xs outline-none focus:ring-1 focus:ring-gray-900 transition-all";
-  const labelClass = "text-xs font-bold text-gray-700 uppercase tracking-wider block mb-1";
-  const sectionClass = "bg-white border border-gray-200 rounded-lg p-6 space-y-5";
+  const inputClass = "w-full bg-[#ffffff] border border-[#e2e8f0] focus:border-[#2563eb] text-[#1e293b] placeholder-[#64748b]/60 px-3 py-2 rounded-lg text-xs outline-none focus:ring-1 focus:ring-[#2563eb] transition-all";
+  const labelClass = "text-xs font-bold text-[#1e293b] uppercase tracking-wider block mb-1";
+  const sectionClass = "bg-[#ffffff] border border-[#e2e8f0] rounded-lg p-6 space-y-5 shadow-sm";
 
   return (
-    <div className="p-8 space-y-8 w-full max-w-5xl mx-auto bg-white min-h-screen">
+    <div className="p-8 space-y-8 w-full max-w-5xl mx-auto bg-[#f8fafc] min-h-screen">
       {/* Navigation Header */}
-      <div className="flex items-center justify-between border-b border-gray-200 pb-6">
+      <div className="flex items-center justify-between border-b border-[#e2e8f0] pb-6">
         <div className="flex items-center gap-3">
           <Link 
             to="/cases" 
-            className="p-2 hover:bg-gray-50 rounded-lg text-gray-450 hover:text-gray-900 border border-gray-200 transition-all"
+            className="p-2 hover:bg-[#eff6ff] rounded-lg text-[#64748b] hover:text-[#1e293b] border border-[#e2e8f0] transition-all bg-[#ffffff]"
             aria-label="Return to Cases Directory"
           >
             <ChevronLeft className="w-4 h-4" />
           </Link>
           <div>
-            <h1 className="text-xl font-black tracking-wide text-gray-900 uppercase">FIR Case Filing</h1>
-            <p className="text-xs text-gray-500 mt-1">Register structured investigation data inside the central database.</p>
+            <h1 className="text-xl font-black tracking-wide text-[#1e293b] uppercase">FIR Case Filing</h1>
+            <p className="text-xs text-[#64748b] mt-1">Register structured investigation data inside the central database.</p>
           </div>
         </div>
       </div>
@@ -223,9 +223,9 @@ const CreateCase = () => {
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* SECTION 1: GENERAL INFORMATION */}
         <div className={sectionClass}>
-          <div className="flex items-center gap-2 border-b border-gray-150 pb-3">
-            <Briefcase className="w-4 h-4 text-gray-900" />
-            <h3 className="text-xs font-black text-gray-900 uppercase tracking-widest">General Information</h3>
+          <div className="flex items-center gap-2 border-b border-[#e2e8f0] pb-3">
+            <Briefcase className="w-4 h-4 text-[#1e3a8a]" />
+            <h3 className="text-xs font-black text-[#1e293b] uppercase tracking-widest">General Information</h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -266,7 +266,7 @@ const CreateCase = () => {
                       setCrimeType('');
                       setSearchCategory('');
                     }}
-                    className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-700 text-xs font-bold"
+                    className="absolute right-3 top-2.5 text-[#64748b] hover:text-[#1e293b] text-xs font-bold"
                   >
                     Clear
                   </button>
@@ -274,7 +274,7 @@ const CreateCase = () => {
               </div>
               
               {showCategoryDropdown && (
-                <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-30 max-h-56 overflow-y-auto divide-y divide-gray-100">
+                <div className="absolute left-0 right-0 mt-1 bg-white border border-[#e2e8f0] rounded-lg shadow-lg z-30 max-h-56 overflow-y-auto divide-y divide-[#e2e8f0]">
                   {filteredCategories.length > 0 ? (
                     filteredCategories.map((cat, idx) => (
                       <button
@@ -285,13 +285,13 @@ const CreateCase = () => {
                           setSearchCategory('');
                           setShowCategoryDropdown(false);
                         }}
-                        className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 text-gray-800 font-bold"
+                        className="w-full text-left px-4 py-2 text-xs hover:bg-[#eff6ff] text-[#1e293b] font-bold"
                       >
                         {cat}
                       </button>
                     ))
                   ) : (
-                    <div className="px-4 py-3 text-xs text-gray-400 italic">No matching categories found.</div>
+                    <div className="px-4 py-3 text-xs text-[#64748b] italic">No matching categories found.</div>
                   )}
                 </div>
               )}
@@ -362,9 +362,9 @@ const CreateCase = () => {
 
         {/* SECTION 3: VICTIM INFORMATION */}
         <div className={sectionClass}>
-          <div className="flex items-center gap-2 border-b border-gray-150 pb-3">
-            <Users className="w-4 h-4 text-gray-900" />
-            <h3 className="text-xs font-black text-gray-900 uppercase tracking-widest">Victim Details</h3>
+          <div className="flex items-center gap-2 border-b border-[#e2e8f0] pb-3">
+            <Users className="w-4 h-4 text-[#1e3a8a]" />
+            <h3 className="text-xs font-black text-[#1e293b] uppercase tracking-widest">Victim Details</h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -461,9 +461,9 @@ const CreateCase = () => {
 
         {/* SECTION 4: ACCUSED / SUSPECT DETAILS */}
         <div className={sectionClass}>
-          <div className="flex items-center gap-2 border-b border-gray-150 pb-3">
-            <Users className="w-4 h-4 text-gray-900" />
-            <h3 className="text-xs font-black text-gray-900 uppercase tracking-widest">Accused / Suspect Details</h3>
+          <div className="flex items-center gap-2 border-b border-[#e2e8f0] pb-3">
+            <Users className="w-4 h-4 text-[#1e3a8a]" />
+            <h3 className="text-xs font-black text-[#1e293b] uppercase tracking-widest">Accused / Suspect Details</h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -518,6 +518,22 @@ const CreateCase = () => {
               />
             </div>
 
+            <div className="space-y-1">
+              <label htmlFor="accusedMobile" className={labelClass}>Suspect/Accused Mobile Number</label>
+              <input
+                id="accusedMobile"
+                type="tel"
+                placeholder="e.g. 9876543210 (10 digits)"
+                value={accused.accused_mobile_number || accused.mobile_number || ''}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  handleAccusedChange('accused_mobile_number', val);
+                  handleAccusedChange('mobile_number', val);
+                }}
+                className={inputClass}
+              />
+            </div>
+
             <div className="space-y-1 md:col-span-2">
               <label htmlFor="accusedRecord" className={labelClass}>Previous Convictions / Records</label>
               <input
@@ -546,28 +562,28 @@ const CreateCase = () => {
 
         {/* SECTION 5: WITNESSES (DYNAMIC LIST) */}
         <div className={sectionClass}>
-          <div className="flex justify-between items-center border-b border-gray-150 pb-3">
+          <div className="flex justify-between items-center border-b border-[#e2e8f0] pb-3">
             <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-gray-900" />
-              <h3 className="text-xs font-black text-gray-900 uppercase tracking-widest">Witness Accounts</h3>
+              <Users className="w-4 h-4 text-[#1e3a8a]" />
+              <h3 className="text-xs font-black text-[#1e293b] uppercase tracking-widest">Witness Accounts</h3>
             </div>
             <button
               type="button"
               onClick={handleAddWitness}
-              className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-900 text-[10px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 transition-all uppercase"
+              className="bg-[#ffffff] border border-[#e2e8f0] hover:bg-[#eff6ff] text-[#1e293b] text-[10px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 transition-all uppercase shadow-sm"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-3.5 h-3.5 text-[#1e3a8a]" />
               <span>Add Witness</span>
             </button>
           </div>
 
           {witnesses.length === 0 ? (
-            <div className="py-12 border border-dashed border-gray-200 bg-gray-50 rounded-lg text-center space-y-3">
-              <p className="text-xs text-gray-400 font-semibold">No witnesses added yet</p>
+            <div className="py-12 border border-dashed border-[#e2e8f0] bg-[#f8fafc] rounded-lg text-center space-y-3">
+              <p className="text-xs text-[#64748b] font-semibold">No witnesses added yet</p>
               <button
                 type="button"
                 onClick={handleAddWitness}
-                className="bg-gray-900 hover:bg-gray-800 text-white font-bold px-3.5 py-1.5 rounded-lg text-[10px] uppercase"
+                className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white font-bold px-3.5 py-1.5 rounded-lg text-[10px] uppercase shadow-sm"
               >
                 Add Witness
               </button>
@@ -575,9 +591,9 @@ const CreateCase = () => {
           ) : (
             <div className="space-y-5">
               {witnesses.map((w, idx) => (
-                <div key={idx} className="p-4 border border-gray-200 rounded-lg bg-gray-50 space-y-4">
+                <div key={idx} className="p-4 border border-[#e2e8f0] rounded-lg bg-[#f8fafc] space-y-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-black text-gray-800 uppercase">Witness Profile #{idx + 1}</span>
+                    <span className="text-[10px] font-black text-[#1e293b] uppercase">Witness Profile #{idx + 1}</span>
                     <button
                       type="button"
                       onClick={() => handleRemoveWitness(idx)}
@@ -638,28 +654,28 @@ const CreateCase = () => {
 
         {/* SECTION 6: EVIDENCE FILES (DYNAMIC LIST) */}
         <div className={sectionClass}>
-          <div className="flex justify-between items-center border-b border-gray-150 pb-3">
+          <div className="flex justify-between items-center border-b border-[#e2e8f0] pb-3">
             <div className="flex items-center gap-2">
-              <Paperclip className="w-4 h-4 text-gray-900" />
-              <h3 className="text-xs font-black text-gray-900 uppercase tracking-widest">Evidence Registry</h3>
+              <Paperclip className="w-4 h-4 text-[#1e3a8a]" />
+              <h3 className="text-xs font-black text-[#1e293b] uppercase tracking-widest">Evidence Registry</h3>
             </div>
             <button
               type="button"
               onClick={handleAddEvidenceItem}
-              className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-900 text-[10px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 transition-all uppercase"
+              className="bg-[#ffffff] border border-[#e2e8f0] hover:bg-[#eff6ff] text-[#1e293b] text-[10px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 transition-all uppercase shadow-sm"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-3.5 h-3.5 text-[#1e3a8a]" />
               <span>Record Evidence</span>
             </button>
           </div>
 
           {evidenceItems.length === 0 ? (
-            <div className="py-12 border border-dashed border-gray-200 bg-gray-50 rounded-lg text-center space-y-3">
-              <p className="text-xs text-gray-400 font-semibold">Evidence locker is empty</p>
+            <div className="py-12 border border-dashed border-[#e2e8f0] bg-[#f8fafc] rounded-lg text-center space-y-3">
+              <p className="text-xs text-[#64748b] font-semibold">Evidence locker is empty</p>
               <button
                 type="button"
                 onClick={handleAddEvidenceItem}
-                className="bg-gray-900 hover:bg-gray-800 text-white font-bold px-3.5 py-1.5 rounded-lg text-[10px] uppercase"
+                className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white font-bold px-3.5 py-1.5 rounded-lg text-[10px] uppercase shadow-sm"
               >
                 Upload Evidence
               </button>
@@ -667,9 +683,9 @@ const CreateCase = () => {
           ) : (
             <div className="space-y-5">
               {evidenceItems.map((ev, idx) => (
-                <div key={idx} className="p-4 border border-gray-200 rounded-lg bg-gray-50 space-y-4">
+                <div key={idx} className="p-4 border border-[#e2e8f0] rounded-lg bg-[#f8fafc] space-y-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-black text-gray-800 uppercase">Evidence Item #{idx + 1}</span>
+                    <span className="text-[10px] font-black text-[#1e293b] uppercase">Evidence Item #{idx + 1}</span>
                     <button
                       type="button"
                       onClick={() => handleRemoveEvidenceItem(idx)}
@@ -743,9 +759,9 @@ const CreateCase = () => {
 
         {/* SECTION 7: INCIDENT NARRATIVE SUMMARY */}
         <div className={sectionClass}>
-          <div className="flex items-center gap-2 border-b border-gray-150 pb-3">
-            <FileText className="w-4 h-4 text-gray-900" />
-            <h3 className="text-xs font-black text-gray-900 uppercase tracking-widest">Incident Details & Narrative</h3>
+          <div className="flex items-center gap-2 border-b border-[#e2e8f0] pb-3">
+            <FileText className="w-4 h-4 text-[#1e3a8a]" />
+            <h3 className="text-xs font-black text-[#1e293b] uppercase tracking-widest">Incident Details & Narrative</h3>
           </div>
 
           <div className="grid grid-cols-1 gap-6">
@@ -767,16 +783,16 @@ const CreateCase = () => {
         <div className="flex justify-end gap-3 pt-4">
           <Link
             to="/cases"
-            className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold px-4 py-2 rounded-lg text-xs transition-all flex items-center justify-center gap-1.5 uppercase"
+            className="bg-[#ffffff] border border-[#e2e8f0] hover:bg-[#eff6ff] text-[#1e293b] font-bold px-4 py-2 rounded-lg text-xs transition-all flex items-center justify-center gap-1.5 uppercase"
           >
             Cancel
           </Link>
           <button
             type="submit"
             disabled={loading}
-            className="bg-gray-900 hover:bg-gray-800 text-white font-bold px-5 py-2.5 rounded-lg text-xs transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 uppercase tracking-wider"
+            className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white font-bold px-5 py-2.5 rounded-lg text-xs transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 uppercase tracking-wider shadow-sm"
           >
-            {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : null}
+            {loading ? <RefreshCw className="w-4 h-4 animate-spin text-[#b45309]" /> : null}
             <span>Save Case File</span>
           </button>
         </div>

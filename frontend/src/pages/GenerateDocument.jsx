@@ -87,15 +87,15 @@ const GenerateDocument = () => {
     }
   };
 
-  const inputClass = "w-full bg-white border border-gray-300 focus:border-gray-900 text-gray-900 placeholder-gray-400 px-3 py-2 rounded-lg text-xs outline-none focus:ring-1 focus:ring-gray-900 transition-all";
-  const labelClass = "text-xs font-bold text-gray-700 uppercase tracking-wider block mb-1";
+  const inputClass = "w-full bg-[#ffffff] border border-[#e2e8f0] focus:border-[#2563eb] text-[#1e293b] placeholder-[#64748b]/60 px-3 py-2 rounded-lg text-xs outline-none focus:ring-1 focus:ring-[#2563eb] transition-all";
+  const labelClass = "text-xs font-bold text-[#1e293b] uppercase tracking-wider block mb-1";
 
   return (
-    <div className="p-8 space-y-8 w-full max-w-7xl mx-auto bg-white min-h-screen">
+    <div className="p-8 space-y-8 w-full max-w-7xl mx-auto bg-[#f8fafc] min-h-screen">
       {/* Title Header */}
-      <div className="border-b border-gray-200 pb-6 no-print">
-        <h1 className="text-xl font-black tracking-wide text-gray-900 uppercase">Legal Draft Assistant</h1>
-        <p className="text-xs text-gray-500 mt-1">Select an incident record and compile structured legal documentation.</p>
+      <div className="border-b border-[#e2e8f0] pb-6 no-print">
+        <h1 className="text-xl font-black tracking-wide text-[#1e293b] uppercase">Legal Draft Assistant</h1>
+        <p className="text-xs text-[#64748b] mt-1">Select an incident record and compile structured legal documentation.</p>
       </div>
 
       {error && (
@@ -107,10 +107,10 @@ const GenerateDocument = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         {/* Document generation options form panel */}
-        <div className="bg-white border border-gray-250 p-6 rounded-lg shadow-sm h-fit space-y-6 no-print">
-          <div className="flex items-center gap-2 border-b border-gray-150 pb-3">
-            <FileSignature className="w-4 h-4 text-gray-900" />
-            <h3 className="text-xs font-black text-gray-900 uppercase tracking-widest">Configuration</h3>
+        <div className="bg-[#ffffff] border border-[#e2e8f0] p-6 rounded-lg shadow-sm h-fit space-y-6 no-print">
+          <div className="flex items-center gap-2 border-b border-[#e2e8f0] pb-3">
+            <FileSignature className="w-4 h-4 text-[#1e3a8a]" />
+            <h3 className="text-xs font-black text-[#1e293b] uppercase tracking-widest">Configuration</h3>
           </div>
 
           <form onSubmit={handleGenerate} className="space-y-5">
@@ -159,11 +159,11 @@ const GenerateDocument = () => {
             <button
               type="submit"
               disabled={generating || cases.length === 0}
-              className="w-full bg-gray-900 hover:bg-gray-800 text-white font-bold py-2.5 px-4 rounded-lg transition-all disabled:opacity-50 text-xs uppercase tracking-wider mt-4"
+              className="w-full bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white font-bold py-2.5 px-4 rounded-lg transition-all disabled:opacity-50 text-xs uppercase tracking-wider mt-4 shadow-sm"
             >
               {generating ? (
                 <span className="flex items-center justify-center gap-2">
-                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <RefreshCw className="w-4 h-4 animate-spin text-[#b45309]" />
                   <span>Drafting Document...</span>
                 </span>
               ) : (
@@ -176,15 +176,15 @@ const GenerateDocument = () => {
         {/* Display Output panel */}
         <div className="lg:col-span-2 flex flex-col min-h-[450px]">
           {generating ? (
-            <div className="flex-1 flex flex-col justify-center items-center gap-3 py-20 text-gray-500 border border-gray-200 bg-white rounded-lg no-print">
-              <RefreshCw className="w-8 h-8 text-gray-900 animate-spin" />
+            <div className="flex-1 flex flex-col justify-center items-center gap-3 py-20 text-[#64748b] border border-[#e2e8f0] bg-[#ffffff] rounded-lg no-print">
+              <RefreshCw className="w-8 h-8 text-[#1e3a8a] animate-spin" />
               <p className="text-xs font-bold tracking-wide animate-pulse">Generating official document draft...</p>
             </div>
           ) : generatedDoc ? (
             <DocumentPreview doc={generatedDoc} onDownload={handleDownload} />
           ) : (
-            <div className="flex-1 flex flex-col justify-center items-center gap-3 py-20 text-gray-400 text-center max-w-sm mx-auto border border-gray-200 bg-white rounded-lg w-full no-print">
-              <FileText className="w-12 h-12" />
+            <div className="flex-1 flex flex-col justify-center items-center gap-3 py-20 text-[#64748b] text-center max-w-sm mx-auto border border-[#e2e8f0] bg-[#ffffff] rounded-lg w-full no-print">
+              <FileText className="w-12 h-12 text-[#1e3a8a]" />
               <p className="text-xs font-semibold">Configure case data and click Generate Document Draft to create standard legal documents.</p>
             </div>
           )}

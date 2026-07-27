@@ -5,6 +5,7 @@ class SuspectCreate(BaseModel):
     alias: str | None = None
     address: str | None = None
     identification_marks: str | None = None
+    accused_mobile_number: str | None = None
     status: str = "Suspect"
     notes: str | None = None
 
@@ -13,6 +14,7 @@ class SuspectUpdate(BaseModel):
     alias: str | None = None
     address: str | None = None
     identification_marks: str | None = None
+    accused_mobile_number: str | None = None
     status: str | None = None
     notes: str | None = None
 
@@ -23,6 +25,7 @@ class SuspectResponse(BaseModel):
     alias: str | None = None
     address: str | None = None
     identification_marks: str | None = None
+    accused_mobile_number: str | None = None
     status: str
     notes: str | None = None
 

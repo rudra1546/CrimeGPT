@@ -129,15 +129,15 @@ const AIAssistant = () => {
       );
     } else if (confidence === 'medium') {
       return (
-        <div className="flex items-center gap-1 text-[10px] font-bold text-yellow-800 bg-yellow-50 border border-yellow-200 px-2 py-0.5 rounded">
-          <ShieldCheck className="w-3 h-3 text-yellow-600" />
+        <div className="flex items-center gap-1 text-[10px] font-bold text-[#b45309] bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
+          <ShieldCheck className="w-3 h-3 text-amber-600" />
           <span>🟡 Medium Confidence</span>
         </div>
       );
     } else {
       return (
-        <div className="flex items-center gap-1 text-[10px] font-bold text-green-800 bg-green-50 border border-green-200 px-2 py-0.5 rounded">
-          <ShieldCheck className="w-3 h-3 text-green-600" />
+        <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
+          <ShieldCheck className="w-3 h-3 text-emerald-600" />
           <span>🟢 High Confidence</span>
         </div>
       );
@@ -145,20 +145,20 @@ const AIAssistant = () => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] p-4 md:p-6 w-full max-w-7xl mx-auto space-y-4 bg-white overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-4rem)] p-4 md:p-6 w-full max-w-7xl mx-auto space-y-4 bg-[#f8fafc] overflow-hidden">
       {/* Title Header */}
-      <div className="border-b border-gray-200 pb-3 flex-shrink-0 flex justify-between items-center">
+      <div className="border-b border-[#e2e8f0] pb-3 flex-shrink-0 flex justify-between items-center">
         <div>
-          <h1 className="text-xl font-black text-gray-900 uppercase tracking-wide flex items-center gap-2">
-            <Bot className="w-5 h-5 text-gray-900" />
+          <h1 className="text-xl font-black text-[#1e293b] uppercase tracking-wide flex items-center gap-2">
+            <Bot className="w-5 h-5 text-[#1e3a8a]" />
             <span>Legal Reference Assistant</span>
           </h1>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <p className="text-xs text-[#64748b] mt-0.5">
             Multi-format document indexing (PDF, CSV, DOCX, TXT, JSON, MD) with source citations.
           </p>
         </div>
-        <div className="hidden sm:flex items-center gap-2 text-[10px] bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-lg text-gray-700 font-bold uppercase tracking-wider">
-          <BookOpen className="w-3.5 h-3.5 text-gray-900" />
+        <div className="hidden sm:flex items-center gap-2 text-[10px] bg-[#eff6ff] border border-[#bfdbfe] px-3 py-1.5 rounded-lg text-[#1e3a8a] font-bold uppercase tracking-wider">
+          <BookOpen className="w-3.5 h-3.5 text-[#1e3a8a]" />
           <span>Legal Reference System Online</span>
         </div>
       </div>
@@ -167,22 +167,22 @@ const AIAssistant = () => {
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-hidden min-h-0">
         
         {/* Upload Control Panel */}
-        <div className="bg-white border border-gray-200 p-5 rounded-lg shadow-sm space-y-4 flex flex-col justify-between overflow-y-auto min-h-0">
+        <div className="bg-[#ffffff] border border-[#e2e8f0] p-5 rounded-lg shadow-sm space-y-4 flex flex-col justify-between overflow-y-auto min-h-0">
           <div>
-            <div className="flex items-center gap-2 border-b border-gray-150 pb-3 mb-4">
-              <Upload className="w-4 h-4 text-gray-900" />
-              <h3 className="text-xs font-black text-gray-900 uppercase tracking-widest">
+            <div className="flex items-center gap-2 border-b border-[#e2e8f0] pb-3 mb-4">
+              <Upload className="w-4 h-4 text-[#1e3a8a]" />
+              <h3 className="text-xs font-black text-[#1e293b] uppercase tracking-widest">
                 Upload Reference Document
               </h3>
             </div>
 
             <form onSubmit={handleFileUpload} className="space-y-4">
               <div className="space-y-2">
-                <label htmlFor="ref-file" className="text-[10px] font-extrabold text-gray-500 uppercase tracking-wider block">
+                <label htmlFor="ref-file" className="text-[10px] font-extrabold text-[#64748b] uppercase tracking-wider block">
                   Supported Formats: PDF, CSV, DOCX, TXT, JSON, MD
                 </label>
                 
-                <div className="border-2 border-dashed border-gray-300 hover:border-gray-900 p-5 rounded-lg flex flex-col items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 cursor-pointer relative transition-all">
+                <div className="border-2 border-dashed border-[#e2e8f0] hover:border-[#2563eb] p-5 rounded-lg flex flex-col items-center justify-center gap-2 bg-[#eff6ff]/50 hover:bg-[#eff6ff] cursor-pointer relative transition-all">
                   <input
                     id="ref-file"
                     type="file"
@@ -191,11 +191,11 @@ const AIAssistant = () => {
                     onChange={(e) => setFile(e.target.files[0])}
                     className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                   />
-                  <FileText className="w-8 h-8 text-gray-400" />
-                  <span className="text-xs font-bold text-gray-700 text-center truncate max-w-[220px]">
+                  <FileText className="w-8 h-8 text-[#1e3a8a]" />
+                  <span className="text-xs font-bold text-[#1e293b] text-center truncate max-w-[220px]">
                     {file ? file.name : 'Select File'}
                   </span>
-                  <span className="text-[10px] text-gray-400 font-semibold">
+                  <span className="text-[10px] text-[#64748b] font-semibold">
                     Click to browse or drag & drop file
                   </span>
                 </div>
@@ -203,18 +203,18 @@ const AIAssistant = () => {
 
               {/* Selected File Details */}
               {file && (
-                <div className="bg-gray-50 border border-gray-250 p-3 rounded-lg text-xs space-y-1.5">
-                  <div className="flex justify-between font-bold text-gray-800">
-                    <span className="text-gray-500 uppercase text-[10px]">Selected:</span>
-                    <span className="truncate max-w-[170px] text-gray-900">{file.name}</span>
+                <div className="bg-[#eff6ff] border border-[#bfdbfe] p-3 rounded-lg text-xs space-y-1.5">
+                  <div className="flex justify-between font-bold text-[#1e293b]">
+                    <span className="text-[#64748b] uppercase text-[10px]">Selected:</span>
+                    <span className="truncate max-w-[170px] text-[#1e293b]">{file.name}</span>
                   </div>
-                  <div className="flex justify-between text-[11px] text-gray-600 font-medium">
-                    <span className="text-gray-500 uppercase text-[10px]">Type:</span>
-                    <span className="uppercase font-bold text-gray-900">{fileExt}</span>
+                  <div className="flex justify-between text-[11px] text-[#64748b] font-medium">
+                    <span className="text-[#64748b] uppercase text-[10px]">Type:</span>
+                    <span className="uppercase font-bold text-[#1e293b]">{fileExt}</span>
                   </div>
-                  <div className="flex justify-between text-[11px] text-gray-600 font-medium">
-                    <span className="text-gray-500 uppercase text-[10px]">Size:</span>
-                    <span className="font-bold text-gray-900">{formatFileSize(file.size)}</span>
+                  <div className="flex justify-between text-[11px] text-[#64748b] font-medium">
+                    <span className="text-[#64748b] uppercase text-[10px]">Size:</span>
+                    <span className="font-bold text-[#1e293b]">{formatFileSize(file.size)}</span>
                   </div>
                 </div>
               )}
@@ -227,7 +227,7 @@ const AIAssistant = () => {
               )}
 
               {uploadSuccess && (
-                <div className="bg-green-50 border border-green-200 text-green-700 p-3 rounded-lg text-xs flex items-center gap-2 font-bold">
+                <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 p-3 rounded-lg text-xs flex items-center gap-2 font-bold">
                   <Check className="w-4 h-4 flex-shrink-0" />
                   <span>{uploadSuccess}</span>
                 </div>
@@ -236,11 +236,11 @@ const AIAssistant = () => {
               <button
                 type="submit"
                 disabled={uploading || !file}
-                className="w-full bg-gray-900 hover:bg-gray-800 text-white font-bold py-2.5 px-4 rounded-lg transition-all disabled:opacity-50 text-xs uppercase tracking-wider flex items-center justify-center gap-2"
+                className="w-full bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white font-bold py-2.5 px-4 rounded-lg transition-all disabled:opacity-50 text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-sm"
               >
                 {uploading ? (
                   <>
-                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <RefreshCw className="w-4 h-4 animate-spin text-[#b45309]" />
                     <span>Ingesting Document...</span>
                   </>
                 ) : (
@@ -250,22 +250,22 @@ const AIAssistant = () => {
             </form>
           </div>
 
-          <div className="bg-gray-50 border border-gray-200 p-3.5 rounded-lg space-y-1.5">
-            <div className="flex items-center gap-1.5 text-gray-900 font-bold">
-              <Info className="w-4 h-4 text-gray-900" />
+          <div className="bg-[#eff6ff] border border-[#bfdbfe] p-3.5 rounded-lg space-y-1.5">
+            <div className="flex items-center gap-1.5 text-[#1e293b] font-bold">
+              <Info className="w-4 h-4 text-[#1e3a8a]" />
               <span className="text-[10px] font-black uppercase tracking-wider">Legal Reference System Online</span>
             </div>
-            <p className="text-[10px] text-gray-500 leading-relaxed">
+            <p className="text-[10px] text-[#64748b] leading-relaxed">
               Legal references are indexed and verified with source citations for accurate responses.
             </p>
           </div>
         </div>
 
         {/* Chat Box Container */}
-        <div className="lg:col-span-2 bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col overflow-hidden min-h-0">
+        <div className="lg:col-span-2 bg-[#ffffff] border border-[#e2e8f0] rounded-lg shadow-sm flex flex-col overflow-hidden min-h-0">
           
           {/* Scrollable Chat Messages Area */}
-          <div className="flex-1 p-4 md:p-5 space-y-4 overflow-y-auto bg-gray-50 min-h-0">
+          <div className="flex-1 p-4 md:p-5 space-y-4 overflow-y-auto bg-[#f8fafc] min-h-0">
             {messages.map((msg, i) => {
               const isAI = msg.sender === 'assistant';
               const isFallback = isAI && msg.text && msg.text.includes("do not contain sufficient information");
@@ -273,7 +273,7 @@ const AIAssistant = () => {
               return (
                 <div key={i} className={`flex gap-3 max-w-[88%] ${isAI ? 'mr-auto' : 'ml-auto flex-row-reverse'}`}>
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 border ${
-                    isAI ? 'bg-white border-gray-300 text-gray-900' : 'bg-gray-900 border-gray-900 text-white'
+                    isAI ? 'bg-[#ffffff] border-[#e2e8f0] text-[#1e3a8a]' : 'bg-[#1e3a8a] border-[#1e3a8a] text-white'
                   }`}>
                     {isAI ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
                   </div>
@@ -284,7 +284,7 @@ const AIAssistant = () => {
                     {isAI && (
                       <div className="flex items-center justify-between">
                         {renderConfidenceBadge(msg.confidence, isFallback)}
-                        <span className="text-[9px] text-gray-400 font-mono uppercase">
+                        <span className="text-[9px] text-[#64748b] font-mono uppercase">
                           Verified Response
                         </span>
                       </div>
@@ -301,8 +301,8 @@ const AIAssistant = () => {
                     {/* Main Message Text Card */}
                     <div className={`p-4 rounded-lg text-xs leading-relaxed whitespace-pre-wrap ${
                       isAI 
-                        ? 'bg-white border border-gray-200 text-gray-800 shadow-sm' 
-                        : 'bg-white border border-gray-300 text-gray-950 font-medium shadow-sm'
+                        ? 'bg-[#ffffff] border border-[#e2e8f0] text-[#1e293b] shadow-sm' 
+                        : 'bg-[#eff6ff] border border-[#bfdbfe] text-[#1e293b] font-medium shadow-sm'
                     }`}>
                       {msg.text}
                     </div>
@@ -310,9 +310,9 @@ const AIAssistant = () => {
                     {/* Section Badges Component */}
                     {isAI && msg.matched_sections && msg.matched_sections.length > 0 && (
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Matched Sections:</span>
+                        <span className="text-[10px] text-[#64748b] font-bold uppercase tracking-wider">Matched Sections:</span>
                         {msg.matched_sections.map((sec, secIdx) => (
-                          <span key={secIdx} className="bg-gray-900 text-white text-[10px] font-black px-2 py-0.5 rounded">
+                          <span key={secIdx} className="bg-[#1e3a8a] text-white text-[10px] font-black px-2 py-0.5 rounded">
                             Section {sec}
                           </span>
                         ))}
@@ -321,17 +321,17 @@ const AIAssistant = () => {
 
                     {/* Sources Citation Component */}
                     {isAI && msg.sources && msg.sources.length > 0 && (
-                      <div className="bg-white border border-gray-250 p-3 rounded-lg text-[10px] space-y-1.5 shadow-sm">
-                        <div className="flex items-center gap-1.5 text-gray-900 font-extrabold uppercase tracking-wider">
-                          <BookOpen className="w-3 h-3 text-gray-900" />
+                      <div className="bg-[#ffffff] border border-[#e2e8f0] p-3 rounded-lg text-[10px] space-y-1.5 shadow-sm">
+                        <div className="flex items-center gap-1.5 text-[#1e293b] font-extrabold uppercase tracking-wider">
+                          <BookOpen className="w-3 h-3 text-[#1e3a8a]" />
                           <span>Sources & Citations:</span>
                         </div>
                         <div className="flex flex-wrap gap-1.5">
                           {msg.sources.map((src, sIdx) => (
-                            <div key={sIdx} className="bg-gray-50 border border-gray-200 px-2.5 py-1 rounded text-gray-700 font-medium flex items-center gap-1">
-                              <span className="font-bold text-gray-900">{src.document || src.source}</span>
-                              {src.section && <span className="text-gray-800 font-semibold">(Section {src.section})</span>}
-                              {src.page && <span className="text-gray-800 font-semibold">(Page {src.page})</span>}
+                            <div key={sIdx} className="bg-[#eff6ff] border border-[#bfdbfe] px-2.5 py-1 rounded text-[#1e293b] font-medium flex items-center gap-1">
+                              <span className="font-bold text-[#1e293b]">{src.document || src.source}</span>
+                              {src.section && <span className="text-[#64748b] font-semibold">(Section {src.section})</span>}
+                              {src.page && <span className="text-[#64748b] font-semibold">(Page {src.page})</span>}
                             </div>
                           ))}
                         </div>
@@ -343,9 +343,9 @@ const AIAssistant = () => {
             })}
 
             {sendingQuery && (
-              <div className="flex gap-3 max-w-[80%] mr-auto items-center text-gray-500 text-xs">
-                <div className="w-8 h-8 rounded-lg bg-white border border-gray-300 text-gray-900 flex items-center justify-center flex-shrink-0">
-                  <Bot className="w-4 h-4 animate-spin text-gray-900" />
+              <div className="flex gap-3 max-w-[80%] mr-auto items-center text-[#64748b] text-xs">
+                <div className="w-8 h-8 rounded-lg bg-[#ffffff] border border-[#e2e8f0] text-[#1e3a8a] flex items-center justify-center flex-shrink-0">
+                  <Bot className="w-4 h-4 animate-spin text-[#1e3a8a]" />
                 </div>
                 <span className="font-bold tracking-wide animate-pulse">Searching indexed legal references and formatting response...</span>
               </div>
@@ -355,7 +355,7 @@ const AIAssistant = () => {
           </div>
 
           {/* Fixed Bottom Input Area */}
-          <form onSubmit={handleSendQuery} className="p-3.5 border-t border-gray-200 bg-white flex gap-2 flex-shrink-0">
+          <form onSubmit={handleSendQuery} className="p-3.5 border-t border-[#e2e8f0] bg-[#ffffff] flex gap-2 flex-shrink-0">
             <input
               type="text"
               required
@@ -363,15 +363,15 @@ const AIAssistant = () => {
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               placeholder="Ask a query about the indexed documents or Indian criminal codes..."
-              className="flex-1 bg-white border border-gray-300 focus:border-gray-900 text-gray-900 placeholder-gray-400 px-3.5 py-2.5 rounded-lg text-xs outline-none focus:ring-1 focus:ring-gray-900 transition-all"
+              className="flex-1 bg-[#ffffff] border border-[#e2e8f0] focus:border-[#2563eb] text-[#1e293b] placeholder-[#64748b]/60 px-3.5 py-2.5 rounded-lg text-xs outline-none focus:ring-1 focus:ring-[#2563eb] transition-all"
               aria-label="Legal Assistant query"
             />
             <button
               type="submit"
               disabled={sendingQuery || !inputText.trim()}
-              className="bg-gray-900 hover:bg-gray-800 text-white font-bold px-4 py-2.5 rounded-lg transition-all disabled:opacity-50 flex items-center justify-center flex-shrink-0"
+              className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white font-bold px-4 py-2.5 rounded-lg transition-all disabled:opacity-50 flex items-center justify-center flex-shrink-0 shadow-sm"
             >
-              <Send className="w-4 h-4" />
+              <Send className="w-4 h-4 text-[#b45309]" />
             </button>
           </form>
 

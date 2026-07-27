@@ -131,15 +131,15 @@ const DocumentPreview = ({ doc, onDownload, onGenerate, onRegenerate, onDelete }
 
   if (!doc) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 border border-dashed border-gray-200 bg-white rounded-lg text-center space-y-4 shadow-sm">
+      <div className="flex flex-col items-center justify-center py-20 border border-dashed border-[#e2e8f0] bg-[#ffffff] rounded-lg text-center space-y-4 shadow-sm">
         <div className="space-y-1.5">
-          <p className="text-sm text-gray-500 font-bold">No document generated yet</p>
-          <p className="text-xs text-gray-400">Select a template and click generate draft to start.</p>
+          <p className="text-sm text-[#1e293b] font-bold">No document generated yet</p>
+          <p className="text-xs text-[#64748b]">Select a template and click generate draft to start.</p>
         </div>
         {onGenerate && (
           <button
             onClick={onGenerate}
-            className="bg-gray-900 hover:bg-gray-800 text-white font-bold px-4 py-2 rounded-lg text-xs transition-all uppercase tracking-wider flex items-center gap-1.5"
+            className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white font-bold px-4 py-2 rounded-lg text-xs transition-all uppercase tracking-wider flex items-center gap-1.5 shadow-sm"
           >
             <span>Generate Document</span>
           </button>
@@ -165,17 +165,17 @@ const DocumentPreview = ({ doc, onDownload, onGenerate, onRegenerate, onDelete }
   const templateVersion = meta.template_version || doc.template_version || 'v1.0';
 
   return (
-    <div className="flex flex-col gap-4 w-full bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+    <div className="flex flex-col gap-4 w-full bg-[#ffffff] border border-[#e2e8f0] rounded-lg p-6 shadow-sm">
       {/* Header bar with controls */}
-      <div className="flex flex-wrap justify-between items-center border-b border-gray-200 pb-4 gap-3 no-print">
+      <div className="flex flex-wrap justify-between items-center border-b border-[#e2e8f0] pb-4 gap-3 no-print">
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-black text-gray-900 uppercase tracking-wide">{docTypeTitle}</h3>
-            <span className="bg-gray-100 border border-gray-300 text-gray-700 text-[10px] font-bold px-2 py-0.5 rounded">
+            <h3 className="text-sm font-black text-[#1e293b] uppercase tracking-wide">{docTypeTitle}</h3>
+            <span className="bg-[#eff6ff] border border-[#bfdbfe] text-[#1e3a8a] text-[10px] font-bold px-2 py-0.5 rounded">
               {templateName} ({templateVersion})
             </span>
           </div>
-          <p className="text-[11px] text-gray-500 font-semibold mt-0.5">
+          <p className="text-[11px] text-[#64748b] font-semibold mt-0.5">
             Draft ID: {docId || 'New'} | FIR: {doc.fir_number || 'Registered Case'}
           </p>
         </div>
@@ -183,20 +183,20 @@ const DocumentPreview = ({ doc, onDownload, onGenerate, onRegenerate, onDelete }
         {/* Action Buttons & Responsive Zoom Controls */}
         <div className="flex items-center gap-2 flex-wrap">
           {/* Zoom Controls Badge */}
-          <div className="bg-gray-100 p-0.5 rounded-lg flex items-center border border-gray-300 gap-1 px-1">
+          <div className="bg-[#eff6ff] p-0.5 rounded-lg flex items-center border border-[#bfdbfe] gap-1 px-1">
             <button
               onClick={handleZoomOut}
-              className="p-1 text-gray-600 hover:text-gray-900 hover:bg-white rounded transition-all"
+              className="p-1 text-[#64748b] hover:text-[#1e293b] hover:bg-[#ffffff] rounded transition-all"
               title="Zoom Out"
             >
               <ZoomOut className="w-3.5 h-3.5" />
             </button>
-            <span className="text-[10px] font-extrabold text-gray-700 px-1 min-w-[42px] text-center">
+            <span className="text-[10px] font-extrabold text-[#1e293b] px-1 min-w-[42px] text-center">
               {Math.round(scale * 100)}%
             </span>
             <button
               onClick={handleZoomIn}
-              className="p-1 text-gray-600 hover:text-gray-900 hover:bg-white rounded transition-all"
+              className="p-1 text-[#64748b] hover:text-[#1e293b] hover:bg-[#ffffff] rounded transition-all"
               title="Zoom In"
             >
               <ZoomIn className="w-3.5 h-3.5" />
@@ -204,7 +204,7 @@ const DocumentPreview = ({ doc, onDownload, onGenerate, onRegenerate, onDelete }
             <button
               onClick={handleResetZoom}
               className={`px-1.5 py-0.5 text-[9px] font-bold rounded transition-all ${
-                !isManualZoom ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-200'
+                !isManualZoom ? 'bg-[#1e3a8a] text-white' : 'bg-[#ffffff] text-[#1e293b] hover:bg-[#eff6ff]'
               }`}
               title="Fit to Viewport Width"
             >
@@ -214,25 +214,25 @@ const DocumentPreview = ({ doc, onDownload, onGenerate, onRegenerate, onDelete }
 
           <button
             onClick={() => window.print()}
-            className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-800 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all"
+            className="bg-[#ffffff] border border-[#e2e8f0] hover:bg-[#eff6ff] text-[#1e293b] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all"
             title="Print Document"
           >
-            <Printer className="w-3.5 h-3.5" />
+            <Printer className="w-3.5 h-3.5 text-[#1e3a8a]" />
             <span>Print</span>
           </button>
 
           <button
             onClick={() => onDownload && onDownload('docx')}
-            className="bg-gray-900 hover:bg-gray-800 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm"
+            className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm"
             title="Download DOCX"
           >
-            <FileSpreadsheet className="w-3.5 h-3.5 text-blue-400" />
+            <FileSpreadsheet className="w-3.5 h-3.5 text-[#b45309]" />
             <span>Download DOCX</span>
           </button>
 
           <button
             onClick={() => onDownload && onDownload('pdf')}
-            className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-900 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all"
+            className="bg-[#ffffff] border border-[#e2e8f0] hover:bg-[#eff6ff] text-[#1e293b] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all"
             title="Download PDF"
           >
             <FileText className="w-3.5 h-3.5 text-red-600" />
@@ -242,7 +242,7 @@ const DocumentPreview = ({ doc, onDownload, onGenerate, onRegenerate, onDelete }
           {onDelete && (
             <button
               onClick={onDelete}
-              className="bg-white border border-red-200 hover:bg-red-50 text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all"
+              className="bg-[#ffffff] border border-red-200 hover:bg-red-50 text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all"
               title="Delete Document"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -255,11 +255,11 @@ const DocumentPreview = ({ doc, onDownload, onGenerate, onRegenerate, onDelete }
       {/* Primary Formatted DOCX Viewer Container (Vertical Scroll Only) */}
       <div
         ref={wrapperRef}
-        className="w-full min-h-[720px] max-h-[850px] overflow-y-auto overflow-x-hidden bg-gray-100 rounded-lg border border-gray-250 relative shadow-inner p-3 flex flex-col items-center"
+        className="w-full min-h-[720px] max-h-[850px] overflow-y-auto overflow-x-hidden bg-[#f8fafc] rounded-lg border border-[#e2e8f0] relative shadow-inner p-3 flex flex-col items-center"
       >
         {loadingDocx && (
-          <div className="flex items-center gap-2 text-xs text-gray-500 font-bold my-auto py-12">
-            <RefreshCw className="w-4 h-4 animate-spin text-gray-900" />
+          <div className="flex items-center gap-2 text-xs text-[#64748b] font-bold my-auto py-12">
+            <RefreshCw className="w-4 h-4 animate-spin text-[#1e3a8a]" />
             <span>Loading formatted DOCX document preview...</span>
           </div>
         )}
@@ -272,7 +272,7 @@ const DocumentPreview = ({ doc, onDownload, onGenerate, onRegenerate, onDelete }
             </div>
             <button
               onClick={() => onDownload && onDownload('docx')}
-              className="bg-gray-900 hover:bg-gray-800 text-white text-xs px-3.5 py-1.5 rounded-lg font-bold"
+              className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white text-xs px-3.5 py-1.5 rounded-lg font-bold"
             >
               Download DOCX File
             </button>

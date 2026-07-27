@@ -80,6 +80,15 @@ print("CORS ORIGINS:", origins)
 # Automatically create database tables (for development convenience)
 Base.metadata.create_all(bind=engine)
 
+# Ensure accused_mobile_number column exists in suspects table
+try:
+    from sqlalchemy import text
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE suspects ADD COLUMN accused_mobile_number VARCHAR;"))
+        conn.commit()
+except Exception:
+    pass
+
 # Register routers
 app.include_router(auth_router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(cases_router, prefix="/api/cases", tags=["Cases"])

@@ -84,7 +84,7 @@ def sanitize_text(text: str) -> str:
     """
     Sanitizes text content before template insertion:
     - Strips Markdown formatting (**, #, ```).
-    - Removes placeholder remnants ([Insert], [Required], N/A, Unknown, To be filled).
+    - Removes placeholder remnants ([Insert], [Required], [To be filled], [Pending]).
     """
     if not text:
         return ""
@@ -101,9 +101,6 @@ def sanitize_text(text: str) -> str:
         r'\[Required.*?\]',
         r'\[To be filled.*?\]',
         r'\[Pending.*?\]',
-        r'\bN/A\b',
-        r'\bUnknown\b',
-        r'\bNot Available\b',
         r'\bTo be inserted\b'
     ]
     for pattern in remnant_patterns:
@@ -317,16 +314,143 @@ def extract_witness_list(case: Case) -> list:
 
     return witnesses
 
+def extract_primary_accused_info(case: Case) -> dict:
+    """
+    Consolidates primary accused details and arrest info from:
+    1. CaseDetails.accused_details (JSON string or dict)
+    2. Suspect table (case.suspect_records)
+    3. InvestigationRecord and CaseTimeline (for arrest telemetry)
+    Defaults missing fields to 'Not Available'.
+    """
+    details = case.details if hasattr(case, 'details') else None
+    suspects = case.suspect_records if hasattr(case, 'suspect_records') and case.suspect_records else []
+    accused_primary_suspect = suspects[0] if suspects else None
+
+    acc_data = {}
+
+    # 1. Parse CaseDetails.accused_details
+    if details and details.accused_details:
+        raw = details.accused_details
+        parsed = None
+        if isinstance(raw, str):
+            raw_stripped = raw.strip()
+            if raw_stripped.startswith('{') or raw_stripped.startswith('['):
+                try:
+                    parsed = json.loads(raw_stripped)
+                except Exception:
+                    pass
+            elif raw_stripped:
+                acc_data['name'] = raw_stripped
+        elif isinstance(raw, dict):
+            parsed = raw
+        elif isinstance(raw, list):
+            parsed = raw
+
+        if isinstance(parsed, list) and len(parsed) > 0:
+            if isinstance(parsed[0], dict):
+                acc_data.update(parsed[0])
+            elif isinstance(parsed[0], str):
+                acc_data['name'] = parsed[0]
+        elif isinstance(parsed, dict):
+            acc_data.update(parsed)
+
+    # 2. Merge from Suspect model record if available
+    if accused_primary_suspect:
+        if not acc_data.get('name') and getattr(accused_primary_suspect, 'name', None):
+            acc_data['name'] = accused_primary_suspect.name
+        if not acc_data.get('address') and getattr(accused_primary_suspect, 'address', None):
+            acc_data['address'] = accused_primary_suspect.address
+        if not acc_data.get('alias') and getattr(accused_primary_suspect, 'alias', None):
+            acc_data['alias'] = accused_primary_suspect.alias
+        if not acc_data.get('identification_marks') and getattr(accused_primary_suspect, 'identification_marks', None):
+            acc_data['identification_marks'] = accused_primary_suspect.identification_marks
+        if not acc_data.get('accused_mobile_number') and getattr(accused_primary_suspect, 'accused_mobile_number', None):
+            acc_data['accused_mobile_number'] = accused_primary_suspect.accused_mobile_number
+
+    def get_first_valid(key_aliases, fallback="Not Available"):
+        for k in key_aliases:
+            v = acc_data.get(k)
+            if v is not None:
+                s_v = str(v).strip()
+                if s_v and s_v.lower() not in [
+                    "none", "null", "", "n/a", "unknown",
+                    "[accused_name]", "[accused_age]", "[accused_gender]",
+                    "[accused_address]", "[accused_mobile_number]"
+                ]:
+                    return s_v
+        return fallback
+
+    acc_name = get_first_valid(['name', 'accused_name', 'full_name', 'suspect_name'])
+    acc_father = get_first_valid(['father_name', 'father_mother_name', 'father', 'parent_name', 'guardian_name'])
+    acc_address = get_first_valid(['address', 'residence_address', 'permanent_address', 'location'])
+    acc_mobile = get_first_valid(['accused_mobile_number', 'mobile_number', 'phone', 'contact_number', 'contact', 'mobile', 'phone_number'])
+
+    raw_age = get_first_valid(['age', 'accused_age'], fallback=None)
+    if raw_age:
+        cleaned_age = re.sub(r'(?i)\s*(years|yrs|year|yr)\b', '', str(raw_age)).strip()
+        acc_age = cleaned_age if cleaned_age else "Not Available"
+    else:
+        acc_age = "Not Available"
+
+    acc_gender = get_first_valid(['gender', 'accused_gender', 'sex'])
+
+    # Arrest telemetry extraction
+    arrest_date_time = get_first_valid(
+        ['arrest_date_time', 'arrest_datetime', 'date_time_of_arrest', 'date_and_time_of_arrest'],
+        fallback=None
+    )
+    arrest_date = get_first_valid(['arrest_date', 'date_of_arrest'], fallback=None)
+    arrest_location = get_first_valid(
+        ['arrest_location', 'place_of_arrest', 'location_of_arrest'],
+        fallback=None
+    )
+
+    # 3. Check InvestigationRecord for arrest/panchanama telemetry fallback
+    inv = getattr(case, 'investigation_record', None)
+    if inv:
+        if not arrest_date_time and inv.panchanama_date_time:
+            arrest_date_time = inv.panchanama_date_time
+        if not arrest_location and inv.panchanama_location:
+            arrest_location = inv.panchanama_location
+
+    # 4. Check Case Timeline for "Arrest" event fallback
+    if hasattr(case, 'timeline') and case.timeline:
+        for t in case.timeline:
+            event_name = getattr(t, 'event_name', '') or ''
+            if 'arrest' in event_name.lower():
+                if not arrest_date_time and getattr(t, 'timestamp', None):
+                    arrest_date_time = t.timestamp.strftime("%Y-%m-%d %H:%M")
+                if not arrest_date and getattr(t, 'timestamp', None):
+                    arrest_date = t.timestamp.strftime("%Y-%m-%d")
+                break
+
+    if not arrest_date_time and arrest_date:
+        arrest_date_time = f"{arrest_date} 10:00"
+
+    if not arrest_date and arrest_date_time:
+        arrest_date = arrest_date_time.split()[0]
+
+    return {
+        "name": acc_name,
+        "father_name": acc_father,
+        "address": acc_address,
+        "mobile_number": acc_mobile,
+        "age": acc_age,
+        "gender": acc_gender,
+        "arrest_date_time": arrest_date_time or "Not Available",
+        "arrest_date": arrest_date or "Not Available",
+        "arrest_location": arrest_location or "Not Available"
+    }
+
 def extract_case_database_fields(case: Case, officer: User = None) -> dict:
     """
     Extracts database model records (Case, CaseDetails, Witness, Suspect, Evidence, User)
     and maps them directly to DOCX template placeholders.
     """
     details = case.details if hasattr(case, 'details') else None
-    suspects = case.suspect_records if hasattr(case, 'suspect_records') and case.suspect_records else []
     evidences = case.evidence if hasattr(case, 'evidence') and case.evidence else []
 
-    accused_primary = suspects[0] if suspects else None
+    accused_info = extract_primary_accused_info(case)
 
     # Witness Data Extraction
     witness_list = extract_witness_list(case)
@@ -418,38 +542,46 @@ def extract_case_database_fields(case: Case, officer: User = None) -> dict:
     ev_time = primary_ev.collection_date.strftime("%Y-%m-%d %H:%M") if (primary_ev and hasattr(primary_ev, 'collection_date') and primary_ev.collection_date) else now_datetime_str
     ev_loc = getattr(primary_ev, 'collection_location', None) or (inv.panchanama_location if inv and inv.panchanama_location else "Spot Location")
 
+    crime_category_val = getattr(case, 'crime_category', None) or getattr(case, 'crime_type', None) or "General Criminal Investigation"
+    crime_type_val = getattr(case, 'crime_type', None) or getattr(case, 'crime_category', None) or "General Criminal Investigation"
+
     fields = {
         "[FIR_NUMBER]": fir_num,
         "[FIR_YEAR]": fir_year,
         "[FIR_DATE]": fir_date_str,
+        "[CRIME_CATEGORY]": crime_category_val,
+        "[CRIME_TYPE]": crime_type_val,
+        "[OFFENCE_CATEGORY]": crime_category_val,
+        "[OFFENSE_CATEGORY]": crime_category_val,
         "[POLICE_STATION_NAME]": st_name,
         "[DISTRICT_NAME]": getattr(case, 'district', 'Metro Police District') or 'Metro Police District',
         "[COURT_NAME]": (inv.court_name if inv and inv.court_name else "Hon'ble Judicial Magistrate First Class Court"),
         "[COURT_ADDRESS]": (inv.court_address if inv and inv.court_address else "District Sessions Court"),
         "[JUDGE_DETAILS]": (inv.judge_details if inv and inv.judge_details else "Judicial Magistrate"),
         
-        # Officer Info (No BADGE_NUMBER or EMPLOYEE_ID)
+        # Officer Info
         "[OFFICER_NAME]": officer.name if officer else "Inspector In-Charge",
         "[OFFICER_RANK]": getattr(officer, 'role', 'Police Officer') if officer else "Investigating Officer",
         "[SUBMISSION_DATE]": now_str,
         
         # Accused Info
-        "[ACCUSED_NAME]": accused_primary.name if accused_primary else "Accused Person",
-        "[ACCUSED_FATHER_NAME]": getattr(accused_primary, 'father_name', 'Not Stated') if accused_primary else "Not Stated",
-        "[ACCUSED_ADDRESS]": getattr(accused_primary, 'address', 'Station Jurisdiction') if accused_primary else "Station Jurisdiction",
-        "[ACCUSED_MOBILE_NUMBER]": getattr(accused_primary, 'phone', 'N/A') if accused_primary else "N/A",
-        "[ACCUSED_AGE]": str(getattr(accused_primary, 'age', 30)) if accused_primary else "30",
-        "[ACCUSED_GENDER]": getattr(accused_primary, 'gender', 'Male') if accused_primary else "Male",
+        "[ACCUSED_NAME]": accused_info["name"],
+        "[ACCUSED_FATHER_NAME]": accused_info["father_name"],
+        "[ACCUSED_ADDRESS]": accused_info["address"],
+        "[ACCUSED_MOBILE_NUMBER]": accused_info["mobile_number"],
+        "[ACCUSED_AGE]": accused_info["age"],
+        "[ACCUSED_GENDER]": accused_info["gender"],
         "[ACCUSED_SECTIONS]": legal_secs,
-        "[FATHER_NAME]": getattr(accused_primary, 'father_name', 'Not Stated') if accused_primary else "Not Stated",
+        "[FATHER_NAME]": accused_info["father_name"],
 
         # Subject Info
-        "[SUBJECT_NAME]": accused_primary.name if accused_primary else "Accused Subject",
-        "[SUBJECT_FATHER_NAME]": getattr(accused_primary, 'father_name', 'Not Stated') if accused_primary else "Not Stated",
-        "[SUBJECT_AGE]": str(getattr(accused_primary, 'age', 30)) if accused_primary else "30",
-        "[SUBJECT_GENDER]": getattr(accused_primary, 'gender', 'Male') if accused_primary else "Male",
-        "[SUBJECT_ROLE]": (inv.subject_type if inv and inv.subject_type else "Accused / Remand Custody Subject"),
-        "[SUSPECT_NAME]": accused_primary.name if accused_primary else "Suspect Person",
+        "[SUBJECT_NAME]": accused_info["name"],
+        "[SUBJECT_FATHER_NAME]": accused_info["father_name"],
+        "[SUBJECT_AGE]": accused_info["age"],
+        "[SUBJECT_GENDER]": accused_info["gender"],
+        "[SUBJECT_MOBILE_NUMBER]": accused_info["mobile_number"],
+        "[SUBJECT_ROLE]": (inv.subject_type if inv and inv.subject_type else "Accused Person"),
+        "[SUSPECT_NAME]": accused_info["name"],
 
         # Witnesses & Panchs
         "[WITNESS_NAME]": w1_name,
@@ -460,6 +592,8 @@ def extract_case_database_fields(case: Case, officer: User = None) -> dict:
         
         "[WITNESS_1_NAME]": w1_name,
         "[WITNESS_1_ADDRESS]": w1_addr,
+        "[WITNESS_1_MOBILE_NUMBER]": (w1["phone"] if w1 else "N/A"),
+        "[WITNESS_1_STATEMENT]": (w1["statement"] if w1 else "Statement recorded under Section 180 BNSS"),
         "[WITNESS_1_DETAILS]": w1_details,
         "[PANCH_1_NAME]": w1_name,
         "[PANCH_1_AGE]": w1_age,
@@ -467,6 +601,8 @@ def extract_case_database_fields(case: Case, officer: User = None) -> dict:
 
         "[WITNESS_2_NAME]": w2_name,
         "[WITNESS_2_ADDRESS]": w2_addr,
+        "[WITNESS_2_MOBILE_NUMBER]": (w2["phone"] if w2 else "N/A"),
+        "[WITNESS_2_STATEMENT]": (w2["statement"] if w2 else "Statement recorded under Section 180 BNSS"),
         "[WITNESS_2_DETAILS]": w2_details,
         "[PANCH_2_NAME]": w2_name,
         "[PANCH_2_AGE]": w2_age,
@@ -485,10 +621,10 @@ def extract_case_database_fields(case: Case, officer: User = None) -> dict:
 
         # Event Dates & Places
         "[INCIDENT_DATE_TIME]": fir_date_str,
-        "[INCIDENT_LOCATION]": getattr(details, 'incident_location', 'Jurisdiction Crime Scene') if details else 'Crime Location',
-        "[ARREST_DATE_TIME]": now_datetime_str,
-        "[ARREST_LOCATION]": "Police Jurisdiction Location",
-        "[ARREST_DATE]": fir_date_str,
+        "[INCIDENT_LOCATION]": getattr(details, 'incident_location', 'Crime Location') if details else 'Crime Location',
+        "[ARREST_DATE_TIME]": accused_info["arrest_date_time"],
+        "[ARREST_LOCATION]": accused_info["arrest_location"],
+        "[ARREST_DATE]": accused_info["arrest_date"],
 
         # Evidence & Seizure Details
         "[ITEM_DESCRIPTION]": items_desc,
@@ -539,8 +675,8 @@ def extract_case_database_fields(case: Case, officer: User = None) -> dict:
         "[CUSTODY_STATUS]": "In Police / Judicial Remand Custody",
 
         # Miscellaneous
-        "[AGE]": "30 Years",
-        "[HT]": "5 ft 9 in",
+        "[AGE]": accused_info["age"],
+        "[HT]": "Not Available",
         "[ROLE]": "Primary Accused Person"
     }
 

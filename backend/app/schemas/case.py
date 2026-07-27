@@ -30,6 +30,8 @@ class AccusedSchema(BaseModel):
     address: str | None = None
     known_aliases: str | None = None
     previous_record: str | None = None
+    accused_mobile_number: str | None = None
+    mobile_number: str | None = None
 
     class Config:
         from_attributes = True

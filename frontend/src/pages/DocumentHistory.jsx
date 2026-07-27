@@ -106,19 +106,19 @@ const DocumentHistory = () => {
     return matchesSearch && matchesType;
   });
 
-  const inputClass = "bg-white border border-gray-305 text-gray-900 px-3 py-2 rounded-lg text-xs outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-all";
-  const selectClass = "bg-white border border-gray-305 text-gray-900 py-2 px-3 rounded-lg text-xs outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-all";
+  const inputClass = "bg-[#ffffff] border border-[#e2e8f0] text-[#1e293b] placeholder-[#64748b]/60 px-3 py-2 rounded-lg text-xs outline-none focus:border-[#2563eb] focus:ring-1 focus:ring-[#2563eb] transition-all";
+  const selectClass = "bg-[#ffffff] border border-[#e2e8f0] text-[#1e293b] py-2 px-3 rounded-lg text-xs outline-none focus:border-[#2563eb] focus:ring-1 focus:ring-[#2563eb] transition-all";
 
   return (
-    <div className="p-8 space-y-8 w-full max-w-6xl mx-auto min-h-screen bg-white">
+    <div className="p-8 space-y-8 w-full max-w-6xl mx-auto min-h-screen bg-[#f8fafc]">
       {/* Title Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-200 pb-5 no-print">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-[#e2e8f0] pb-5 no-print">
         <div>
-          <h1 className="text-xl font-black text-gray-900 tracking-wide uppercase flex items-center gap-2.5">
-            <FileText className="text-gray-950 w-6 h-6" />
+          <h1 className="text-xl font-black text-[#1e293b] tracking-wide uppercase flex items-center gap-2.5">
+            <FileText className="text-[#1e3a8a] w-6 h-6" />
             <span>Document Registry</span>
           </h1>
-          <p className="text-gray-500 text-xs mt-1">
+          <p className="text-[#64748b] text-xs mt-1">
             Archived legal documents, seizure memos, remand requests, and final police charge sheets.
           </p>
         </div>
@@ -132,9 +132,9 @@ const DocumentHistory = () => {
       )}
 
       {/* Filters bar */}
-      <div className="bg-white border border-gray-200 p-4.5 rounded-lg flex flex-col md:flex-row gap-4 items-center justify-between shadow-sm no-print">
+      <div className="bg-[#ffffff] border border-[#e2e8f0] p-4.5 rounded-lg flex flex-col md:flex-row gap-4 items-center justify-between shadow-sm no-print">
         <div className="relative w-full md:max-w-md">
-          <Search className="absolute left-3.5 top-3 w-3.5 h-3.5 text-gray-400" />
+          <Search className="absolute left-3.5 top-3 w-3.5 h-3.5 text-[#64748b]" />
           <input
             type="text"
             value={searchTerm}
@@ -166,16 +166,16 @@ const DocumentHistory = () => {
       </div>
 
       {/* Documents inventory table */}
-      <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden no-print">
+      <div className="bg-[#ffffff] border border-[#e2e8f0] rounded-lg shadow-sm overflow-hidden no-print">
         {loading ? (
-          <div className="py-24 text-center text-gray-400 text-xs font-bold">Connecting to archive database...</div>
+          <div className="py-24 text-center text-[#64748b] text-xs font-bold">Connecting to archive database...</div>
         ) : filteredDocs.length === 0 ? (
-          <div className="py-24 text-center text-gray-400 text-xs font-bold">No generated documents indexed in registry.</div>
+          <div className="py-24 text-center text-[#64748b] text-xs font-bold">No generated documents indexed in registry.</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 font-extrabold uppercase text-[9px] tracking-wider">
+                <tr className="bg-[#eff6ff] border-b border-[#e2e8f0] text-[#1e3a8a] font-extrabold uppercase text-[9px] tracking-wider">
                   <th className="py-3 px-4">Doc ID</th>
                   <th className="py-3 px-4">Associated FIR</th>
                   <th className="py-3 px-4">Template Category</th>
@@ -183,27 +183,27 @@ const DocumentHistory = () => {
                   <th className="py-3 px-4 text-center">Action Options</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 font-bold text-gray-700">
+              <tbody className="divide-y divide-[#e2e8f0] font-bold text-[#1e293b]">
                 {filteredDocs.map((doc) => (
-                  <tr key={doc.id} className="hover:bg-gray-50 transition-all">
+                  <tr key={doc.id} className="hover:bg-[#eff6ff]/50 transition-all">
                     <td className="py-4 px-4 font-black"># {doc.id}</td>
-                    <td className="py-4 px-4 font-black text-gray-900">{doc.fir_number}</td>
-                    <td className="py-4 px-4 uppercase text-[10px] text-gray-600">{doc.document_type?.replace('_', ' ')}</td>
-                    <td className="py-4 px-4 text-gray-450 font-medium">{new Date(doc.created_date).toLocaleString()}</td>
+                    <td className="py-4 px-4 font-black text-[#1e293b]">{doc.fir_number}</td>
+                    <td className="py-4 px-4 uppercase text-[10px] text-[#64748b]">{doc.document_type?.replace('_', ' ')}</td>
+                    <td className="py-4 px-4 text-[#64748b] font-medium">{new Date(doc.created_date).toLocaleString()}</td>
                     <td className="py-4 px-4">
                       <div className="flex justify-center items-center gap-2">
                         <button
                           onClick={() => openViewModal(doc)}
-                          className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-800 px-3 py-1.5 rounded text-[10px] font-bold"
+                          className="bg-[#ffffff] border border-[#e2e8f0] hover:bg-[#eff6ff] text-[#1e293b] px-3 py-1.5 rounded text-[10px] font-bold"
                         >
                           View Document
                         </button>
                         <button
                           onClick={() => handleRegenerate(doc.id)}
                           disabled={regeneratingIds[doc.id]}
-                          className="bg-gray-100 hover:bg-gray-200 text-gray-850 border border-gray-300 px-3 py-1.5 rounded text-[10px] font-bold flex items-center gap-1.5"
+                          className="bg-[#eff6ff] hover:bg-blue-100 text-[#1e3a8a] border border-[#bfdbfe] px-3 py-1.5 rounded text-[10px] font-bold flex items-center gap-1.5"
                         >
-                          {regeneratingIds[doc.id] ? <RefreshCw className="w-3 h-3 animate-spin" /> : null}
+                          {regeneratingIds[doc.id] ? <RefreshCw className="w-3 h-3 animate-spin text-[#1e3a8a]" /> : null}
                           <span>Regenerate</span>
                         </button>
                       </div>
@@ -218,12 +218,12 @@ const DocumentHistory = () => {
 
       {/* View Document Modal */}
       {showViewModal && selectedDoc && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-gray-250 w-full max-w-4xl rounded-lg shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 bg-[#1e293b]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#ffffff] border border-[#e2e8f0] w-full max-w-4xl rounded-lg shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
             {/* Modal Header */}
-            <div className="bg-white px-5 py-4 border-b border-gray-200 flex justify-between items-center no-print">
-              <h3 className="text-xs font-black text-gray-900 uppercase tracking-widest flex items-center gap-1.5">
-                <FileText className="w-4 h-4 text-gray-800" />
+            <div className="bg-[#ffffff] px-5 py-4 border-b border-[#e2e8f0] flex justify-between items-center no-print">
+              <h3 className="text-xs font-black text-[#1e293b] uppercase tracking-widest flex items-center gap-1.5">
+                <FileText className="w-4 h-4 text-[#1e3a8a]" />
                 <span>View Document Draft</span>
               </h3>
               <button 
@@ -231,21 +231,21 @@ const DocumentHistory = () => {
                   setShowViewModal(false);
                   setSelectedDoc(null);
                 }} 
-                className="text-gray-400 hover:text-gray-700"
+                className="text-[#64748b] hover:text-[#1e293b]"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Modal Content */}
-            <div className="flex-1 overflow-y-auto p-6 bg-gray-50 flex justify-center">
+            <div className="flex-1 overflow-y-auto p-6 bg-[#f8fafc] flex justify-center">
               <div className="w-full max-w-[794px]">
                 <DocumentPreview doc={selectedDoc} onDownload={(format) => handleDownload(selectedDoc.id, format, `document_${selectedDoc.id}`)} />
               </div>
             </div>
             
             {/* Modal Footer */}
-            <div className="bg-gray-50 p-4 border-t border-gray-200 flex justify-end no-print">
+            <div className="bg-[#f8fafc] p-4 border-t border-[#e2e8f0] flex justify-end no-print">
               <button
                 type="button"
                 onClick={() => {
@@ -264,6 +264,6 @@ const DocumentHistory = () => {
   );
 };
 
-const secondaryBtn = "bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold px-4 py-2 rounded-lg text-xs transition-all uppercase tracking-wider";
+const secondaryBtn = "bg-[#ffffff] border border-[#e2e8f0] hover:bg-[#eff6ff] text-[#1e293b] font-bold px-4 py-2 rounded-lg text-xs transition-all uppercase tracking-wider";
 
 export default DocumentHistory;

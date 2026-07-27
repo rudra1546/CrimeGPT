@@ -121,7 +121,7 @@ const CaseDetails = () => {
   // Suspect management
   const [suspects, setSuspects] = useState([]);
   const [showSuspectForm, setShowSuspectForm] = useState(false);
-  const [newSuspect, setNewSuspect] = useState({ name: '', alias: '', address: '', identification_marks: '', status: 'Suspect', notes: '' });
+  const [newSuspect, setNewSuspect] = useState({ name: '', alias: '', address: '', identification_marks: '', accused_mobile_number: '', status: 'Suspect', notes: '' });
 
   // Evidence & Chain of custody
   const [evidenceCategories, setEvidenceCategories] = useState(EVIDENCE_CATEGORIES);
@@ -573,6 +573,7 @@ const CaseDetails = () => {
       alias: newSuspect.alias,
       address: newSuspect.address,
       identification_marks: newSuspect.identification_marks,
+      accused_mobile_number: newSuspect.accused_mobile_number,
       status: newSuspect.status,
       notes: newSuspect.notes
     };
@@ -580,7 +581,7 @@ const CaseDetails = () => {
     const onlineCall = async () => {
       await api.post('/suspects/', payload);
       setShowSuspectForm(false);
-      setNewSuspect({ name: '', alias: '', address: '', identification_marks: '', status: 'Suspect', notes: '' });
+      setNewSuspect({ name: '', alias: '', address: '', identification_marks: '', accused_mobile_number: '', status: 'Suspect', notes: '' });
       fetchAllCaseData();
     };
 
@@ -588,7 +589,7 @@ const CaseDetails = () => {
       const newLocal = { ...payload, id: Date.now() };
       setSuspects(prev => [...prev, newLocal]);
       setShowSuspectForm(false);
-      setNewSuspect({ name: '', alias: '', address: '', identification_marks: '', status: 'Suspect', notes: '' });
+      setNewSuspect({ name: '', alias: '', address: '', identification_marks: '', accused_mobile_number: '', status: 'Suspect', notes: '' });
     };
 
     await handleMutation('create_suspect', payload, onlineCall, localCall);
@@ -888,9 +889,9 @@ const CaseDetails = () => {
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center min-h-[80vh] bg-white">
-        <div className="flex flex-col items-center gap-3 text-gray-500 font-bold text-xs">
-          <Loader2 className="w-8 h-8 text-gray-950 animate-spin" />
+      <div className="flex-1 flex items-center justify-center min-h-[80vh] bg-[#f8fafc]">
+        <div className="flex flex-col items-center gap-3 text-[#64748b] font-bold text-xs">
+          <Loader2 className="w-8 h-8 text-[#1e3a8a] animate-spin" />
           <span>Opening Case Dossier Record...</span>
         </div>
       </div>
@@ -902,26 +903,26 @@ const CaseDetails = () => {
   const completedTasks = tasks.filter(t => t.status === 'Completed').length;
   const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-  const inputClass = "w-full bg-white border border-gray-300 focus:border-gray-900 text-gray-900 placeholder-gray-400 px-3 py-2 rounded-lg text-xs outline-none focus:ring-1 focus:ring-gray-900 transition-all";
-  const labelClass = "text-xs font-bold text-gray-700 uppercase tracking-wider block mb-1";
-  const primaryBtn = "bg-gray-900 hover:bg-gray-800 text-white font-bold px-4 py-2 rounded-lg text-xs transition-all uppercase tracking-wider disabled:opacity-50";
-  const secondaryBtn = "bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold px-4 py-2 rounded-lg text-xs transition-all uppercase tracking-wider";
+  const inputClass = "w-full bg-[#ffffff] border border-[#e2e8f0] focus:border-[#2563eb] text-[#1e293b] placeholder-[#64748b]/60 px-3 py-2 rounded-lg text-xs outline-none focus:ring-1 focus:ring-[#2563eb] transition-all";
+  const labelClass = "text-xs font-bold text-[#1e293b] uppercase tracking-wider block mb-1";
+  const primaryBtn = "bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white font-bold px-4 py-2 rounded-lg text-xs transition-all uppercase tracking-wider disabled:opacity-50 shadow-sm";
+  const secondaryBtn = "bg-[#ffffff] border border-[#e2e8f0] hover:bg-[#eff6ff] text-[#1e293b] font-bold px-4 py-2 rounded-lg text-xs transition-all uppercase tracking-wider";
 
   const details = caseData ? (caseData.case_details || caseData.details || {}) : {};
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 w-full max-w-7xl mx-auto bg-white min-h-screen flex-1 min-w-0">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 w-full max-w-7xl mx-auto bg-[#f8fafc] min-h-screen flex-1 min-w-0">
       {/* Title Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-200 pb-5 no-print">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-[#e2e8f0] pb-5 no-print">
         <div className="flex items-center gap-3">
-          <Link to="/cases" className="p-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
-            <ChevronLeft className="w-4 h-4 text-gray-800" />
+          <Link to="/cases" className="p-2 bg-[#ffffff] border border-[#e2e8f0] rounded-lg hover:bg-[#eff6ff]">
+            <ChevronLeft className="w-4 h-4 text-[#1e293b]" />
           </Link>
           <div>
-            <h1 className="text-lg font-black text-gray-900 tracking-wide uppercase">
+            <h1 className="text-lg font-black text-[#1e293b] tracking-wide uppercase">
               Investigation Workspace — FIR No. {caseData?.fir_number}
             </h1>
-            <p className="text-[10px] font-bold text-gray-500 mt-1 uppercase tracking-wider">
+            <p className="text-[10px] font-bold text-[#64748b] mt-1 uppercase tracking-wider">
               {caseData?.police_station} station • {caseData?.crime_type} • Status: {caseData?.status}
             </p>
           </div>
@@ -934,8 +935,8 @@ const CaseDetails = () => {
             </span>
           )}
           <span className={`px-2.5 py-1 rounded text-[10px] font-extrabold uppercase tracking-wider ${caseData?.status?.toLowerCase() === 'active'
-              ? 'bg-green-50 text-green-700 border border-green-200'
-              : 'bg-gray-100 text-gray-700 border border-gray-300'
+              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+              : 'bg-slate-100 text-[#1e293b] border border-[#e2e8f0]'
             }`}>
             {caseData?.status} Dossier
           </span>
@@ -943,7 +944,7 @@ const CaseDetails = () => {
       </div>
 
       {/* Grouped Case Workspace Navigation */}
-      <div className="space-y-3 no-print z-10 sticky top-0 bg-white pt-2 pb-1 border-b border-gray-200">
+      <div className="space-y-3 no-print z-10 sticky top-0 bg-[#f8fafc] pt-2 pb-1 border-b border-[#e2e8f0]">
         {/* Top-Level Module Tabs */}
         <div className="flex flex-wrap gap-2">
           {[
@@ -965,14 +966,14 @@ const CaseDetails = () => {
                   else if (group.id === 'documents') setActiveSubTab('documents_list');
                 }}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${isCurrentGroup
-                    ? 'bg-gray-900 text-white shadow-sm'
-                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-250'
+                    ? 'bg-[#1e3a8a] text-white shadow-sm'
+                    : 'bg-[#ffffff] hover:bg-[#eff6ff] text-[#1e293b] border border-[#e2e8f0]'
                   }`}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className={`w-4 h-4 ${isCurrentGroup ? 'text-[#b45309]' : 'text-[#1e3a8a]'}`} />
                 <span>{group.name}</span>
                 {group.subCount ? (
-                  <span className={`px-1.5 py-0.2 text-[9px] font-extrabold rounded-full ${isCurrentGroup ? 'bg-white/20 text-white' : 'bg-gray-250 text-gray-800'
+                  <span className={`px-1.5 py-0.2 text-[9px] font-extrabold rounded-full ${isCurrentGroup ? 'bg-white/20 text-white' : 'bg-[#1e3a8a]/10 text-[#1e3a8a]'
                     }`}>
                     {group.subCount}
                   </span>
@@ -984,7 +985,7 @@ const CaseDetails = () => {
 
         {/* Sub-Navigation Tabs */}
         {activeGroup === 'fir' && (
-          <div className="flex flex-wrap gap-1 bg-gray-50 p-1 rounded-lg border border-gray-200">
+          <div className="flex flex-wrap gap-1 bg-[#ffffff] p-1 rounded-lg border border-[#e2e8f0]">
             {[
               { id: 'fir_details', name: 'FIR Metadata' },
               { id: 'complainant', name: 'Complainant Details' },
@@ -997,8 +998,8 @@ const CaseDetails = () => {
                 key={sub.id}
                 onClick={() => setActiveSubTab(sub.id)}
                 className={`px-3 py-1.5 rounded-md text-[11px] font-bold uppercase transition-all ${activeSubTab === sub.id
-                    ? 'bg-white border border-gray-300 text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    ? 'bg-[#eff6ff] border border-[#bfdbfe] text-[#1e3a8a] shadow-sm font-black'
+                    : 'text-[#64748b] hover:text-[#1e293b] hover:bg-[#f8fafc]'
                   }`}
               >
                 {sub.name}
@@ -1008,7 +1009,7 @@ const CaseDetails = () => {
         )}
 
         {activeGroup === 'investigation' && (
-          <div className="flex flex-wrap gap-1 bg-gray-50 p-1 rounded-lg border border-gray-200">
+          <div className="flex flex-wrap gap-1 bg-[#ffffff] p-1 rounded-lg border border-[#e2e8f0]">
             {[
               { id: 'tasks', name: `Tasks (${tasks.length})` },
               { id: 'timeline', name: `Timeline (${timeline.length})` },
@@ -1021,8 +1022,8 @@ const CaseDetails = () => {
                 key={sub.id}
                 onClick={() => setActiveSubTab(sub.id)}
                 className={`px-3 py-1.5 rounded-md text-[11px] font-bold uppercase transition-all ${activeSubTab === sub.id
-                    ? 'bg-white border border-gray-300 text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    ? 'bg-[#eff6ff] border border-[#bfdbfe] text-[#1e3a8a] shadow-sm font-black'
+                    : 'text-[#64748b] hover:text-[#1e293b] hover:bg-[#f8fafc]'
                   }`}
               >
                 {sub.name}
@@ -1032,7 +1033,7 @@ const CaseDetails = () => {
         )}
 
         {activeGroup === 'documents' && (
-          <div className="flex flex-wrap gap-1 bg-gray-50 p-1 rounded-lg border border-gray-200">
+          <div className="flex flex-wrap gap-1 bg-[#ffffff] p-1 rounded-lg border border-[#e2e8f0]">
             {[
               { id: 'documents_list', name: `Generated Documents (${generatedDocuments.length})` },
               { id: 'documents_history', name: 'Document Registry' }
@@ -1041,8 +1042,8 @@ const CaseDetails = () => {
                 key={sub.id}
                 onClick={() => setActiveSubTab(sub.id)}
                 className={`px-3 py-1.5 rounded-md text-[11px] font-bold uppercase transition-all ${activeSubTab === sub.id
-                    ? 'bg-white border border-gray-300 text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    ? 'bg-[#eff6ff] border border-[#bfdbfe] text-[#1e3a8a] shadow-sm font-black'
+                    : 'text-[#64748b] hover:text-[#1e293b] hover:bg-[#f8fafc]'
                   }`}
               >
                 {sub.name}
@@ -1053,26 +1054,26 @@ const CaseDetails = () => {
       </div>
 
       {/* Workspace Content */}
-      <div className="bg-white p-2 min-h-[50vh]">
+      <div className="bg-[#f8fafc] p-2 min-h-[50vh]">
 
         {/* SUBTAB: Complainant Details */}
         {(activeGroup === 'fir' && activeSubTab === 'complainant') && (
           <div className="space-y-6">
-            <h2 className="text-xs font-black text-gray-700 uppercase tracking-widest pb-3 border-b border-gray-200">
+            <h2 className="text-xs font-black text-[#1e293b] uppercase tracking-widest pb-3 border-b border-[#e2e8f0]">
               FIR Complainant Record
             </h2>
-            <div className="bg-white border border-gray-200 rounded-lg p-6 max-w-2xl space-y-4 shadow-sm">
+            <div className="bg-[#ffffff] border border-[#e2e8f0] rounded-lg p-6 max-w-2xl space-y-4 shadow-sm">
               <div className="space-y-1">
-                <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block">Complainant Full Name</span>
-                <span className="text-sm font-bold text-gray-900 block">{details.complainant_name || 'State Police Department (Suo Motu FIR)'}</span>
+                <span className="text-[10px] font-extrabold text-[#64748b] uppercase tracking-wider block">Complainant Full Name</span>
+                <span className="text-sm font-bold text-[#1e293b] block">{details.complainant_name || 'State Police Department (Suo Motu FIR)'}</span>
               </div>
-              <div className="space-y-1 border-t border-gray-150 pt-3">
-                <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block">Contact Information</span>
-                <span className="text-xs font-semibold text-gray-700 block">{details.complainant_contact || 'Police Station Control Desk'}</span>
+              <div className="space-y-1 border-t border-[#e2e8f0] pt-3">
+                <span className="text-[10px] font-extrabold text-[#64748b] uppercase tracking-wider block">Contact Information</span>
+                <span className="text-xs font-semibold text-[#1e293b] block">{details.complainant_contact || 'Police Station Control Desk'}</span>
               </div>
-              <div className="space-y-1 border-t border-gray-150 pt-3">
-                <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block">Residential Address</span>
-                <span className="text-xs font-semibold text-gray-700 block">{details.complainant_address || 'Station Jurisdiction Premises'}</span>
+              <div className="space-y-1 border-t border-[#e2e8f0] pt-3">
+                <span className="text-[10px] font-extrabold text-[#64748b] uppercase tracking-wider block">Residential Address</span>
+                <span className="text-xs font-semibold text-[#1e293b] block">{details.complainant_address || 'Station Jurisdiction Premises'}</span>
               </div>
             </div>
           </div>
@@ -1081,27 +1082,27 @@ const CaseDetails = () => {
         {/* SUBTAB: Incident Details */}
         {(activeGroup === 'fir' && activeSubTab === 'incident') && (
           <div className="space-y-6">
-            <h2 className="text-xs font-black text-gray-700 uppercase tracking-widest pb-3 border-b border-gray-200">
+            <h2 className="text-xs font-black text-[#1e293b] uppercase tracking-widest pb-3 border-b border-[#e2e8f0]">
               Incident Scene & Category Parameters
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-white border border-gray-200 rounded-lg p-5 space-y-3 shadow-sm">
+              <div className="bg-[#ffffff] border border-[#e2e8f0] rounded-lg p-5 space-y-3 shadow-sm">
                 <div>
-                  <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block">Crime Category</span>
-                  <span className="text-xs font-bold text-gray-900">{caseData.crime_type}</span>
+                  <span className="text-[10px] font-extrabold text-[#64748b] uppercase tracking-wider block">Crime Category</span>
+                  <span className="text-xs font-bold text-[#1e293b]">{caseData.crime_type}</span>
                 </div>
-                <div className="border-t border-gray-150 pt-2">
-                  <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block">Incident Occurrence Date</span>
-                  <span className="text-xs font-bold text-gray-900">{new Date(caseData.incident_date).toLocaleString()}</span>
+                <div className="border-t border-[#e2e8f0] pt-2">
+                  <span className="text-[10px] font-extrabold text-[#64748b] uppercase tracking-wider block">Incident Occurrence Date</span>
+                  <span className="text-xs font-bold text-[#1e293b]">{new Date(caseData.incident_date).toLocaleString()}</span>
                 </div>
-                <div className="border-t border-gray-150 pt-2">
-                  <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block">Spot / Scene Location</span>
-                  <span className="text-xs font-bold text-gray-900">{details.incident_location || caseData.police_station}</span>
+                <div className="border-t border-[#e2e8f0] pt-2">
+                  <span className="text-[10px] font-extrabold text-[#64748b] uppercase tracking-wider block">Spot / Scene Location</span>
+                  <span className="text-xs font-bold text-[#1e293b]">{details.incident_location || caseData.police_station}</span>
                 </div>
               </div>
-              <div className="bg-white border border-gray-200 rounded-lg p-5 space-y-2 shadow-sm">
-                <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block">Complete Incident Narrative</span>
-                <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap">{details.incident_description || details.description || caseData.description || 'No detailed narrative logged.'}</p>
+              <div className="bg-[#ffffff] border border-[#e2e8f0] rounded-lg p-5 space-y-2 shadow-sm">
+                <span className="text-[10px] font-extrabold text-[#64748b] uppercase tracking-wider block">Complete Incident Narrative</span>
+                <p className="text-xs text-[#1e293b] leading-relaxed whitespace-pre-wrap">{details.incident_description || details.description || caseData.description || 'No detailed narrative logged.'}</p>
               </div>
             </div>
           </div>
@@ -1110,15 +1111,15 @@ const CaseDetails = () => {
         {/* SUBTAB: FIR Details */}
         {(activeGroup === 'fir' && activeSubTab === 'fir_details') && (
           <div className="space-y-6">
-            <div className="flex justify-between items-center pb-3 border-b border-gray-200">
-              <h2 className="text-xs font-black text-gray-700 uppercase tracking-widest">FIR Metadata Registry</h2>
+            <div className="flex justify-between items-center pb-3 border-b border-[#e2e8f0]">
+              <h2 className="text-xs font-black text-[#1e293b] uppercase tracking-widest">FIR Metadata Registry</h2>
               <div className="flex gap-2">
                 <button
                   onClick={runAIFirAnalysis}
                   disabled={analyzingFIR}
-                  className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-900 px-3.5 py-2 rounded-lg text-[10px] font-bold flex items-center gap-1.5 transition-all uppercase"
+                  className="bg-[#ffffff] border border-[#e2e8f0] hover:bg-[#eff6ff] text-[#1e293b] px-3.5 py-2 rounded-lg text-[10px] font-bold flex items-center gap-1.5 transition-all uppercase"
                 >
-                  {analyzingFIR ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                  {analyzingFIR ? <Loader2 className="w-3.5 h-3.5 animate-spin text-[#1e3a8a]" /> : <Sparkles className="w-3.5 h-3.5 text-[#1e3a8a]" />}
                   <span>Analyze FIR with AI</span>
                 </button>
                 <button
@@ -1226,53 +1227,53 @@ const CaseDetails = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="md:col-span-2 space-y-5">
-                  <div className="bg-white p-4 border border-gray-200 rounded-lg space-y-2">
-                    <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block">Incident Narrative Description</span>
-                    <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap">{details.incident_description || details.description || caseData.description || 'No description recorded.'}</p>
+                  <div className="bg-[#ffffff] p-4 border border-[#e2e8f0] rounded-lg space-y-2">
+                    <span className="text-[10px] font-extrabold text-[#64748b] uppercase tracking-wider block">Incident Narrative Description</span>
+                    <p className="text-xs text-[#1e293b] leading-relaxed whitespace-pre-wrap">{details.incident_description || details.description || caseData.description || 'No description recorded.'}</p>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="bg-white p-4 border border-gray-200 rounded-lg space-y-2.5">
-                      <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block">Applicable Sections</span>
+                    <div className="bg-[#ffffff] p-4 border border-[#e2e8f0] rounded-lg space-y-2.5">
+                      <span className="text-[10px] font-extrabold text-[#64748b] uppercase tracking-wider block">Applicable Sections</span>
                       {details.legal_sections ? (
                         <div className="flex flex-wrap gap-1.5">
                           {(typeof details.legal_sections === 'string'
                             ? JSON.parse(details.legal_sections)
                             : details.legal_sections
                           ).map((sec, idx) => (
-                            <span key={idx} className="bg-gray-105 text-gray-900 border border-gray-300 px-2 py-0.5 rounded text-[10px] font-bold">
+                            <span key={idx} className="bg-[#eff6ff] text-[#1e3a8a] border border-[#bfdbfe] px-2 py-0.5 rounded text-[10px] font-bold">
                               {sec.law} {sec.section}
                             </span>
                           ))}
                         </div>
                       ) : (
-                        <span className="text-xs font-black text-gray-900">{details.ipc_sections || 'Not assigned'}</span>
+                        <span className="text-xs font-black text-[#1e293b]">{details.ipc_sections || 'Not assigned'}</span>
                       )}
                     </div>
-                    <div className="bg-white p-4 border border-gray-200 rounded-lg">
-                      <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block mb-1">Investigating Officer</span>
-                      <span className="text-xs font-black text-gray-700">{details.investigating_officer || 'Unassigned'}</span>
+                    <div className="bg-[#ffffff] p-4 border border-[#e2e8f0] rounded-lg">
+                      <span className="text-[10px] font-extrabold text-[#64748b] uppercase tracking-wider block mb-1">Investigating Officer</span>
+                      <span className="text-xs font-black text-[#1e293b]">{details.investigating_officer || 'Unassigned'}</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                    <div className="bg-gray-50 px-4 py-2 text-[10px] font-extrabold text-gray-600 uppercase border-b border-gray-200">
+                  <div className="bg-[#ffffff] border border-[#e2e8f0] rounded-lg overflow-hidden">
+                    <div className="bg-[#eff6ff] px-4 py-2 text-[10px] font-extrabold text-[#1e3a8a] uppercase border-b border-[#e2e8f0]">
                       FIR File Parameters
                     </div>
                     <div className="p-4 space-y-3 text-xs">
                       <div className="flex justify-between">
-                        <span className="text-gray-400 font-bold uppercase text-[9px]">FIR Number</span>
-                        <span className="font-bold text-gray-800">{caseData.fir_number}</span>
+                        <span className="text-[#64748b] font-bold uppercase text-[9px]">FIR Number</span>
+                        <span className="font-bold text-[#1e293b]">{caseData.fir_number}</span>
                       </div>
-                      <div className="flex justify-between border-t border-gray-100 pt-2.5">
-                        <span className="text-gray-400 font-bold uppercase text-[9px]">Station Location</span>
-                        <span className="font-bold text-gray-800">{caseData.police_station}</span>
+                      <div className="flex justify-between border-t border-[#e2e8f0] pt-2.5">
+                        <span className="text-[#64748b] font-bold uppercase text-[9px]">Station Location</span>
+                        <span className="font-bold text-[#1e293b]">{caseData.police_station}</span>
                       </div>
-                      <div className="flex justify-between border-t border-gray-100 pt-2.5">
-                        <span className="text-gray-400 font-bold uppercase text-[9px]">Incident Date</span>
-                        <span className="font-bold text-gray-800">{new Date(caseData.incident_date).toLocaleString()}</span>
+                      <div className="flex justify-between border-t border-[#e2e8f0] pt-2.5">
+                        <span className="text-[#64748b] font-bold uppercase text-[9px]">Incident Date</span>
+                        <span className="font-bold text-[#1e293b]">{new Date(caseData.incident_date).toLocaleString()}</span>
                       </div>
                     </div>
                   </div>
@@ -1282,31 +1283,31 @@ const CaseDetails = () => {
 
             {/* AI analysis Modal */}
             {showAIModal && aiAnalysis && (
-              <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                <div className="bg-white border border-gray-250 w-full max-w-2xl rounded-lg shadow-xl overflow-hidden">
-                  <div className="bg-white px-6 py-4.5 border-b border-gray-200 flex justify-between items-center">
-                    <h3 className="text-xs font-black text-gray-900 uppercase tracking-widest flex items-center gap-1.5">
-                      <Sparkles className="w-4 h-4 text-gray-950" />
+              <div className="fixed inset-0 bg-[#1e293b]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="bg-[#ffffff] border border-[#e2e8f0] w-full max-w-2xl rounded-lg shadow-xl overflow-hidden">
+                  <div className="bg-[#ffffff] px-6 py-4.5 border-b border-[#e2e8f0] flex justify-between items-center">
+                    <h3 className="text-xs font-black text-[#1e293b] uppercase tracking-widest flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4 text-[#1e3a8a]" />
                       <span>Legal Section Recommendations</span>
                     </h3>
-                    <button onClick={() => setShowAIModal(false)} className="text-gray-400 hover:text-gray-700">✕</button>
+                    <button onClick={() => setShowAIModal(false)} className="text-[#64748b] hover:text-[#1e293b]">✕</button>
                   </div>
 
                   <div className="p-6 space-y-5 max-h-[60vh] overflow-y-auto">
                     {/* BNS Section Recommendations */}
                     <div className="space-y-3">
-                      <h4 className="text-xs font-black text-gray-700 uppercase tracking-wider">Suggested BNS Sections</h4>
+                      <h4 className="text-xs font-black text-[#1e293b] uppercase tracking-wider">Suggested BNS Sections</h4>
                       <div className="grid grid-cols-1 gap-3">
                         {aiAnalysis.recommendations?.map((rec, i) => (
-                          <div key={i} className="p-3.5 border border-gray-200 rounded-lg bg-white flex justify-between items-start gap-4">
+                          <div key={i} className="p-3.5 border border-[#e2e8f0] rounded-lg bg-[#ffffff] flex justify-between items-start gap-4">
                             <div className="space-y-1">
-                              <span className="text-xs font-black text-gray-900">Section {rec.section} {rec.law}</span>
-                              <span className="text-xs font-bold text-gray-700 block">{rec.title}</span>
-                              <p className="text-[11px] text-gray-500 leading-normal">{rec.description}</p>
-                              <p className="text-[9px] text-gray-400 font-bold mt-1">Reason: {rec.reasoning}</p>
+                              <span className="text-xs font-black text-[#1e293b]">Section {rec.section} {rec.law}</span>
+                              <span className="text-xs font-bold text-[#1e293b] block">{rec.title}</span>
+                              <p className="text-[11px] text-[#64748b] leading-normal">{rec.description}</p>
+                              <p className="text-[9px] text-[#64748b] font-bold mt-1">Reason: {rec.reasoning}</p>
                             </div>
                             <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                              <span className="text-[9px] bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded font-bold">
+                              <span className="text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded font-bold">
                                 {rec.confidence}% Conf.
                               </span>
                               <button
@@ -1316,7 +1317,7 @@ const CaseDetails = () => {
                                     setEditLegalSections([...editLegalSections, { law: rec.law, section: rec.section, title: rec.title, description: rec.description }]);
                                   }
                                 }}
-                                className="bg-gray-900 hover:bg-gray-800 text-white px-2 py-1 rounded text-[9px] font-bold"
+                                className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white px-2 py-1 rounded text-[9px] font-bold"
                               >
                                 Add
                               </button>
@@ -1327,21 +1328,21 @@ const CaseDetails = () => {
                     </div>
 
                     {/* Landmark judgments */}
-                    <div className="space-y-3 pt-3 border-t border-gray-150">
-                      <h4 className="text-xs font-black text-gray-700 uppercase tracking-wider">Landmark Judgments for Reference</h4>
+                    <div className="space-y-3 pt-3 border-t border-[#e2e8f0]">
+                      <h4 className="text-xs font-black text-[#1e293b] uppercase tracking-wider">Landmark Judgments for Reference</h4>
                       <div className="grid grid-cols-1 gap-3">
                         {aiAnalysis.landmark_cases?.map((c, i) => (
-                          <div key={i} className="p-3 border border-gray-200 rounded-lg bg-white space-y-1">
-                            <span className="text-xs font-black text-gray-900">{c.citation}</span>
-                            <p className="text-[11px] text-gray-600"><b>Summary:</b> {c.summary}</p>
-                            <p className="text-[9px] text-gray-400 font-bold"><b>Significance:</b> {c.significance}</p>
+                          <div key={i} className="p-3 border border-[#e2e8f0] rounded-lg bg-[#ffffff] space-y-1">
+                            <span className="text-xs font-black text-[#1e293b]">{c.citation}</span>
+                            <p className="text-[11px] text-[#64748b]"><b>Summary:</b> {c.summary}</p>
+                            <p className="text-[9px] text-[#64748b] font-bold"><b>Significance:</b> {c.significance}</p>
                           </div>
                         ))}
                       </div>
                     </div>
                   </div>
 
-                  <div className="bg-gray-50 p-4 border-t border-gray-200 flex justify-end">
+                  <div className="bg-[#f8fafc] p-4 border-t border-[#e2e8f0] flex justify-end">
                     <button
                       onClick={() => {
                         setShowAIModal(false);
@@ -1361,19 +1362,19 @@ const CaseDetails = () => {
         {/* TAB 2: Witnesses */}
         {(activeGroup === 'fir' && activeSubTab === 'witnesses') && (
           <div className="space-y-6">
-            <div className="flex justify-between items-center pb-3 border-b border-gray-200">
-              <h2 className="text-xs font-black text-gray-700 uppercase tracking-widest">Witness Registry Files</h2>
+            <div className="flex justify-between items-center pb-3 border-b border-[#e2e8f0]">
+              <h2 className="text-xs font-black text-[#1e293b] uppercase tracking-widest">Witness Registry Files</h2>
               <button
                 onClick={() => setShowWitnessForm(!showWitnessForm)}
-                className="bg-gray-900 hover:bg-gray-800 text-white px-3.5 py-2 rounded-lg text-[10px] font-bold flex items-center gap-1.5 transition-all uppercase tracking-wider"
+                className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white px-3.5 py-2 rounded-lg text-[10px] font-bold flex items-center gap-1.5 transition-all uppercase tracking-wider shadow-sm"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="w-3.5 h-3.5 text-[#b45309]" />
                 <span>Record Witness Statement</span>
               </button>
             </div>
 
             {showWitnessForm && (
-              <form onSubmit={handleAddWitness} className="p-5 border border-gray-200 rounded-lg bg-white grid grid-cols-1 md:grid-cols-2 gap-4">
+              <form onSubmit={handleAddWitness} className="p-5 border border-[#e2e8f0] rounded-lg bg-[#ffffff] grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label htmlFor="wit-name" className={labelClass}>Name</label>
                   <input
@@ -1449,24 +1450,24 @@ const CaseDetails = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {witnesses.length > 0 ? (
                 witnesses.map((w) => (
-                  <div key={w.id} className="p-4 border border-gray-200 rounded-lg bg-white flex flex-col justify-between shadow-sm">
+                  <div key={w.id} className="p-4 border border-[#e2e8f0] rounded-lg bg-[#ffffff] flex flex-col justify-between shadow-sm">
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
-                        <span className="text-xs font-black text-gray-900 flex items-center gap-1.5">
-                          <User className="w-4 h-4 text-gray-800" />
+                        <span className="text-xs font-black text-[#1e293b] flex items-center gap-1.5">
+                          <User className="w-4 h-4 text-[#1e3a8a]" />
                           <span>{w.name}</span>
                         </span>
-                        <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${w.status === 'Cooperative' ? 'bg-green-50 text-green-700 border border-green-200' :
-                            w.status === 'Hostile' ? 'bg-red-50 text-red-750 border border-red-200' : 'bg-gray-100 text-gray-700 border border-gray-300'
+                        <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${w.status === 'Cooperative' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                            w.status === 'Hostile' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-slate-100 text-[#1e293b] border border-[#e2e8f0]'
                           }`}>
                           {w.status}
                         </span>
                       </div>
-                      <div className="text-[10px] text-gray-400 font-bold space-y-0.5">
+                      <div className="text-[10px] text-[#64748b] font-bold space-y-0.5">
                         <p>Phone: {w.phone || 'N/A'}</p>
                         <p>Address: {w.address || 'N/A'}</p>
                       </div>
-                      <p className="text-[11px] text-gray-650 bg-gray-50 p-2.5 rounded-lg border border-gray-200 leading-relaxed font-sans italic">
+                      <p className="text-[11px] text-[#1e293b] bg-[#eff6ff] p-2.5 rounded-lg border border-[#bfdbfe] leading-relaxed font-sans italic">
                         "{w.statement || 'No statement transcript recorded.'}"
                       </p>
                     </div>
@@ -1482,12 +1483,12 @@ const CaseDetails = () => {
                   </div>
                 ))
               ) : (
-                <div className="md:col-span-2 py-12 border border-dashed border-gray-200 bg-gray-50 rounded-lg text-center space-y-3 w-full">
-                  <p className="text-xs text-gray-400 font-semibold">No witnesses added yet</p>
+                <div className="md:col-span-2 py-12 border border-dashed border-[#e2e8f0] bg-[#ffffff] rounded-lg text-center space-y-3 w-full">
+                  <p className="text-xs text-[#64748b] font-semibold">No witnesses added yet</p>
                   <button
                     type="button"
                     onClick={() => setShowWitnessForm(true)}
-                    className="bg-gray-900 hover:bg-gray-800 text-white font-bold px-3.5 py-1.5 rounded-lg text-[10px] uppercase"
+                    className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white font-bold px-3.5 py-1.5 rounded-lg text-[10px] uppercase"
                   >
                     Add Witness
                   </button>
@@ -1500,19 +1501,19 @@ const CaseDetails = () => {
         {/* TAB 3: Suspects */}
         {(activeGroup === 'fir' && activeSubTab === 'suspects') && (
           <div className="space-y-6">
-            <div className="flex justify-between items-center pb-3 border-b border-gray-200">
-              <h2 className="text-xs font-black text-gray-700 uppercase tracking-widest">Suspect Registry Files</h2>
+            <div className="flex justify-between items-center pb-3 border-b border-[#e2e8f0]">
+              <h2 className="text-xs font-black text-[#1e293b] uppercase tracking-widest">Suspect Registry Files</h2>
               <button
                 onClick={() => setShowSuspectForm(!showSuspectForm)}
-                className="bg-gray-900 hover:bg-gray-800 text-white px-3.5 py-2 rounded-lg text-[10px] font-bold flex items-center gap-1.5 transition-all uppercase tracking-wider"
+                className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white px-3.5 py-2 rounded-lg text-[10px] font-bold flex items-center gap-1.5 transition-all uppercase tracking-wider shadow-sm"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="w-3.5 h-3.5 text-[#b45309]" />
                 <span>Register Accused / Suspect</span>
               </button>
             </div>
 
             {showSuspectForm && (
-              <form onSubmit={handleAddSuspect} className="p-5 border border-gray-200 rounded-lg bg-white grid grid-cols-1 md:grid-cols-2 gap-4">
+              <form onSubmit={handleAddSuspect} className="p-5 border border-[#e2e8f0] rounded-lg bg-[#ffffff] grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label htmlFor="susp-name" className={labelClass}>Name</label>
                   <input
@@ -1542,6 +1543,17 @@ const CaseDetails = () => {
                     value={newSuspect.address}
                     onChange={(e) => setNewSuspect({ ...newSuspect, address: e.target.value })}
                     className={inputClass}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="susp-mobile" className={labelClass}>Suspect/Accused Mobile Number</label>
+                  <input
+                    id="susp-mobile"
+                    type="tel"
+                    value={newSuspect.accused_mobile_number || ''}
+                    onChange={(e) => setNewSuspect({ ...newSuspect, accused_mobile_number: e.target.value })}
+                    className={inputClass}
+                    placeholder="e.g. 9876543210 (10 digits)"
                   />
                 </div>
                 <div className="space-y-1">
@@ -1600,25 +1612,26 @@ const CaseDetails = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {suspects.length > 0 ? (
                 suspects.map((s) => (
-                  <div key={s.id} className="p-4 border border-gray-200 rounded-lg bg-white flex flex-col justify-between shadow-sm">
+                  <div key={s.id} className="p-4 border border-[#e2e8f0] rounded-lg bg-[#ffffff] flex flex-col justify-between shadow-sm">
                     <div className="space-y-2.5">
                       <div className="flex justify-between items-center">
-                        <span className="text-xs font-black text-gray-900 flex items-center gap-1.5">
-                          <User className="w-4 h-4 text-gray-500" />
+                        <span className="text-xs font-black text-[#1e293b] flex items-center gap-1.5">
+                          <User className="w-4 h-4 text-[#1e3a8a]" />
                           <span>{s.name} {s.alias ? `(Alias: ${s.alias})` : ''}</span>
                         </span>
                         <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${s.status === 'Arrested' ? 'bg-red-50 text-red-700 border border-red-200' :
-                            s.status === 'Absconding' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-gray-100 text-gray-700 border border-gray-300'
+                            s.status === 'Absconding' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-slate-100 text-[#1e293b] border border-[#e2e8f0]'
                           }`}>
                           {s.status}
                         </span>
                       </div>
-                      <div className="text-[10px] text-gray-400 font-bold space-y-0.5 leading-relaxed">
+                      <div className="text-[10px] text-[#64748b] font-bold space-y-0.5 leading-relaxed">
+                        <p>Mobile Number: {s.accused_mobile_number || s.phone || s.mobile_number || 'Not Available'}</p>
                         <p>Address: {s.address || 'N/A'}</p>
                         <p>Identification Marks: {s.identification_marks || 'None recorded'}</p>
                       </div>
                       {s.notes && (
-                        <div className="text-[11px] text-gray-655 bg-gray-50 p-2.5 rounded-lg border border-gray-200 leading-relaxed font-sans">
+                        <div className="text-[11px] text-[#1e293b] bg-[#eff6ff] p-2.5 rounded-lg border border-[#bfdbfe] leading-relaxed font-sans">
                           <b>Notes:</b> {s.notes}
                         </div>
                       )}
@@ -1635,7 +1648,7 @@ const CaseDetails = () => {
                   </div>
                 ))
               ) : (
-                <div className="md:col-span-2 py-16 text-center text-gray-400 text-xs font-semibold">
+                <div className="md:col-span-2 py-16 text-center text-[#64748b] text-xs font-semibold">
                   No suspect/accused profiles registered.
                 </div>
               )}
@@ -1646,19 +1659,19 @@ const CaseDetails = () => {
         {/* TAB 4: Evidence Locker */}
         {(activeGroup === 'fir' && activeSubTab === 'evidence') && (
           <div className="space-y-6">
-            <div className="flex justify-between items-center pb-3 border-b border-gray-200">
-              <h2 className="text-xs font-black text-gray-700 uppercase tracking-widest">Evidence Locker Inventory</h2>
+            <div className="flex justify-between items-center pb-3 border-b border-[#e2e8f0]">
+              <h2 className="text-xs font-black text-[#1e293b] uppercase tracking-widest">Evidence Locker Inventory</h2>
               <button
                 onClick={() => setShowEvidenceForm(!showEvidenceForm)}
-                className="bg-gray-900 hover:bg-gray-800 text-white px-3.5 py-2 rounded-lg text-[10px] font-bold flex items-center gap-1.5 transition-all uppercase tracking-wider"
+                className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white px-3.5 py-2 rounded-lg text-[10px] font-bold flex items-center gap-1.5 transition-all uppercase tracking-wider shadow-sm"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="w-3.5 h-3.5 text-[#b45309]" />
                 <span>Index Evidence File</span>
               </button>
             </div>
 
             {showEvidenceForm && (
-              <form onSubmit={handleAddEvidence} className="p-5 border border-gray-200 rounded-lg bg-white grid grid-cols-1 md:grid-cols-2 gap-4">
+              <form onSubmit={handleAddEvidence} className="p-5 border border-[#e2e8f0] rounded-lg bg-[#ffffff] grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label htmlFor="ev-type" className={labelClass}>Evidence Type</label>
                   <select
@@ -1703,7 +1716,7 @@ const CaseDetails = () => {
                       setEvidenceFile(e.target.files[0]);
                       setNewEvidence({ ...newEvidence, file_name: e.target.files[0]?.name || '' });
                     }}
-                    className="w-full text-xs text-gray-500 border border-gray-300 bg-white rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-gray-950"
+                    className="w-full text-xs text-[#64748b] border border-[#e2e8f0] bg-[#ffffff] rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-[#2563eb]"
                     required
                   />
                 </div>
@@ -1729,9 +1742,9 @@ const CaseDetails = () => {
                   <button
                     type="submit"
                     disabled={uploadingEvidence}
-                    className="bg-gray-900 hover:bg-gray-800 text-white px-5 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 uppercase"
+                    className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white px-5 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 uppercase shadow-sm"
                   >
-                    {uploadingEvidence && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                    {uploadingEvidence && <Loader2 className="w-3.5 h-3.5 animate-spin text-[#b45309]" />}
                     <span>Index Locker</span>
                   </button>
                 </div>
@@ -1740,13 +1753,13 @@ const CaseDetails = () => {
 
             {/* Transfer Modal */}
             {selectedEvidenceForTransfer && (
-              <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                <form onSubmit={handleTransferEvidence} className="bg-white border border-gray-200 w-full max-w-md rounded-lg shadow-xl overflow-hidden space-y-4">
-                  <div className="bg-white px-5 py-4 border-b border-gray-200 flex justify-between items-center">
-                    <h3 className="text-xs font-black text-gray-900 uppercase tracking-widest">
+              <div className="fixed inset-0 bg-[#1e293b]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <form onSubmit={handleTransferEvidence} className="bg-[#ffffff] border border-[#e2e8f0] w-full max-w-md rounded-lg shadow-xl overflow-hidden space-y-4">
+                  <div className="bg-[#ffffff] px-5 py-4 border-b border-[#e2e8f0] flex justify-between items-center">
+                    <h3 className="text-xs font-black text-[#1e293b] uppercase tracking-widest">
                       Chain of Custody Transfer — ID {selectedEvidenceForTransfer.id}
                     </h3>
-                    <button type="button" onClick={() => setSelectedEvidenceForTransfer(null)} className="text-slate-400">✕</button>
+                    <button type="button" onClick={() => setSelectedEvidenceForTransfer(null)} className="text-[#64748b] hover:text-[#1e293b]">✕</button>
                   </div>
                   <div className="p-5 space-y-4 text-xs">
                     <div className="grid grid-cols-2 gap-3">
@@ -1811,7 +1824,7 @@ const CaseDetails = () => {
                       />
                     </div>
                   </div>
-                  <div className="bg-gray-50 p-4 border-t border-gray-200 flex justify-end gap-2">
+                  <div className="bg-[#f8fafc] p-4 border-t border-[#e2e8f0] flex justify-end gap-2">
                     <button
                       type="button"
                       onClick={() => setSelectedEvidenceForTransfer(null)}
@@ -1833,15 +1846,15 @@ const CaseDetails = () => {
             <div className="space-y-6">
               {evidenceList.length > 0 ? (
                 evidenceList.map((ev) => (
-                  <div key={ev.id} className="border border-gray-200 rounded-lg bg-white overflow-hidden shadow-sm">
+                  <div key={ev.id} className="border border-[#e2e8f0] rounded-lg bg-[#ffffff] overflow-hidden shadow-sm">
                     {/* Header bar */}
-                    <div className="bg-gray-50 border-b border-gray-200 p-4 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                    <div className="bg-[#eff6ff] border-b border-[#e2e8f0] p-4 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
                       <div className="space-y-0.5">
-                        <span className="text-[9px] bg-white text-gray-700 border border-gray-300 px-2 py-0.5 rounded font-bold uppercase tracking-wide">
+                        <span className="text-[9px] bg-[#ffffff] text-[#1e293b] border border-[#e2e8f0] px-2 py-0.5 rounded font-bold uppercase tracking-wide">
                           {ev.evidence_type || ev.file_type || 'Physical'}
                         </span>
-                        <h4 className="text-xs font-black text-gray-900 tracking-wide mt-1.5 flex items-center gap-1">
-                          <Paperclip className="w-4 h-4 text-gray-950" />
+                        <h4 className="text-xs font-black text-[#1e293b] tracking-wide mt-1.5 flex items-center gap-1">
+                          <Paperclip className="w-4 h-4 text-[#1e3a8a]" />
                           <span>{ev.file_name || ev.description || 'Evidence Item'}</span>
                         </h4>
                       </div>
@@ -1850,7 +1863,7 @@ const CaseDetails = () => {
                         <div className="flex gap-2">
                           <button
                             onClick={() => setSelectedEvidenceForTransfer(ev)}
-                            className="bg-gray-955 text-white hover:bg-gray-800 border border-transparent px-3 py-1.5 rounded-lg text-[10px] font-bold"
+                            className="bg-[#1e3a8a] text-white hover:bg-[#1e3a8a]/90 border border-transparent px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-sm"
                           >
                             Transfer Property
                           </button>
@@ -1858,9 +1871,9 @@ const CaseDetails = () => {
                             href={`${api.defaults.baseURL}/cases/${id}/evidence/${ev.id}/download`}
                             target="_blank"
                             rel="noreferrer"
-                            className="bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 px-3 py-1.5 rounded-lg text-[10px] font-bold flex items-center gap-1"
+                            className="bg-[#ffffff] hover:bg-[#eff6ff] border border-[#e2e8f0] text-[#1e293b] px-3 py-1.5 rounded-lg text-[10px] font-bold flex items-center gap-1"
                           >
-                            <Download className="w-3.5 h-3.5" />
+                            <Download className="w-3.5 h-3.5 text-[#1e3a8a]" />
                             <span>Download File</span>
                           </a>
                         </div>
@@ -1874,40 +1887,40 @@ const CaseDetails = () => {
 
                     <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
                       {/* Properties */}
-                      <div className="md:col-span-1 space-y-3 bg-gray-50 p-4 border border-gray-200 rounded-lg">
-                        <h5 className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">Metadata Profile</h5>
+                      <div className="md:col-span-1 space-y-3 bg-[#f8fafc] p-4 border border-[#e2e8f0] rounded-lg">
+                        <h5 className="text-[10px] font-extrabold text-[#64748b] uppercase tracking-widest">Metadata Profile</h5>
                         <div className="space-y-2">
                           <p className="flex justify-between">
-                            <span className="text-gray-400 font-bold">Col. Officer:</span>
-                            <span className="font-bold text-gray-800">{ev.collecting_officer || ev.officer_remarks || 'N/A'}</span>
+                            <span className="text-[#64748b] font-bold">Col. Officer:</span>
+                            <span className="font-bold text-[#1e293b]">{ev.collecting_officer || ev.officer_remarks || 'N/A'}</span>
                           </p>
                           <p className="flex justify-between">
-                            <span className="text-gray-400 font-bold">Col. Spot:</span>
-                            <span className="font-bold text-gray-800">{ev.collection_location || ev.recovered_from || 'N/A'}</span>
+                            <span className="text-[#64748b] font-bold">Col. Spot:</span>
+                            <span className="font-bold text-[#1e293b]">{ev.collection_location || ev.recovered_from || 'N/A'}</span>
                           </p>
                           {!ev._fromDetails && (
                             <p className="flex justify-between">
-                              <span className="text-gray-400 font-bold">Locker ID:</span>
-                              <span className="font-bold text-gray-800">EV-{ev.id}</span>
+                              <span className="text-[#64748b] font-bold">Locker ID:</span>
+                              <span className="font-bold text-[#1e293b]">EV-{ev.id}</span>
                             </p>
                           )}
-                          <p className="text-gray-500 italic mt-2">{ev.description || 'No description added.'}</p>
+                          <p className="text-[#64748b] italic mt-2">{ev.description || 'No description added.'}</p>
                         </div>
                       </div>
 
                       {/* Chain of custody timeline — only for DB records */}
                       <div className="md:col-span-2 space-y-3">
-                        <h5 className="text-[10px] font-extrabold text-gray-550 uppercase tracking-widest flex items-center gap-1 font-bold">
-                          <History className="w-4.5 h-4.5 text-gray-900" />
+                        <h5 className="text-[10px] font-extrabold text-[#64748b] uppercase tracking-widest flex items-center gap-1 font-bold">
+                          <History className="w-4.5 h-4.5 text-[#1e3a8a]" />
                           <span>Chain of Custody (Movement History)</span>
                         </h5>
-                        <div className="space-y-3 border-l-2 border-gray-200 pl-4 py-1">
+                        <div className="space-y-3 border-l-2 border-[#e2e8f0] pl-4 py-1">
                           {/* Initial Seizure record */}
                           <div className="relative">
-                            <span className="absolute -left-[21px] top-1.5 w-2 h-2 rounded-full bg-green-600 border border-white"></span>
+                            <span className="absolute -left-[21px] top-1.5 w-2 h-2 rounded-full bg-emerald-600 border border-white"></span>
                             <div className="space-y-0.5">
-                              <p className="font-bold text-gray-800">Evidence Seized &amp; Indexed</p>
-                              <p className="text-[10px] text-gray-400 font-bold">
+                              <p className="font-bold text-[#1e293b]">Evidence Seized &amp; Indexed</p>
+                              <p className="text-[10px] text-[#64748b] font-bold">
                                 Officer: {ev.collecting_officer || ev.officer_remarks || 'N/A'} •{' '}
                                 {ev.uploaded_date ? new Date(ev.uploaded_date).toLocaleString() : (ev.recovery_date || 'Date N/A')}
                               </p>
@@ -1917,26 +1930,26 @@ const CaseDetails = () => {
                           {/* Transfer timeline records */}
                           {ev.movement_history && ev.movement_history.length > 0 ? (
                             ev.movement_history.map((move) => (
-                              <div key={move.id} className="relative pt-1.5 border-t border-gray-100">
-                                <span className="absolute -left-[21px] top-3 w-2 h-2 rounded-full bg-gray-900 border border-white"></span>
+                              <div key={move.id} className="relative pt-1.5 border-t border-[#e2e8f0]">
+                                <span className="absolute -left-[21px] top-3 w-2 h-2 rounded-full bg-[#1e3a8a] border border-white"></span>
                                 <div className="space-y-1">
-                                  <p className="font-bold text-gray-800 flex flex-wrap gap-1.5 items-center">
+                                  <p className="font-bold text-[#1e293b] flex flex-wrap gap-1.5 items-center">
                                     <span>Transferred Property</span>
-                                    <span className="bg-gray-100 text-gray-700 border border-gray-200 px-1.5 py-0.5 rounded text-[9px] font-bold">
+                                    <span className="bg-[#eff6ff] text-[#1e3a8a] border border-[#bfdbfe] px-1.5 py-0.5 rounded text-[9px] font-bold">
                                       {move.transfer_reason}
                                     </span>
                                   </p>
-                                  <p className="text-[10px] text-gray-400 font-bold">
+                                  <p className="text-[10px] text-[#64748b] font-bold">
                                     From: {move.from_officer} ({move.from_officer_badge || 'No badge'})
                                     ➔ To: {move.to_officer} ({move.to_officer_badge || 'No badge'})
                                     • {new Date(move.timestamp).toLocaleString()}
                                   </p>
-                                  {move.remarks && <p className="text-[10px] text-gray-505 leading-normal italic bg-gray-50 p-2 border border-gray-250 rounded">"{move.remarks}"</p>}
+                                  {move.remarks && <p className="text-[10px] text-[#1e293b] leading-normal italic bg-[#eff6ff] p-2 border border-[#bfdbfe] rounded">"{move.remarks}"</p>}
                                 </div>
                               </div>
                             ))
                           ) : (
-                            <div className="text-[10px] text-gray-400 font-bold italic pt-1">
+                            <div className="text-[10px] text-[#64748b] font-bold italic pt-1">
                               {ev._fromDetails
                                 ? 'Evidence recorded from initial FIR filing. Upload file to create full custody record.'
                                 : 'Property remains secured in primary evidence locker.'}
@@ -1948,12 +1961,12 @@ const CaseDetails = () => {
                   </div>
                 ))
               ) : (
-                <div className="py-12 border border-dashed border-gray-200 bg-gray-50 rounded-lg text-center space-y-3 w-full">
-                  <p className="text-xs text-gray-400 font-semibold">Evidence locker is empty</p>
+                <div className="py-12 border border-dashed border-[#e2e8f0] bg-[#ffffff] rounded-lg text-center space-y-3 w-full">
+                  <p className="text-xs text-[#64748b] font-semibold">Evidence locker is empty</p>
                   <button
                     type="button"
                     onClick={() => setShowEvidenceForm(true)}
-                    className="bg-gray-900 hover:bg-gray-800 text-white font-bold px-3.5 py-1.5 rounded-lg text-[10px] uppercase"
+                    className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white font-bold px-3.5 py-1.5 rounded-lg text-[10px] uppercase"
                   >
                     Upload Evidence
                   </button>
@@ -1966,13 +1979,13 @@ const CaseDetails = () => {
         {/* SUBTAB: Medical Records */}
         {(activeGroup === 'investigation' && activeSubTab === 'medical') && (
           <div className="space-y-6">
-            <div className="flex justify-between items-center pb-3 border-b border-gray-200">
-              <h2 className="text-xs font-black text-gray-700 uppercase tracking-widest">Medical Examination & Treatment Records</h2>
+            <div className="flex justify-between items-center pb-3 border-b border-[#e2e8f0]">
+              <h2 className="text-xs font-black text-[#1e293b] uppercase tracking-widest">Medical Examination & Treatment Records</h2>
               <button onClick={handleSaveInvestigation} disabled={savingInvestigation || caseData?.status?.toLowerCase() === 'closed'} className={primaryBtn}>
                 {savingInvestigation ? 'Saving...' : 'Save Medical Record'}
               </button>
             </div>
-            <form onSubmit={handleSaveInvestigation} className="grid grid-cols-1 md:grid-cols-2 gap-5 bg-white border border-gray-200 p-6 rounded-lg shadow-sm">
+            <form onSubmit={handleSaveInvestigation} className="grid grid-cols-1 md:grid-cols-2 gap-5 bg-[#ffffff] border border-[#e2e8f0] p-6 rounded-lg shadow-sm">
               <div className="space-y-1">
                 <label className={labelClass}>Hospital Name</label>
                 <input type="text" value={investigationData.hospital_name || ''} onChange={(e) => setInvestigationData({ ...investigationData, hospital_name: e.target.value })} className={inputClass} placeholder="e.g. Government Civil Hospital" disabled={caseData?.status?.toLowerCase() === 'closed'} />
@@ -2024,13 +2037,13 @@ const CaseDetails = () => {
         {/* SUBTAB: Court / Remand Details */}
         {(activeGroup === 'investigation' && activeSubTab === 'court') && (
           <div className="space-y-6">
-            <div className="flex justify-between items-center pb-3 border-b border-gray-200">
-              <h2 className="text-xs font-black text-gray-700 uppercase tracking-widest">Court Proceedings & Remand Custody Details</h2>
+            <div className="flex justify-between items-center pb-3 border-b border-[#e2e8f0]">
+              <h2 className="text-xs font-black text-[#1e293b] uppercase tracking-widest">Court Proceedings & Remand Custody Details</h2>
               <button onClick={handleSaveInvestigation} disabled={savingInvestigation || caseData?.status?.toLowerCase() === 'closed'} className={primaryBtn}>
                 {savingInvestigation ? 'Saving...' : 'Save Court Record'}
               </button>
             </div>
-            <form onSubmit={handleSaveInvestigation} className="grid grid-cols-1 md:grid-cols-2 gap-5 bg-white border border-gray-200 p-6 rounded-lg shadow-sm">
+            <form onSubmit={handleSaveInvestigation} className="grid grid-cols-1 md:grid-cols-2 gap-5 bg-[#ffffff] border border-[#e2e8f0] p-6 rounded-lg shadow-sm">
               <div className="space-y-1">
                 <label className={labelClass}>Court Name</label>
                 <input type="text" value={investigationData.court_name || ''} onChange={(e) => setInvestigationData({ ...investigationData, court_name: e.target.value })} className={inputClass} placeholder="Hon'ble Judicial Magistrate Court" disabled={caseData?.status?.toLowerCase() === 'closed'} />
@@ -2077,13 +2090,13 @@ const CaseDetails = () => {
         {/* SUBTAB: Panchanama Details */}
         {(activeGroup === 'investigation' && activeSubTab === 'panchanama') && (
           <div className="space-y-6">
-            <div className="flex justify-between items-center pb-3 border-b border-gray-200">
-              <h2 className="text-xs font-black text-gray-700 uppercase tracking-widest">Accused Panchanama Records</h2>
+            <div className="flex justify-between items-center pb-3 border-b border-[#e2e8f0]">
+              <h2 className="text-xs font-black text-[#1e293b] uppercase tracking-widest">Accused Panchanama Records</h2>
               <button onClick={handleSaveInvestigation} disabled={savingInvestigation || caseData?.status?.toLowerCase() === 'closed'} className={primaryBtn}>
                 {savingInvestigation ? 'Saving...' : 'Save Panchanama Record'}
               </button>
             </div>
-            <form onSubmit={handleSaveInvestigation} className="grid grid-cols-1 md:grid-cols-2 gap-5 bg-white border border-gray-200 p-6 rounded-lg shadow-sm">
+            <form onSubmit={handleSaveInvestigation} className="grid grid-cols-1 md:grid-cols-2 gap-5 bg-[#ffffff] border border-[#e2e8f0] p-6 rounded-lg shadow-sm">
               <div className="space-y-1">
                 <label className={labelClass}>Panchanama Date & Time</label>
                 <input type="datetime-local" value={investigationData.panchanama_date_time || ''} onChange={(e) => setInvestigationData({ ...investigationData, panchanama_date_time: e.target.value })} className={inputClass} disabled={caseData?.status?.toLowerCase() === 'closed'} />
@@ -2111,13 +2124,13 @@ const CaseDetails = () => {
         {/* SUBTAB: Test Identification Parade (TIP) */}
         {(activeGroup === 'investigation' && activeSubTab === 'tip') && (
           <div className="space-y-6">
-            <div className="flex justify-between items-center pb-3 border-b border-gray-200">
-              <h2 className="text-xs font-black text-gray-700 uppercase tracking-widest">Test Identification Parade (TIP) Records</h2>
+            <div className="flex justify-between items-center pb-3 border-b border-[#e2e8f0]">
+              <h2 className="text-xs font-black text-[#1e293b] uppercase tracking-widest">Test Identification Parade (TIP) Records</h2>
               <button onClick={handleSaveInvestigation} disabled={savingInvestigation || caseData?.status?.toLowerCase() === 'closed'} className={primaryBtn}>
                 {savingInvestigation ? 'Saving...' : 'Save TIP Record'}
               </button>
             </div>
-            <form onSubmit={handleSaveInvestigation} className="grid grid-cols-1 md:grid-cols-2 gap-5 bg-white border border-gray-200 p-6 rounded-lg shadow-sm">
+            <form onSubmit={handleSaveInvestigation} className="grid grid-cols-1 md:grid-cols-2 gap-5 bg-[#ffffff] border border-[#e2e8f0] p-6 rounded-lg shadow-sm">
               <div className="space-y-1">
                 <label className={labelClass}>TIP Date & Time</label>
                 <input type="datetime-local" value={investigationData.tip_date_time || ''} onChange={(e) => setInvestigationData({ ...investigationData, tip_date_time: e.target.value })} className={inputClass} disabled={caseData?.status?.toLowerCase() === 'closed'} />
@@ -2145,27 +2158,27 @@ const CaseDetails = () => {
         {/* SUBTAB: Investigation Tasks */}
         {(activeGroup === 'investigation' && activeSubTab === 'tasks') && (
           <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between sm:items-center pb-3 border-b border-gray-200 gap-4">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center pb-3 border-b border-[#e2e8f0] gap-4">
               <div className="space-y-1.5">
-                <h2 className="text-xs font-black text-gray-700 uppercase tracking-widest">Investigation Task Board</h2>
+                <h2 className="text-xs font-black text-[#1e293b] uppercase tracking-widest">Investigation Task Board</h2>
                 <div className="flex items-center gap-2">
-                  <div className="w-36 bg-gray-250 rounded-full h-1.5 border border-gray-300">
-                    <div className="bg-gray-900 h-1 rounded-full" style={{ width: `${progressPercent}%` }}></div>
+                  <div className="w-36 bg-[#eff6ff] rounded-full h-1.5 border border-[#e2e8f0]">
+                    <div className="bg-[#1e3a8a] h-1 rounded-full" style={{ width: `${progressPercent}%` }}></div>
                   </div>
-                  <span className="text-[9px] font-black text-gray-650">{progressPercent}% COMPLETED ({completedTasks}/{totalTasks})</span>
+                  <span className="text-[9px] font-black text-[#64748b]">{progressPercent}% COMPLETED ({completedTasks}/{totalTasks})</span>
                 </div>
               </div>
               <button
                 onClick={() => setShowTaskForm(!showTaskForm)}
-                className="bg-gray-900 hover:bg-gray-800 text-white px-3.5 py-2 rounded-lg text-[10px] font-bold flex items-center gap-1.5 transition-all uppercase tracking-wider"
+                className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white px-3.5 py-2 rounded-lg text-[10px] font-bold flex items-center gap-1.5 transition-all uppercase tracking-wider shadow-sm"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="w-3.5 h-3.5 text-[#b45309]" />
                 <span>Create Investigation Task</span>
               </button>
             </div>
 
             {showTaskForm && (
-              <form onSubmit={handleAddTask} className="p-5 border border-gray-200 rounded-lg bg-white grid grid-cols-1 md:grid-cols-2 gap-4">
+              <form onSubmit={handleAddTask} className="p-5 border border-[#e2e8f0] rounded-lg bg-[#ffffff] grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label htmlFor="task-title" className={labelClass}>Task Title</label>
                   <input
@@ -2244,21 +2257,21 @@ const CaseDetails = () => {
               {['Pending', 'In Progress', 'Completed'].map((colStatus) => {
                 const columnTasks = tasks.filter(t => t.status === colStatus);
                 return (
-                  <div key={colStatus} className="bg-gray-50 border border-gray-200 rounded-lg p-4 flex flex-col space-y-3 min-h-[40vh]">
-                    <div className="flex justify-between items-center border-b border-gray-200 pb-2 flex-shrink-0">
-                      <span className="text-[10px] font-black text-gray-705 uppercase tracking-wider">{colStatus}</span>
-                      <span className="text-[9px] bg-white border border-gray-205 text-gray-650 px-2 py-0.5 rounded-full font-black">
+                  <div key={colStatus} className="bg-[#eff6ff] border border-[#bfdbfe] rounded-lg p-4 flex flex-col space-y-3 min-h-[40vh]">
+                    <div className="flex justify-between items-center border-b border-[#bfdbfe] pb-2 flex-shrink-0">
+                      <span className="text-[10px] font-black text-[#1e3a8a] uppercase tracking-wider">{colStatus}</span>
+                      <span className="text-[9px] bg-[#ffffff] border border-[#bfdbfe] text-[#1e3a8a] px-2 py-0.5 rounded-full font-black">
                         {columnTasks.length}
                       </span>
                     </div>
                     <div className="flex-1 overflow-y-auto space-y-3">
                       {columnTasks.length > 0 ? (
                         columnTasks.map(t => (
-                          <div key={t.id} className="bg-white border border-gray-250 p-4.5 rounded-lg shadow-sm flex flex-col justify-between gap-3">
+                          <div key={t.id} className="bg-[#ffffff] border border-[#e2e8f0] p-4.5 rounded-lg shadow-sm flex flex-col justify-between gap-3">
                             <div className="space-y-1.5">
-                              <h4 className="text-xs font-black text-gray-900 leading-normal">{t.title}</h4>
-                              <p className="text-[10px] text-gray-500 leading-relaxed">{t.description}</p>
-                              <div className="flex flex-wrap gap-2 text-[9px] font-bold text-gray-450 pt-1.5 border-t border-gray-100">
+                              <h4 className="text-xs font-black text-[#1e293b] leading-normal">{t.title}</h4>
+                              <p className="text-[10px] text-[#64748b] leading-relaxed">{t.description}</p>
+                              <div className="flex flex-wrap gap-2 text-[9px] font-bold text-[#64748b] pt-1.5 border-t border-[#e2e8f0]">
                                 <span>IO: {t.assigned_to || 'N/A'}</span>
                                 {t.due_date && (
                                   <>
@@ -2268,11 +2281,11 @@ const CaseDetails = () => {
                                 )}
                               </div>
                             </div>
-                            <div className="flex justify-between items-center border-t border-gray-100 pt-2.5">
+                            <div className="flex justify-between items-center border-t border-[#e2e8f0] pt-2.5">
                               <select
                                 value={t.status}
                                 onChange={(e) => handleUpdateTaskStatus(t.id, e.target.value)}
-                                className="bg-white border border-gray-300 text-[9px] font-bold rounded px-1.5 py-0.5 outline-none text-gray-650"
+                                className="bg-[#ffffff] border border-[#e2e8f0] text-[9px] font-bold rounded px-1.5 py-0.5 outline-none text-[#1e293b]"
                               >
                                 <option value="Pending">Pending</option>
                                 <option value="In Progress">In Progress</option>
@@ -2280,7 +2293,7 @@ const CaseDetails = () => {
                               </select>
                               <button
                                 onClick={() => handleDeleteTask(t.id)}
-                                className="text-red-755 hover:text-red-800 p-0.5 hover:bg-red-550 rounded"
+                                className="text-red-600 hover:text-red-800 p-0.5 hover:bg-red-50 rounded"
                                 title="Delete Task"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -2289,7 +2302,7 @@ const CaseDetails = () => {
                           </div>
                         ))
                       ) : (
-                        <div className="text-center py-12 text-gray-400 italic text-[11px] font-bold">No tasks in {colStatus.toLowerCase()} status.</div>
+                        <div className="text-center py-12 text-[#64748b] italic text-[11px] font-bold">No tasks in {colStatus.toLowerCase()} status.</div>
                       )}
                     </div>
                   </div>
@@ -2302,26 +2315,26 @@ const CaseDetails = () => {
         {/* TAB 6: Case Timeline */}
         {(activeGroup === 'investigation' && activeSubTab === 'timeline') && (
           <div className="space-y-6">
-            <div className="flex justify-between items-center pb-3 border-b border-gray-200">
-              <h2 className="text-xs font-black text-gray-700 uppercase tracking-widest">Case Timeline Milestones</h2>
+            <div className="flex justify-between items-center pb-3 border-b border-[#e2e8f0]">
+              <h2 className="text-xs font-black text-[#1e293b] uppercase tracking-widest">Case Timeline Milestones</h2>
               <button
                 onClick={() => setShowTimelineForm(!showTimelineForm)}
-                className="bg-gray-900 hover:bg-gray-800 text-white px-3.5 py-2 rounded-lg text-[10px] font-bold flex items-center gap-1.5 transition-all uppercase tracking-wider"
+                className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white px-3.5 py-2 rounded-lg text-[10px] font-bold flex items-center gap-1.5 transition-all uppercase tracking-wider shadow-sm"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="w-3.5 h-3.5 text-[#b45309]" />
                 <span>Log Custom Milestone</span>
               </button>
             </div>
 
             {showTimelineForm && (
-              <form onSubmit={handleAddMilestone} className="p-4 border border-gray-200 rounded-lg bg-white flex flex-wrap gap-4 items-end">
+              <form onSubmit={handleAddMilestone} className="p-4 border border-[#e2e8f0] rounded-lg bg-[#ffffff] flex flex-wrap gap-4 items-end">
                 <div className="space-y-1 flex-1 min-w-[200px]">
-                  <label htmlFor="time-evt" className="text-[10px] font-bold text-gray-450 uppercase block">Milestone Event</label>
+                  <label htmlFor="time-evt" className="text-[10px] font-bold text-[#64748b] uppercase block">Milestone Event</label>
                   <select
                     id="time-evt"
                     value={newMilestone.event_name}
                     onChange={(e) => setNewMilestone({ ...newMilestone, event_name: e.target.value })}
-                    className="w-full bg-white border border-gray-300 text-gray-800 px-3 py-1.5 rounded-lg text-xs outline-none focus:ring-1 focus:ring-gray-900"
+                    className="w-full bg-[#ffffff] border border-[#e2e8f0] text-[#1e293b] px-3 py-1.5 rounded-lg text-xs outline-none focus:ring-1 focus:ring-[#2563eb]"
                   >
                     <option value="Complaint Received">Complaint Received</option>
                     <option value="FIR Registered">FIR Registered</option>
@@ -2334,7 +2347,7 @@ const CaseDetails = () => {
                   </select>
                 </div>
                 <div className="space-y-1 flex-[2] min-w-[300px]">
-                  <label htmlFor="time-desc" className="text-[10px] font-bold text-gray-455 uppercase block">Description Details</label>
+                  <label htmlFor="time-desc" className="text-[10px] font-bold text-[#64748b] uppercase block">Description Details</label>
                   <input
                     id="time-desc"
                     type="text"
@@ -2363,24 +2376,24 @@ const CaseDetails = () => {
               </form>
             )}
 
-            <div className="relative border-l-2 border-gray-200 pl-6 space-y-6 py-2 ml-4">
+            <div className="relative border-l-2 border-[#e2e8f0] pl-6 space-y-6 py-2 ml-4">
               {timeline.length > 0 ? (
                 timeline.map((mile) => (
                   <div key={mile.id} className="relative">
-                    <span className="absolute -left-[31px] top-1 bg-gray-900 text-white w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-sm text-[8px] font-bold">
+                    <span className="absolute -left-[31px] top-1 bg-[#1e3a8a] text-white w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-sm text-[8px] font-bold">
                       ✓
                     </span>
-                    <div className="space-y-1 bg-white p-4 border border-gray-200 rounded-lg max-w-2xl shadow-sm">
+                    <div className="space-y-1 bg-[#ffffff] p-4 border border-[#e2e8f0] rounded-lg max-w-2xl shadow-sm">
                       <div className="flex justify-between items-center">
-                        <span className="text-xs font-black text-gray-900 uppercase">{mile.event_name}</span>
-                        <span className="text-[9px] text-gray-400 font-bold">{new Date(mile.timestamp).toLocaleString()}</span>
+                        <span className="text-xs font-black text-[#1e293b] uppercase">{mile.event_name}</span>
+                        <span className="text-[9px] text-[#64748b] font-bold">{new Date(mile.timestamp).toLocaleString()}</span>
                       </div>
-                      <p className="text-xs text-gray-650 leading-relaxed">{mile.description}</p>
+                      <p className="text-xs text-[#64748b] leading-relaxed">{mile.description}</p>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="text-gray-400 py-6 text-xs italic font-semibold border-l border-transparent">No timeline milestones logged.</div>
+                <div className="text-[#64748b] py-6 text-xs italic font-semibold border-l border-transparent">No timeline milestones logged.</div>
               )}
             </div>
           </div>
@@ -2389,13 +2402,13 @@ const CaseDetails = () => {
         {/* TAB 7: Document generation workbench */}
         {(activeGroup === 'documents') && (
           <div className="space-y-6">
-            <div className="flex justify-between items-center pb-3 border-b border-gray-200">
-              <h2 className="text-xs font-black text-gray-700 uppercase tracking-widest">Legal Documentation Workbench</h2>
+            <div className="flex justify-between items-center pb-3 border-b border-[#e2e8f0]">
+              <h2 className="text-xs font-black text-[#1e293b] uppercase tracking-widest">Legal Documentation Workbench</h2>
               <div className="flex items-center gap-3">
                 <select
                   value={selectedDocType}
                   onChange={(e) => setSelectedDocType(e.target.value)}
-                  className="bg-white border border-gray-300 text-xs rounded-lg px-3 py-2 outline-none text-gray-750 font-bold focus:ring-1 focus:ring-gray-900"
+                  className="bg-[#ffffff] border border-[#e2e8f0] text-xs rounded-lg px-3 py-2 outline-none text-[#1e293b] font-bold focus:ring-1 focus:ring-[#2563eb]"
                   aria-label="Select template document type"
                 >
                   <option value="purvani_chargesheet">Purvani Chargesheet (Supplementary)</option>
@@ -2410,9 +2423,9 @@ const CaseDetails = () => {
                 <button
                   onClick={handleGenerateDocument}
                   disabled={generatingDoc}
-                  className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all uppercase tracking-wider"
+                  className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all uppercase tracking-wider shadow-sm"
                 >
-                  {generatingDoc ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                  {generatingDoc ? <Loader2 className="w-3.5 h-3.5 animate-spin text-[#b45309]" /> : <Sparkles className="w-3.5 h-3.5 text-[#b45309]" />}
                   <span>Generate Draft</span>
                 </button>
               </div>
@@ -2420,36 +2433,36 @@ const CaseDetails = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Document Registry List */}
-              <div className="bg-white border border-gray-200 rounded-lg p-4.5 space-y-4 lg:col-span-1 shadow-sm">
-                <h3 className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">Case Generated Archive</h3>
+              <div className="bg-[#ffffff] border border-[#e2e8f0] rounded-lg p-4.5 space-y-4 lg:col-span-1 shadow-sm">
+                <h3 className="text-[10px] font-extrabold text-[#64748b] uppercase tracking-widest">Case Generated Archive</h3>
                 <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
                   {generatedDocuments.length > 0 ? (
                     generatedDocuments.map((doc) => (
                       <div
                         key={doc.id}
-                        className={`w-full text-left p-3.5 border rounded-lg bg-white shadow-sm flex flex-col gap-2 transition-all relative ${
-                          previewDoc?.id === doc.id ? 'border-gray-900 ring-1 ring-gray-900 bg-gray-50/50' : 'border-gray-200 hover:border-gray-400'
+                        className={`w-full text-left p-3.5 border rounded-lg bg-[#ffffff] shadow-sm flex flex-col gap-2 transition-all relative ${
+                          previewDoc?.id === doc.id ? 'border-[#2563eb] ring-1 ring-[#2563eb] bg-[#eff6ff]/50' : 'border-[#e2e8f0] hover:border-[#2563eb]'
                         }`}
                       >
                         <div className="flex justify-between items-start w-full">
                           <div>
-                            <span className="text-[9px] font-extrabold text-gray-500 uppercase tracking-wider block">
+                            <span className="text-[9px] font-extrabold text-[#64748b] uppercase tracking-wider block">
                               {doc.document_type?.replace(/_/g, ' ')}
                             </span>
-                            <span className="text-[11px] font-black text-gray-900 block truncate">Draft #{doc.id}</span>
+                            <span className="text-[11px] font-black text-[#1e293b] block truncate">Draft #{doc.id}</span>
                           </div>
-                          <span className="text-[9px] text-gray-400 font-bold">{new Date(doc.created_date).toLocaleDateString()}</span>
+                          <span className="text-[9px] text-[#64748b] font-bold">{new Date(doc.created_date).toLocaleDateString()}</span>
                         </div>
 
                         {/* Action Buttons Row */}
-                        <div className="flex items-center gap-1.5 pt-1 border-t border-gray-100 flex-wrap">
+                        <div className="flex items-center gap-1.5 pt-1 border-t border-[#e2e8f0] flex-wrap">
                           <button
                             type="button"
                             onClick={() => setPreviewDoc(doc)}
-                            className="bg-gray-900 hover:bg-gray-800 text-white text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1 transition-all"
+                            className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1 transition-all shadow-sm"
                             title="View Formatted DOCX Document"
                           >
-                            <Eye className="w-3 h-3" />
+                            <Eye className="w-3 h-3 text-[#b45309]" />
                             <span>View Document</span>
                           </button>
                           <button
@@ -2458,7 +2471,7 @@ const CaseDetails = () => {
                               e.stopPropagation();
                               handleDownloadFile('docx', doc);
                             }}
-                            className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1 transition-all"
+                            className="bg-[#ffffff] border border-[#e2e8f0] hover:bg-[#eff6ff] text-[#1e293b] text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1 transition-all"
                             title="Download DOCX File"
                           >
                             <FileSpreadsheet className="w-3 h-3 text-blue-600" />
@@ -2470,7 +2483,7 @@ const CaseDetails = () => {
                               e.stopPropagation();
                               handleDownloadFile('pdf', doc);
                             }}
-                            className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1 transition-all"
+                            className="bg-[#ffffff] border border-[#e2e8f0] hover:bg-[#eff6ff] text-[#1e293b] text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1 transition-all"
                             title="Download PDF File"
                           >
                             <FileText className="w-3 h-3 text-red-600" />
@@ -2482,7 +2495,7 @@ const CaseDetails = () => {
                               e.stopPropagation();
                               setDocToDelete(doc);
                             }}
-                            className="bg-white border border-red-200 hover:bg-red-50 text-red-600 text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1 transition-all ml-auto"
+                            className="bg-[#ffffff] border border-red-200 hover:bg-red-50 text-red-600 text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1 transition-all ml-auto"
                             title="Delete Document"
                           >
                             <Trash2 className="w-3 h-3" />
@@ -2491,12 +2504,12 @@ const CaseDetails = () => {
                       </div>
                     ))
                   ) : (
-                    <div className="py-12 border border-dashed border-gray-200 bg-gray-50 rounded-lg text-center space-y-3 w-full">
-                      <p className="text-xs text-gray-400 font-semibold">No generated documents</p>
+                    <div className="py-12 border border-dashed border-[#e2e8f0] bg-[#ffffff] rounded-lg text-center space-y-3 w-full">
+                      <p className="text-xs text-[#64748b] font-semibold">No generated documents</p>
                       <button
                         type="button"
                         onClick={handleGenerateDocument}
-                        className="bg-gray-900 hover:bg-gray-800 text-white font-bold px-3.5 py-1.5 rounded-lg text-[10px] uppercase"
+                        className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white font-bold px-3.5 py-1.5 rounded-lg text-[10px] uppercase"
                       >
                         Generate Document
                       </button>
@@ -2514,7 +2527,7 @@ const CaseDetails = () => {
                     onDelete={() => setDocToDelete(previewDoc)}
                   />
                 ) : (
-                  <div className="flex items-center justify-center flex-1 text-gray-400 text-xs font-semibold py-24 border border-gray-200 bg-gray-50 rounded-lg">
+                  <div className="flex items-center justify-center flex-1 text-[#64748b] text-xs font-semibold py-24 border border-[#e2e8f0] bg-[#ffffff] rounded-lg">
                     Select a generated document from the archive list, or generate a new predefined draft to open preview.
                   </div>
                 )}
@@ -2523,19 +2536,19 @@ const CaseDetails = () => {
 
             {/* Delete Document Confirmation Modal */}
             {docToDelete && (
-              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                <div className="bg-white rounded-lg p-6 max-w-md w-full space-y-4 shadow-xl border border-gray-200">
+              <div className="fixed inset-0 bg-[#1e293b]/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                <div className="bg-[#ffffff] rounded-lg p-6 max-w-md w-full space-y-4 shadow-xl border border-[#e2e8f0]">
                   <div className="flex items-center gap-3 text-red-600">
                     <AlertCircle className="w-6 h-6" />
                     <h3 className="text-sm font-black uppercase tracking-wide">Confirm Delete Document</h3>
                   </div>
-                  <p className="text-xs text-gray-600 font-medium leading-relaxed">
+                  <p className="text-xs text-[#64748b] font-medium leading-relaxed">
                     Are you sure you want to delete this document? This action cannot be undone.
                   </p>
                   <div className="flex justify-end gap-3 pt-2">
                     <button
                       onClick={() => setDocToDelete(null)}
-                      className="px-4 py-2 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all"
+                      className="px-4 py-2 text-xs font-bold text-[#1e293b] bg-[#eff6ff] hover:bg-blue-100 rounded-lg transition-all border border-[#bfdbfe]"
                       disabled={deletingDoc}
                     >
                       Cancel
@@ -2558,20 +2571,20 @@ const CaseDetails = () => {
         {/* TAB 8: AI Case Assistant chat */}
         {(activeGroup === 'assistant') && (
           <div className="space-y-6">
-            <h2 className="text-xs font-black text-gray-750 uppercase tracking-widest pb-3 border-b border-gray-200">
+            <h2 className="text-xs font-black text-[#1e293b] uppercase tracking-widest pb-3 border-b border-[#e2e8f0]">
               CrimeGPT Case Co-Pilot Assistant
             </h2>
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
               {/* Chat recommendations quick controls */}
-              <div className="bg-white border border-gray-255 rounded-lg p-4.5 space-y-4 lg:col-span-1 flex flex-col shadow-sm">
-                <h3 className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">Co-Pilot Brief Actions</h3>
+              <div className="bg-[#ffffff] border border-[#e2e8f0] rounded-lg p-4.5 space-y-4 lg:col-span-1 flex flex-col shadow-sm">
+                <h3 className="text-[10px] font-extrabold text-[#64748b] uppercase tracking-widest">Co-Pilot Brief Actions</h3>
                 <div className="space-y-2 text-xs flex-1">
                   <button
                     onClick={() => {
                       setChatInput('Summarize this case dossier profile.');
                     }}
-                    className="w-full text-left bg-white border border-gray-300 hover:bg-gray-50 p-2.5 rounded-lg font-bold text-gray-755"
+                    className="w-full text-left bg-[#ffffff] border border-[#e2e8f0] hover:bg-[#eff6ff] p-2.5 rounded-lg font-bold text-[#1e293b]"
                   >
                     🔍 Summarize Case
                   </button>
@@ -2579,7 +2592,7 @@ const CaseDetails = () => {
                     onClick={() => {
                       setChatInput('Find missing investigation details or timeline gaps.');
                     }}
-                    className="w-full text-left bg-white border border-gray-300 hover:bg-gray-50 p-2.5 rounded-lg font-bold text-gray-755"
+                    className="w-full text-left bg-[#ffffff] border border-[#e2e8f0] hover:bg-[#eff6ff] p-2.5 rounded-lg font-bold text-[#1e293b]"
                   >
                     ⚠️ Audit Case Gaps
                   </button>
@@ -2587,7 +2600,7 @@ const CaseDetails = () => {
                     onClick={() => {
                       setChatInput('Explain applicable BNS/BNSS/BSA provisions and list relevant judgments.');
                     }}
-                    className="w-full text-left bg-white border border-gray-300 hover:bg-gray-50 p-2.5 rounded-lg font-bold text-gray-755"
+                    className="w-full text-left bg-[#ffffff] border border-[#e2e8f0] hover:bg-[#eff6ff] p-2.5 rounded-lg font-bold text-[#1e293b]"
                   >
                     ⚖️ Suggest Legal Actions
                   </button>
@@ -2595,14 +2608,14 @@ const CaseDetails = () => {
               </div>
 
               {/* Chat container */}
-              <div className="lg:col-span-3 border border-gray-250 rounded-lg flex flex-col justify-between h-[50vh] bg-gray-50 overflow-hidden shadow-sm">
+              <div className="lg:col-span-3 border border-[#e2e8f0] rounded-lg flex flex-col justify-between h-[50vh] bg-[#f8fafc] overflow-hidden shadow-sm">
                 {/* Message logs */}
                 <div className="flex-1 p-4 space-y-3 overflow-y-auto max-h-[38vh]">
                   {chatMessages.map((msg, i) => (
                     <div key={i} className={`flex ${msg.sender === 'Officer' ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-[75%] p-3.5 rounded-lg text-xs leading-relaxed ${msg.sender === 'Officer'
-                          ? 'bg-gray-900 text-white rounded-br-none'
-                          : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none font-sans shadow-sm'
+                          ? 'bg-[#1e3a8a] text-white rounded-br-none'
+                          : 'bg-[#ffffff] text-[#1e293b] border border-[#e2e8f0] rounded-bl-none font-sans shadow-sm'
                         }`}>
                         <span className="text-[8px] font-black uppercase tracking-wider block opacity-75 mb-1">{msg.sender}</span>
                         <p className="whitespace-pre-wrap leading-normal font-medium">{msg.text}</p>
@@ -2611,8 +2624,8 @@ const CaseDetails = () => {
                   ))}
                   {sendingChat && (
                     <div className="flex justify-start">
-                      <div className="bg-white text-gray-850 border border-gray-200 p-3 rounded-lg rounded-bl-none flex items-center gap-2 text-xs shadow-sm">
-                        <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-900" />
+                      <div className="bg-[#ffffff] text-[#1e293b] border border-[#e2e8f0] p-3 rounded-lg rounded-bl-none flex items-center gap-2 text-xs shadow-sm">
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-[#1e3a8a]" />
                         <span className="font-bold">CrimeGPT AI co-pilot is thinking...</span>
                       </div>
                     </div>
@@ -2620,22 +2633,22 @@ const CaseDetails = () => {
                 </div>
 
                 {/* Input form */}
-                <form onSubmit={handleSendChat} className="p-3 bg-white border-t border-gray-200 flex gap-2">
+                <form onSubmit={handleSendChat} className="p-3 bg-[#ffffff] border-t border-[#e2e8f0] flex gap-2">
                   <input
                     type="text"
                     placeholder="Enter legal search queries, gaps requests..."
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
-                    className="flex-1 bg-white border border-gray-300 focus:border-gray-900 text-gray-900 placeholder-gray-400 px-3 py-2 rounded-lg text-xs outline-none focus:ring-1 focus:ring-gray-900 transition-all"
+                    className="flex-1 bg-[#ffffff] border border-[#e2e8f0] focus:border-[#2563eb] text-[#1e293b] placeholder-[#64748b]/60 px-3 py-2 rounded-lg text-xs outline-none focus:ring-1 focus:ring-[#2563eb] transition-all"
                     disabled={sendingChat}
                     aria-label="Ask Legal AI Co-pilot"
                   />
                   <button
                     type="submit"
                     disabled={sendingChat}
-                    className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all uppercase"
+                    className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all uppercase shadow-sm"
                   >
-                    <Send className="w-4 h-4" />
+                    <Send className="w-4 h-4 text-[#b45309]" />
                   </button>
                 </form>
               </div>
@@ -2646,40 +2659,40 @@ const CaseDetails = () => {
         {/* TAB 9: Audit Trail */}
         {activeTab === 'audit' && (
           <div className="space-y-6">
-            <div className="flex justify-between items-center pb-3 border-b border-gray-200">
-              <h2 className="text-xs font-black text-gray-700 uppercase tracking-widest">Audit Trail Modification History</h2>
+            <div className="flex justify-between items-center pb-3 border-b border-[#e2e8f0]">
+              <h2 className="text-xs font-black text-[#1e293b] uppercase tracking-widest">Audit Trail Modification History</h2>
               <button
                 onClick={() => fetchAuditLogs()}
-                className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
+                className="bg-[#ffffff] border border-[#e2e8f0] hover:bg-[#eff6ff] text-[#1e293b] px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
               >
                 Refresh Log
               </button>
             </div>
 
-            <div className="border border-gray-200 rounded-lg overflow-hidden shadow-sm bg-white">
+            <div className="border border-[#e2e8f0] rounded-lg overflow-hidden shadow-sm bg-[#ffffff]">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 font-extrabold uppercase text-[9px] tracking-wider">
+                    <tr className="bg-[#eff6ff] border-b border-[#e2e8f0] text-[#1e3a8a] font-extrabold uppercase text-[9px] tracking-wider">
                       <th className="py-2.5 px-4">User</th>
                       <th className="py-2.5 px-4">Action</th>
                       <th className="py-2.5 px-4">Timestamp</th>
                       <th className="py-2.5 px-4">Modification Details</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200 font-bold text-gray-655">
+                  <tbody className="divide-y divide-[#e2e8f0] font-bold text-[#1e293b]">
                     {auditLogs.length > 0 ? (
                       auditLogs.map((log) => (
-                        <tr key={log.id} className="hover:bg-gray-50 transition-all">
-                          <td className="py-3 px-4 font-black text-gray-855">{log.user_name}</td>
-                          <td className="py-3 px-4 uppercase text-[9px] text-gray-955 font-bold">{log.action}</td>
-                          <td className="py-3 px-4 text-gray-400 font-medium">{new Date(log.timestamp).toLocaleString()}</td>
-                          <td className="py-3 px-4 font-medium text-gray-500 leading-normal">{log.details || 'N/A'}</td>
+                        <tr key={log.id} className="hover:bg-[#eff6ff]/50 transition-all">
+                          <td className="py-3 px-4 font-black text-[#1e293b]">{log.user_name}</td>
+                          <td className="py-3 px-4 uppercase text-[9px] text-[#1e3a8a] font-bold">{log.action}</td>
+                          <td className="py-3 px-4 text-[#64748b] font-medium">{new Date(log.timestamp).toLocaleString()}</td>
+                          <td className="py-3 px-4 font-medium text-[#64748b] leading-normal">{log.details || 'N/A'}</td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="4" className="py-12 text-center text-gray-400 italic">No audit log history entries matching this Case profile.</td>
+                        <td colSpan="4" className="py-12 text-center text-[#64748b] italic">No audit log history entries matching this Case profile.</td>
                       </tr>
                     )}
                   </tbody>
@@ -2693,9 +2706,9 @@ const CaseDetails = () => {
 {
   activeGroup === 'close' && (
     <div className="space-y-6">
-      <div className="flex justify-between items-center pb-3 border-b border-gray-200">
-        <h2 className="text-xs font-black text-gray-700 uppercase tracking-widest flex items-center gap-2">
-          <Lock className="w-4 h-4 text-gray-900" />
+      <div className="flex justify-between items-center pb-3 border-b border-[#e2e8f0]">
+        <h2 className="text-xs font-black text-[#1e293b] uppercase tracking-widest flex items-center gap-2">
+          <Lock className="w-4 h-4 text-[#1e3a8a]" />
           <span>Case Closure Workflow & Validation Checklist</span>
         </h2>
         {caseData?.status?.toLowerCase() === 'closed' ? (
@@ -2703,78 +2716,78 @@ const CaseDetails = () => {
             Status: CASE OFFICIALLY CLOSED
           </span>
         ) : (
-          <span className="bg-green-50 border border-green-200 text-green-700 text-xs font-extrabold px-3 py-1.5 rounded uppercase tracking-wider">
+          <span className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-extrabold px-3 py-1.5 rounded uppercase tracking-wider">
             Status: INVESTIGATION ACTIVE
           </span>
         )}
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-6 shadow-sm">
-        <p className="text-xs text-gray-600 font-medium leading-relaxed">
+      <div className="bg-[#ffffff] border border-[#e2e8f0] rounded-lg p-6 space-y-6 shadow-sm">
+        <p className="text-xs text-[#64748b] font-medium leading-relaxed">
           Before closing a case file, all mandatory FIR and investigation checklist items must be completed or verified. Optional investigation items (Medical Records, Court/Remand, Panchanama, TIP) may be marked as <strong>N/A</strong> if genuinely not applicable to this incident.
         </p>
 
         {/* Checklist Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Mandatory Checklist Items */}
-          <div className="space-y-2.5 bg-gray-50 border border-gray-200 p-4 rounded-lg">
-            <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block border-b border-gray-200 pb-1">
+          <div className="space-y-2.5 bg-[#f8fafc] border border-[#e2e8f0] p-4 rounded-lg">
+            <span className="text-[10px] font-black text-[#64748b] uppercase tracking-wider block border-b border-[#e2e8f0] pb-1">
               Mandatory Case Requirements
             </span>
 
-            <div className="flex items-center justify-between text-xs font-bold text-gray-800 py-1">
+            <div className="flex items-center justify-between text-xs font-bold text-[#1e293b] py-1">
               <span>1. FIR Details & Metadata</span>
-              <span className="text-green-600 flex items-center gap-1"><CheckCircle className="w-4 h-4" /> Verified</span>
+              <span className="text-emerald-600 flex items-center gap-1"><CheckCircle className="w-4 h-4" /> Verified</span>
             </div>
-            <div className="flex items-center justify-between text-xs font-bold text-gray-800 py-1 border-t border-gray-200">
+            <div className="flex items-center justify-between text-xs font-bold text-[#1e293b] py-1 border-t border-[#e2e8f0]">
               <span>2. Complainant Record</span>
-              <span className="text-green-600 flex items-center gap-1"><CheckCircle className="w-4 h-4" /> Verified</span>
+              <span className="text-emerald-600 flex items-center gap-1"><CheckCircle className="w-4 h-4" /> Verified</span>
             </div>
-            <div className="flex items-center justify-between text-xs font-bold text-gray-800 py-1 border-t border-gray-200">
+            <div className="flex items-center justify-between text-xs font-bold text-[#1e293b] py-1 border-t border-[#e2e8f0]">
               <span>3. Witness Details ({witnesses.length})</span>
               {witnesses.length > 0 ? (
-                <span className="text-green-600 flex items-center gap-1"><CheckCircle className="w-4 h-4" /> Verified</span>
+                <span className="text-emerald-600 flex items-center gap-1"><CheckCircle className="w-4 h-4" /> Verified</span>
               ) : (
                 <span className="text-amber-600 flex items-center gap-1"><AlertCircle className="w-4 h-4" /> Recommended</span>
               )}
             </div>
-            <div className="flex items-center justify-between text-xs font-bold text-gray-800 py-1 border-t border-gray-200">
+            <div className="flex items-center justify-between text-xs font-bold text-[#1e293b] py-1 border-t border-[#e2e8f0]">
               <span>4. Suspects / Accused Details ({suspects.length})</span>
               {suspects.length > 0 ? (
-                <span className="text-green-600 flex items-center gap-1"><CheckCircle className="w-4 h-4" /> Verified</span>
+                <span className="text-emerald-600 flex items-center gap-1"><CheckCircle className="w-4 h-4" /> Verified</span>
               ) : (
                 <span className="text-amber-600 flex items-center gap-1"><AlertCircle className="w-4 h-4" /> Recommended</span>
               )}
             </div>
-            <div className="flex items-center justify-between text-xs font-bold text-gray-800 py-1 border-t border-gray-200">
+            <div className="flex items-center justify-between text-xs font-bold text-[#1e293b] py-1 border-t border-[#e2e8f0]">
               <span>5. Evidence Records ({evidenceList.length})</span>
               {evidenceList.length > 0 ? (
-                <span className="text-green-600 flex items-center gap-1"><CheckCircle className="w-4 h-4" /> Verified</span>
+                <span className="text-emerald-600 flex items-center gap-1"><CheckCircle className="w-4 h-4" /> Verified</span>
               ) : (
                 <span className="text-amber-600 flex items-center gap-1"><AlertCircle className="w-4 h-4" /> Recommended</span>
               )}
             </div>
-            <div className="flex items-center justify-between text-xs font-bold text-gray-800 py-1 border-t border-gray-200">
+            <div className="flex items-center justify-between text-xs font-bold text-[#1e293b] py-1 border-t border-[#e2e8f0]">
               <span>6. Case Timeline Milestones ({timeline.length})</span>
-              <span className="text-green-600 flex items-center gap-1"><CheckCircle className="w-4 h-4" /> Verified</span>
+              <span className="text-emerald-600 flex items-center gap-1"><CheckCircle className="w-4 h-4" /> Verified</span>
             </div>
           </div>
 
           {/* Optional Investigation Checklist Items */}
-          <div className="space-y-2.5 bg-gray-50 border border-gray-200 p-4 rounded-lg">
-            <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block border-b border-gray-200 pb-1">
+          <div className="space-y-2.5 bg-[#f8fafc] border border-[#e2e8f0] p-4 rounded-lg">
+            <span className="text-[10px] font-black text-[#64748b] uppercase tracking-wider block border-b border-[#e2e8f0] pb-1">
               Investigation Module Requirements
             </span>
 
             {/* Medical */}
-            <div className="flex items-center justify-between text-xs font-bold text-gray-800 py-1">
+            <div className="flex items-center justify-between text-xs font-bold text-[#1e293b] py-1">
               <span>Medical Details</span>
               {investigationData.hospital_name ? (
-                <span className="text-green-600 flex items-center gap-1"><CheckCircle className="w-4 h-4" /> Filled</span>
+                <span className="text-emerald-600 flex items-center gap-1"><CheckCircle className="w-4 h-4" /> Filled</span>
               ) : (
                 <button
                   onClick={() => setChecklistNA(prev => ({ ...prev, medical: !prev.medical }))}
-                  className={`text-[10px] px-2 py-0.5 rounded font-extrabold uppercase ${checklistNA.medical ? 'bg-gray-900 text-white' : 'bg-white border border-gray-300 text-gray-700'
+                  className={`text-[10px] px-2 py-0.5 rounded font-extrabold uppercase ${checklistNA.medical ? 'bg-[#1e3a8a] text-white' : 'bg-[#ffffff] border border-[#e2e8f0] text-[#1e293b]'
                     }`}
                 >
                   {checklistNA.medical ? 'Marked N/A' : 'Mark as N/A'}
@@ -2783,14 +2796,14 @@ const CaseDetails = () => {
             </div>
 
             {/* Court */}
-            <div className="flex items-center justify-between text-xs font-bold text-gray-800 py-1 border-t border-gray-200">
+            <div className="flex items-center justify-between text-xs font-bold text-[#1e293b] py-1 border-t border-[#e2e8f0]">
               <span>Court / Remand Details</span>
               {investigationData.court_name ? (
-                <span className="text-green-600 flex items-center gap-1"><CheckCircle className="w-4 h-4" /> Filled</span>
+                <span className="text-emerald-600 flex items-center gap-1"><CheckCircle className="w-4 h-4" /> Filled</span>
               ) : (
                 <button
                   onClick={() => setChecklistNA(prev => ({ ...prev, court: !prev.court }))}
-                  className={`text-[10px] px-2 py-0.5 rounded font-extrabold uppercase ${checklistNA.court ? 'bg-gray-900 text-white' : 'bg-white border border-gray-300 text-gray-700'
+                  className={`text-[10px] px-2 py-0.5 rounded font-extrabold uppercase ${checklistNA.court ? 'bg-[#1e3a8a] text-white' : 'bg-[#ffffff] border border-[#e2e8f0] text-[#1e293b]'
                     }`}
                 >
                   {checklistNA.court ? 'Marked N/A' : 'Mark as N/A'}
@@ -2799,14 +2812,14 @@ const CaseDetails = () => {
             </div>
 
             {/* Panchanama */}
-            <div className="flex items-center justify-between text-xs font-bold text-gray-800 py-1 border-t border-gray-200">
+            <div className="flex items-center justify-between text-xs font-bold text-[#1e293b] py-1 border-t border-[#e2e8f0]">
               <span>Panchanama Details</span>
               {investigationData.panchanama_location ? (
-                <span className="text-green-600 flex items-center gap-1"><CheckCircle className="w-4 h-4" /> Filled</span>
+                <span className="text-emerald-600 flex items-center gap-1"><CheckCircle className="w-4 h-4" /> Filled</span>
               ) : (
                 <button
                   onClick={() => setChecklistNA(prev => ({ ...prev, panchanama: !prev.panchanama }))}
-                  className={`text-[10px] px-2 py-0.5 rounded font-extrabold uppercase ${checklistNA.panchanama ? 'bg-gray-900 text-white' : 'bg-white border border-gray-300 text-gray-700'
+                  className={`text-[10px] px-2 py-0.5 rounded font-extrabold uppercase ${checklistNA.panchanama ? 'bg-[#1e3a8a] text-white' : 'bg-[#ffffff] border border-[#e2e8f0] text-[#1e293b]'
                     }`}
                 >
                   {checklistNA.panchanama ? 'Marked N/A' : 'Mark as N/A'}
@@ -2815,14 +2828,14 @@ const CaseDetails = () => {
             </div>
 
             {/* TIP */}
-            <div className="flex items-center justify-between text-xs font-bold text-gray-800 py-1 border-t border-gray-200">
+            <div className="flex items-center justify-between text-xs font-bold text-[#1e293b] py-1 border-t border-[#e2e8f0]">
               <span>Test Identification Parade (TIP)</span>
               {investigationData.tip_location ? (
-                <span className="text-green-600 flex items-center gap-1"><CheckCircle className="w-4 h-4" /> Filled</span>
+                <span className="text-emerald-600 flex items-center gap-1"><CheckCircle className="w-4 h-4" /> Filled</span>
               ) : (
                 <button
                   onClick={() => setChecklistNA(prev => ({ ...prev, tip: !prev.tip }))}
-                  className={`text-[10px] px-2 py-0.5 rounded font-extrabold uppercase ${checklistNA.tip ? 'bg-gray-900 text-white' : 'bg-white border border-gray-300 text-gray-700'
+                  className={`text-[10px] px-2 py-0.5 rounded font-extrabold uppercase ${checklistNA.tip ? 'bg-[#1e3a8a] text-white' : 'bg-[#ffffff] border border-[#e2e8f0] text-[#1e293b]'
                     }`}
                 >
                   {checklistNA.tip ? 'Marked N/A' : 'Mark as N/A'}
@@ -2833,14 +2846,14 @@ const CaseDetails = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="pt-4 border-t border-gray-200 flex justify-end gap-3">
+        <div className="pt-4 border-t border-[#e2e8f0] flex justify-end gap-3">
           {caseData?.status?.toLowerCase() === 'closed' ? (
             user?.role === 'ADMIN' ? (
-              <button onClick={handleReopenCase} className="bg-gray-900 hover:bg-gray-800 text-white font-bold px-4 py-2.5 rounded-lg text-xs uppercase tracking-wider">
+              <button onClick={handleReopenCase} className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white font-bold px-4 py-2.5 rounded-lg text-xs uppercase tracking-wider shadow-sm">
                 Reopen Case (Admin Clearance)
               </button>
             ) : (
-              <span className="text-xs text-gray-500 font-bold italic">Only Administrative Officers (ADMIN) can reopen closed cases.</span>
+              <span className="text-xs text-[#64748b] font-bold italic">Only Administrative Officers (ADMIN) can reopen closed cases.</span>
             )
           ) : (
             <button onClick={handleCloseCase} disabled={closingCase} className="bg-red-700 hover:bg-red-800 text-white font-bold px-5 py-2.5 rounded-lg text-xs uppercase tracking-wider flex items-center gap-2 shadow-sm">

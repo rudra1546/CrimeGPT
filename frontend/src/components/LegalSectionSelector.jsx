@@ -198,15 +198,15 @@ const LegalSectionSelector = ({ crimeType, selectedSections = [], onChange, role
   const isSenior = ['ADMIN', 'SHO', 'LEGAL_ADVISOR', 'POLICE_OFFICER'].includes(role) || !role;
 
   return (
-    <div className="space-y-5 bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
+    <div className="space-y-5 bg-[#ffffff] border border-[#e2e8f0] rounded-lg p-5 shadow-sm">
       {/* Title */}
-      <div className="flex justify-between items-center border-b border-gray-150 pb-3">
+      <div className="flex justify-between items-center border-b border-[#e2e8f0] pb-3">
         <div>
-          <h4 className="text-xs font-black text-gray-900 uppercase tracking-widest flex items-center gap-1.5">
-            <ShieldCheck className="w-4 h-4 text-gray-900" />
+          <h4 className="text-xs font-black text-[#1e293b] uppercase tracking-widest flex items-center gap-1.5">
+            <ShieldCheck className="w-4 h-4 text-[#1e3a8a]" />
             <span>Legal Section Selection Workspace</span>
           </h4>
-          <p className="text-[10px] text-gray-500 mt-0.5">Select and approve BNS/IPC sections applied to this Case folder.</p>
+          <p className="text-[10px] text-[#64748b] mt-0.5">Select and approve BNS/IPC sections applied to this Case folder.</p>
         </div>
         <div className="flex items-center gap-2">
           {isOffline && (
@@ -215,7 +215,7 @@ const LegalSectionSelector = ({ crimeType, selectedSections = [], onChange, role
               <span>Offline Mapping</span>
             </span>
           )}
-          <span className="px-2.5 py-1 rounded text-[9px] font-extrabold uppercase tracking-wide border bg-green-50 text-green-700 border-green-200">
+          <span className="px-2.5 py-1 rounded text-[9px] font-extrabold uppercase tracking-wide border bg-emerald-50 text-emerald-700 border-emerald-200">
             Section Database Connected
           </span>
         </div>
@@ -223,11 +223,11 @@ const LegalSectionSelector = ({ crimeType, selectedSections = [], onChange, role
 
       {/* Suggested Sections List */}
       <div className="space-y-2">
-        <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block">Recommended Sections</span>
+        <span className="text-[10px] font-extrabold text-[#64748b] uppercase tracking-wider block">Recommended Sections</span>
         {loadingRecs ? (
-          <p className="text-xs text-gray-400 font-semibold italic">Recalculating penal recommendations...</p>
+          <p className="text-xs text-[#64748b] font-semibold italic">Recalculating penal recommendations...</p>
         ) : recommendations.length === 0 ? (
-          <p className="text-xs text-gray-400 font-semibold italic">No recommendations mapped for category "{crimeType || 'N/A'}". Use search to add custom sections.</p>
+          <p className="text-xs text-[#64748b] font-semibold italic">No recommendations mapped for category "{crimeType || 'N/A'}". Use search to add custom sections.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             {recommendations.map((rec, i) => {
@@ -236,20 +236,20 @@ const LegalSectionSelector = ({ crimeType, selectedSections = [], onChange, role
                 <label 
                   key={i} 
                   className={`p-3.5 border rounded-lg cursor-pointer flex items-start gap-3 transition-all select-none ${
-                    checked ? 'border-gray-900 bg-gray-50' : 'border-gray-200 hover:border-gray-400 bg-white'
+                    checked ? 'border-[#2563eb] bg-[#eff6ff]' : 'border-[#e2e8f0] hover:border-[#2563eb] bg-[#ffffff]'
                   }`}
                 >
                   <input
                     type="checkbox"
                     checked={checked}
                     onChange={() => handleToggleSection(rec)}
-                    className="mt-0.5 h-3.5 w-3.5 text-gray-900 border-gray-300 rounded focus:ring-gray-900 accent-gray-900"
+                    className="mt-0.5 h-3.5 w-3.5 text-[#1e3a8a] border-[#cbd5e1] rounded focus:ring-[#2563eb] accent-[#1e3a8a]"
                     aria-label={`Select section ${rec.law} ${rec.section}`}
                   />
                   <div className="space-y-0.5">
-                    <span className="text-xs font-black text-gray-900">{rec.law} {rec.section}</span>
-                    <span className="text-xs font-bold text-gray-700 block leading-normal">{rec.title}</span>
-                    <p className="text-[10px] text-gray-500 leading-normal">{rec.description}</p>
+                    <span className="text-xs font-black text-[#1e293b]">{rec.law} {rec.section}</span>
+                    <span className="text-xs font-bold text-[#1e293b] block leading-normal">{rec.title}</span>
+                    <p className="text-[10px] text-[#64748b] leading-normal">{rec.description}</p>
                   </div>
                 </label>
               );
@@ -260,12 +260,12 @@ const LegalSectionSelector = ({ crimeType, selectedSections = [], onChange, role
 
       {/* Live Search and Add Custom */}
       {isSenior && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-3 border-t border-gray-150">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-3 border-t border-[#e2e8f0]">
           {/* Live Search */}
           <div className="space-y-2">
-            <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block">Search Legal Sections Database</span>
+            <span className="text-[10px] font-extrabold text-[#64748b] uppercase tracking-wider block">Search Legal Sections Database</span>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-[#64748b]">
                 <Search className="w-3.5 h-3.5" />
               </span>
               <input
@@ -279,23 +279,23 @@ const LegalSectionSelector = ({ crimeType, selectedSections = [], onChange, role
                     e.stopPropagation();
                   }
                 }}
-                className="w-full bg-white border border-gray-300 focus:border-gray-900 text-gray-900 placeholder-gray-400 pl-9 pr-4 py-2 rounded-lg text-xs outline-none focus:ring-1 focus:ring-gray-900 transition-all"
+                className="w-full bg-[#ffffff] border border-[#e2e8f0] focus:border-[#2563eb] text-[#1e293b] placeholder-[#64748b]/60 pl-9 pr-4 py-2 rounded-lg text-xs outline-none focus:ring-1 focus:ring-[#2563eb] transition-all"
                 aria-label="Search legal sections"
               />
             </div>
             
             {searchResults.length > 0 && (
-              <div className="border border-gray-200 rounded-lg bg-white divide-y divide-gray-100 max-h-56 overflow-y-auto shadow-md mt-1">
+              <div className="border border-[#e2e8f0] rounded-lg bg-[#ffffff] divide-y divide-[#e2e8f0] max-h-56 overflow-y-auto shadow-md mt-1">
                 {searchResults.map((res, i) => (
                   <div
                     key={i}
-                    className="w-full text-left px-3 py-2.5 hover:bg-gray-50 flex justify-between items-center text-xs"
+                    className="w-full text-left px-3 py-2.5 hover:bg-[#eff6ff] flex justify-between items-center text-xs"
                   >
                     <div className="space-y-0.5">
-                      <span className="font-black text-gray-900">{res.law} Section {res.section}</span>
-                      <span className="font-bold text-gray-700 block leading-normal">{res.title}</span>
+                      <span className="font-black text-[#1e293b]">{res.law} Section {res.section}</span>
+                      <span className="font-bold text-[#1e293b] block leading-normal">{res.title}</span>
                       {res.description && (
-                        <p className="text-[10px] text-gray-500 leading-normal">{res.description}</p>
+                        <p className="text-[10px] text-[#64748b] leading-normal">{res.description}</p>
                       )}
                     </div>
                     <button
@@ -304,7 +304,7 @@ const LegalSectionSelector = ({ crimeType, selectedSections = [], onChange, role
                       className={`px-2.5 py-1 rounded text-[10px] font-black uppercase transition-all flex-shrink-0 ${
                         isSelected(res) 
                           ? 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100' 
-                          : 'bg-gray-900 text-white hover:bg-gray-800'
+                          : 'bg-[#1e3a8a] text-white hover:bg-[#1e3a8a]/90'
                       }`}
                     >
                       {isSelected(res) ? 'Remove' : 'Add Section'}
@@ -313,9 +313,9 @@ const LegalSectionSelector = ({ crimeType, selectedSections = [], onChange, role
                 ))}
               </div>
             )}
-            {searching && <p className="text-[10px] text-gray-400 italic">Searching database records...</p>}
+            {searching && <p className="text-[10px] text-[#64748b] italic">Searching database records...</p>}
             {searchQuery.length >= 1 && !searching && searchResults.length === 0 && (
-              <p className="text-[10px] text-gray-400 italic">No matching legal sections found for "{searchQuery}".</p>
+              <p className="text-[10px] text-[#64748b] italic">No matching legal sections found for "{searchQuery}".</p>
             )}
           </div>
 
@@ -328,11 +328,11 @@ const LegalSectionSelector = ({ crimeType, selectedSections = [], onChange, role
             }} 
             className="space-y-2"
           >
-            <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block">Manually Log Section</span>
+            <span className="text-[10px] font-extrabold text-[#64748b] uppercase tracking-wider block">Manually Log Section</span>
             <div className="flex gap-2">
               <select 
                 name="law" 
-                className="bg-white border border-gray-300 text-gray-800 py-1.5 px-2 rounded-lg text-xs outline-none focus:ring-1 focus:ring-gray-900"
+                className="bg-[#ffffff] border border-[#e2e8f0] text-[#1e293b] py-1.5 px-2 rounded-lg text-xs outline-none focus:ring-1 focus:ring-[#2563eb]"
                 aria-label="Select manual law body"
               >
                 <option value="BNS">BNS</option>
@@ -351,7 +351,7 @@ const LegalSectionSelector = ({ crimeType, selectedSections = [], onChange, role
                     handleAddManualSection(e);
                   }
                 }}
-                className="w-20 bg-white border border-gray-300 text-gray-900 py-1.5 px-2.5 rounded-lg text-xs outline-none focus:ring-1 focus:ring-gray-900"
+                className="w-20 bg-[#ffffff] border border-[#e2e8f0] text-[#1e293b] py-1.5 px-2.5 rounded-lg text-xs outline-none focus:ring-1 focus:ring-[#2563eb]"
                 required
                 aria-label="Manual Section Number"
               />
@@ -366,16 +366,16 @@ const LegalSectionSelector = ({ crimeType, selectedSections = [], onChange, role
                     handleAddManualSection(e);
                   }
                 }}
-                className="flex-1 bg-white border border-gray-300 text-gray-900 py-1.5 px-2.5 rounded-lg text-xs outline-none focus:ring-1 focus:ring-gray-900"
+                className="flex-1 bg-[#ffffff] border border-[#e2e8f0] text-[#1e293b] py-1.5 px-2.5 rounded-lg text-xs outline-none focus:ring-1 focus:ring-[#2563eb]"
                 required
                 aria-label="Manual Section Title"
               />
               <button
                 type="button"
                 onClick={(e) => handleAddManualSection(e)}
-                className="bg-gray-900 hover:bg-gray-800 text-white p-2 rounded-lg text-xs font-bold"
+                className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white p-2 rounded-lg text-xs font-bold"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-4 h-4 text-[#b45309]" />
               </button>
             </div>
           </form>
@@ -383,22 +383,22 @@ const LegalSectionSelector = ({ crimeType, selectedSections = [], onChange, role
       )}
 
       {/* Selected Sections list */}
-      <div className="space-y-2 pt-3 border-t border-gray-150">
-        <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider block">Selected Sections List ({selectedSections.length})</span>
+      <div className="space-y-2 pt-3 border-t border-[#e2e8f0]">
+        <span className="text-[10px] font-extrabold text-[#64748b] uppercase tracking-wider block">Selected Sections List ({selectedSections.length})</span>
         {selectedSections.length === 0 ? (
-          <p className="text-xs text-gray-400 font-semibold italic">No legal sections selected. Select recommended checkboxes above to link penal codes.</p>
+          <p className="text-xs text-[#64748b] font-semibold italic">No legal sections selected. Select recommended checkboxes above to link penal codes.</p>
         ) : (
           <div className="flex flex-wrap gap-2.5">
             {selectedSections.map((sec, idx) => (
               <span 
                 key={idx} 
-                className="inline-flex items-center gap-1 bg-gray-900 text-white pl-2.5 pr-1.5 py-1 rounded text-xs font-bold"
+                className="inline-flex items-center gap-1 bg-[#1e3a8a] text-white pl-2.5 pr-1.5 py-1 rounded text-xs font-bold shadow-sm"
               >
                 <span>{sec.law} {sec.section} - {sec.title}</span>
                 <button
                   type="button"
                   onClick={() => handleRemoveSection(idx)}
-                  className="hover:bg-red-750 p-0.5 rounded text-white"
+                  className="hover:bg-red-600 p-0.5 rounded text-white"
                   title="Remove Section"
                 >
                   <Trash2 className="w-3 h-3" />

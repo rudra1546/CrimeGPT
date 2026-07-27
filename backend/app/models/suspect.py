@@ -11,6 +11,7 @@ class Suspect(Base):
     alias = Column(String, nullable=True)
     address = Column(String, nullable=True)
     identification_marks = Column(String, nullable=True)
+    accused_mobile_number = Column(String, nullable=True)
     status = Column(String, default="Suspect", nullable=False) # e.g. Suspect, Arrested, Absconding, Released
     notes = Column(Text, nullable=True)
 

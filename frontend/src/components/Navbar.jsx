@@ -63,68 +63,68 @@ const Navbar = () => {
   };
 
   const sidebarContent = (
-    <aside className="w-64 bg-white border-r border-gray-200 flex flex-col h-full flex-shrink-0">
+    <aside className="w-64 bg-[#ffffff] border-r border-[#e2e8f0] flex flex-col h-full flex-shrink-0">
       {/* Government Branding Header */}
-      <div className="p-4 border-b border-gray-200 flex flex-col items-center text-center gap-1 bg-white relative">
+      <div className="p-4 border-b border-[#e2e8f0] flex flex-col items-center text-center gap-1 bg-[#ffffff] relative">
         <button
           onClick={() => setIsMobileOpen(false)}
-          className="lg:hidden absolute top-3 right-3 text-gray-500 hover:text-gray-900 p-1 rounded-lg"
+          className="lg:hidden absolute top-3 right-3 text-[#64748b] hover:text-[#1e293b] p-1 rounded-lg"
           aria-label="Close navigation menu"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <Shield className="w-7 h-7 text-gray-900" />
+        <Shield className="w-7 h-7 text-[#1e3a8a]" />
         <div>
-          <h1 className="text-xs font-black tracking-wide text-gray-900 uppercase">CrimeGPT Portal</h1>
-          <span className="text-[9px] text-gray-500 font-bold uppercase tracking-widest block">
-            National Registry
+          <h1 className="text-xs font-black tracking-wide text-[#1e293b] uppercase">CrimeGPT Portal</h1>
+          <span className="text-[9px] text-[#b45309] font-bold uppercase tracking-widest block">
+            National Police Registry
           </span>
         </div>
       </div>
 
       {/* Network Connectivity Status Indicator */}
-      <div className="px-4 py-2 bg-white border-b border-gray-200 flex items-center justify-between text-[10px] font-bold text-gray-500">
+      <div className="px-4 py-2 bg-[#ffffff] border-b border-[#e2e8f0] flex items-center justify-between text-[10px] font-bold text-[#64748b]">
         <span className="flex items-center gap-1">
           {networkStatus === 'online' ? (
             <>
-              <Wifi className="w-3.5 h-3.5 text-green-600" />
-              <span className="text-green-700">Online</span>
+              <Wifi className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="text-emerald-700">Online</span>
             </>
           ) : networkStatus === 'syncing' ? (
             <>
-              <div className="w-3 h-3 rounded-full border border-gray-950 border-t-transparent animate-spin" />
-              <span className="text-gray-800">Syncing...</span>
+              <div className="w-3 h-3 rounded-full border border-[#1e3a8a] border-t-transparent animate-spin" />
+              <span className="text-[#1e3a8a]">Syncing...</span>
             </>
           ) : (
             <>
-              <WifiOff className="w-3.5 h-3.5 text-gray-500" />
-              <span className="text-gray-600">Offline Queue</span>
+              <WifiOff className="w-3.5 h-3.5 text-[#64748b]" />
+              <span className="text-[#64748b]">Offline Queue</span>
             </>
           )}
         </span>
-        <span className="text-[9px] text-gray-400 uppercase">{user?.role?.toLowerCase()}</span>
+        <span className="text-[9px] text-[#64748b]/80 uppercase">{user?.role?.toLowerCase()}</span>
       </div>
 
       {/* Global Search Bar */}
-      <form onSubmit={handleSearchSubmit} className="p-3 border-b border-gray-200 bg-white">
+      <form onSubmit={handleSearchSubmit} className="p-3 border-b border-[#e2e8f0] bg-[#ffffff]">
         <div className="relative">
           <input
             type="text"
             placeholder="Search FIR, suspect..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white border border-gray-300 focus:border-gray-900 text-gray-900 placeholder-gray-400 pl-8 pr-3 py-1.5 rounded-lg text-xs outline-none focus:ring-1 focus:ring-gray-900 transition-all"
+            className="w-full bg-[#ffffff] border border-[#e2e8f0] focus:border-[#2563eb] text-[#1e293b] placeholder-[#64748b]/60 pl-8 pr-3 py-1.5 rounded-lg text-xs outline-none focus:ring-1 focus:ring-[#2563eb] transition-all"
             aria-label="Global Case Search"
           />
-          <button type="submit" className="absolute left-2.5 top-2.5 text-gray-400 hover:text-gray-950">
+          <button type="submit" className="absolute left-2.5 top-2.5 text-[#64748b] hover:text-[#1e293b]">
             <Search className="w-3.5 h-3.5" />
           </button>
         </div>
       </form>
 
       {/* Navigation Links */}
-      <nav className="flex-1 p-3 space-y-1 overflow-y-auto bg-white">
+      <nav className="flex-1 p-3 space-y-1 overflow-y-auto bg-[#ffffff]">
         {menuItems.map((item) => {
           const isActive = location.pathname === item.path;
           const Icon = item.icon;
@@ -135,28 +135,28 @@ const Navbar = () => {
               onClick={() => setIsMobileOpen(false)}
               className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold uppercase transition-all ${
                 isActive 
-                  ? 'bg-gray-900 text-white shadow-sm' 
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  ? 'bg-[#eff6ff] text-[#1e3a8a] border border-[#bfdbfe] shadow-sm font-black' 
+                  : 'text-[#64748b] border border-transparent hover:bg-[#f8fafc] hover:text-[#1e293b]'
               }`}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className={`w-4 h-4 ${isActive ? 'text-[#1e3a8a]' : ''}`} />
               <span>{item.name}</span>
             </Link>
           );
         })}
 
         {user && user.role === 'ADMIN' && (
-          <div className="pt-2 mt-2 border-t border-gray-200">
+          <div className="pt-2 mt-2 border-t border-[#e2e8f0]">
             <Link
               to="/admin"
               onClick={() => setIsMobileOpen(false)}
               className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold uppercase transition-all ${
                 location.pathname === '/admin' 
-                  ? 'bg-gray-900 text-white' 
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'bg-[#eff6ff] text-[#1e3a8a] border border-[#bfdbfe] font-black' 
+                  : 'text-[#1e293b] border border-transparent hover:bg-[#f8fafc]'
               }`}
             >
-              <Shield className="w-4 h-4 text-gray-900" />
+              <Shield className="w-4 h-4 text-[#b45309]" />
               <span>Admin Dashboard</span>
             </Link>
           </div>
@@ -164,14 +164,14 @@ const Navbar = () => {
       </nav>
 
       {/* User Information Profile Footer */}
-      <div className="p-3 border-t border-gray-200 bg-white">
+      <div className="p-3 border-t border-[#e2e8f0] bg-[#ffffff]">
         <div className="flex items-center gap-3 mb-2.5">
-          <div className="w-7 h-7 rounded-full bg-gray-100 border border-gray-300 flex items-center justify-center text-gray-900 flex-shrink-0">
+          <div className="w-7 h-7 rounded-full bg-[#eff6ff] border border-[#bfdbfe] flex items-center justify-center text-[#1e3a8a] flex-shrink-0">
             <User className="w-3.5 h-3.5" />
           </div>
           <div className="overflow-hidden">
-            <h4 className="text-xs font-bold text-gray-900 truncate">{user?.name}</h4>
-            <span className="text-[8px] bg-gray-100 text-gray-500 border border-gray-200 px-1.5 py-0.5 rounded font-black tracking-wider uppercase">
+            <h4 className="text-xs font-bold text-[#1e293b] truncate">{user?.name}</h4>
+            <span className="text-[8px] bg-[#eff6ff] text-[#1e3a8a] border border-[#bfdbfe] px-1.5 py-0.5 rounded font-black tracking-wider uppercase">
               {user?.role}
             </span>
           </div>
@@ -179,9 +179,9 @@ const Navbar = () => {
         
         <button
           onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-1.5 bg-white hover:bg-gray-50 text-gray-800 border border-gray-300 py-1.5 rounded-lg text-xs transition-all font-bold"
+          className="w-full flex items-center justify-center gap-1.5 bg-[#ffffff] hover:bg-[#f8fafc] text-[#1e293b] border border-[#e2e8f0] py-1.5 rounded-lg text-xs transition-all font-bold"
         >
-          <LogOut className="w-3.5 h-3.5" />
+          <LogOut className="w-3.5 h-3.5 text-[#64748b]" />
           <span>Exit Portal</span>
         </button>
       </div>
@@ -191,21 +191,21 @@ const Navbar = () => {
   return (
     <>
       {/* Mobile Top Header (Visible < lg) */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-white border-b border-gray-200 px-4 flex items-center justify-between z-40 shadow-sm no-print">
+      <header className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-[#ffffff] border-b border-[#e2e8f0] px-4 flex items-center justify-between z-40 shadow-sm no-print">
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsMobileOpen(true)}
-            className="p-1.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all"
+            className="p-1.5 text-[#1e293b] hover:text-[#1e3a8a] hover:bg-[#eff6ff] rounded-lg transition-all"
             aria-label="Open Navigation Drawer"
           >
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-1.5">
-            <Shield className="w-5 h-5 text-gray-900" />
-            <span className="text-xs font-black uppercase text-gray-900">CrimeGPT Portal</span>
+            <Shield className="w-5 h-5 text-[#1e3a8a]" />
+            <span className="text-xs font-black uppercase text-[#1e293b]">CrimeGPT Portal</span>
           </div>
         </div>
-        <span className="text-[10px] font-bold text-gray-500 bg-gray-100 border border-gray-300 px-2 py-0.5 rounded uppercase">
+        <span className="text-[10px] font-bold text-[#1e3a8a] bg-[#eff6ff] border border-[#bfdbfe] px-2 py-0.5 rounded uppercase">
           {user?.role}
         </span>
       </header>
@@ -220,9 +220,9 @@ const Navbar = () => {
         <div className="lg:hidden fixed inset-0 z-50 flex">
           <div
             onClick={() => setIsMobileOpen(false)}
-            className="fixed inset-0 bg-black/40 transition-opacity"
+            className="fixed inset-0 bg-[#1e293b]/40 transition-opacity"
           />
-          <div className="relative z-50 h-full flex flex-col max-w-xs w-full bg-white shadow-2xl">
+          <div className="relative z-50 h-full flex flex-col max-w-xs w-full bg-[#ffffff] shadow-2xl">
             {sidebarContent}
           </div>
         </div>

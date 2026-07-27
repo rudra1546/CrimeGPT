@@ -16,7 +16,7 @@ crimegpt_production.log
 
 # Uploaded files
 uploaded_evidence/
-temp_uploads/
+
 
 # ChromaDB vector store
 chroma_db/

@@ -152,18 +152,30 @@ def format_accused_for_prompt(db_case: Case) -> str:
         try:
             parsed = json.loads(raw) if isinstance(raw, str) else raw
             if isinstance(parsed, dict) and parsed.get("name"):
-                if not any(existing.get("name") == parsed.get("name") for existing in accused_list):
+                name = parsed.get("name")
+                matching = next((item for item in accused_list if item.get("name") == name), None)
+                if matching:
+                    for k, v in parsed.items():
+                        if v and not matching.get(k):
+                            matching[k] = v
+                else:
                     accused_list.append(parsed)
             elif isinstance(parsed, list):
                 for acc in parsed:
                     if isinstance(acc, dict) and acc.get("name"):
-                        if not any(existing.get("name") == acc.get("name") for existing in accused_list):
+                        name = acc.get("name")
+                        matching = next((item for item in accused_list if item.get("name") == name), None)
+                        if matching:
+                            for k, v in acc.items():
+                                if v and not matching.get(k):
+                                    matching[k] = v
+                        else:
                             accused_list.append(acc)
         except Exception:
             pass
 
     if not accused_list:
-        return "Not specified"
+        return "Not Available"
 
     blocks = []
     for idx, acc in enumerate(accused_list):
@@ -175,7 +187,7 @@ def format_accused_for_prompt(db_case: Case) -> str:
         if acc_details:
             blocks.append(f"  Accused/Suspect #{idx+1}:\n" + "\n".join(acc_details))
 
-    return "\n\n".join(blocks) if blocks else "Not specified"
+    return "\n\n".join(blocks) if blocks else "Not Available"
 
 def format_victim_for_prompt(db_case: Case) -> str:
     details = db_case.details

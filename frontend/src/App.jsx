@@ -19,8 +19,8 @@ const PrivateRoute = ({ children }) => {
   
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex flex-col justify-center items-center gap-3 text-gray-500">
-        <div className="w-10 h-10 border-4 border-gray-200 border-t-gray-900 rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-[#f8fafc] flex flex-col justify-center items-center gap-3 text-[#64748b]">
+        <div className="w-10 h-10 border-4 border-[#1e3a8a]/10 border-t-[#1e3a8a] rounded-full animate-spin"></div>
         <span className="text-xs font-bold tracking-wider uppercase animate-pulse">Establishing Secure Connection...</span>
       </div>
     );
@@ -31,9 +31,9 @@ const PrivateRoute = ({ children }) => {
   }
   
   return (
-    <div className="flex h-screen overflow-hidden bg-white w-full">
+    <div className="flex h-screen overflow-hidden bg-[#f8fafc] w-full">
       <Navbar />
-      <main className="flex-1 min-w-0 overflow-y-auto bg-white pt-14 lg:pt-0">
+      <main className="flex-1 min-w-0 overflow-y-auto bg-[#f8fafc] pt-14 lg:pt-0">
         {children}
       </main>
     </div>

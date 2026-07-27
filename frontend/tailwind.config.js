@@ -20,12 +20,26 @@ export default {
       },
       colors: {
         police: {
-          background: "#ffffff",
+          background: "#f8fafc",
           surface: "#ffffff",
-          border: "#e5e7eb",
-          primary: "#111827",
-          secondary: "#6b7280",
-          muted: "#9ca3af"
+          border: "#e2e8f0",
+          primary: "#1e3a8a",
+          secondary: "#2563eb",
+          accent: "#b45309",
+          text: "#1e293b",
+          muted: "#64748b",
+          light: "#eff6ff"
+        },
+        gov: {
+          bg: "#f8fafc",
+          card: "#ffffff",
+          primary: "#1e3a8a",
+          secondary: "#2563eb",
+          accent: "#b45309",
+          text: "#1e293b",
+          muted: "#64748b",
+          border: "#e2e8f0",
+          light: "#eff6ff"
         }
       }
     },
