@@ -29,8 +29,12 @@ export const AuthProvider = ({ children }) => {
     fetchCurrentUser();
   }, []);
 
-  const login = async (email, password) => {
-    const response = await api.post('/auth/login', { email, password });
+  const login = async (email, password, captchaToken) => {
+    const response = await api.post('/auth/login', {
+      email,
+      password,
+      turnstile_token: captchaToken
+    });
 
     const { access_token } = response.data;
     localStorage.setItem('token', access_token);
@@ -41,12 +45,13 @@ export const AuthProvider = ({ children }) => {
     return profileResponse.data;
   };
 
-  const register = async (name, email, password, role) => {
+  const register = async (name, email, password, role, captchaToken) => {
     const response = await api.post('/auth/register', {
       name,
       email,
       password,
-      role
+      role,
+      turnstile_token: captchaToken
     });
     return response.data;
   };

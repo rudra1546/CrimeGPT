@@ -16,7 +16,7 @@ import Navbar from './components/Navbar';
 // private route wrapper to verify JWT token and layout Navbar
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
-  
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#f8fafc] flex flex-col justify-center items-center gap-3 text-[#64748b]">
@@ -25,11 +25,11 @@ const PrivateRoute = ({ children }) => {
       </div>
     );
   }
-  
+
   if (!user) {
     return <Navigate to="/login" replace />;
   }
-  
+
   return (
     <div className="flex h-screen overflow-hidden bg-[#f8fafc] w-full">
       <Navbar />

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Shield, Mail, Lock, User, RefreshCw } from 'lucide-react';
-
+import { Turnstile } from "@marsidev/react-turnstile";
 const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -13,14 +13,18 @@ const Register = () => {
   const [submitting, setSubmitting] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
-
+  const [captchaToken, setCaptchaToken] = useState("");
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    if (!captchaToken) {
+      setError("Please complete CAPTCHA verification.");
+      return;
+    }
     setSuccess(false);
     setSubmitting(true);
     try {
-      await register(name, email, password, role);
+      await register(name, email, password, role, captchaToken);
       setSuccess(true);
       setTimeout(() => {
         navigate('/login');
@@ -28,7 +32,7 @@ const Register = () => {
     } catch (err) {
       console.error(err);
       setError(
-        err._parsedMessage || 
+        err._parsedMessage ||
         'Onboarding request failed. Email might already be registered.'
       );
     } finally {
@@ -135,7 +139,16 @@ const Register = () => {
               <option value="ADMIN">Administrative Officer</option>
             </select>
           </div>
-
+          <Turnstile
+            siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
+            options={{
+              appearance: "always",
+              execution: "render"
+            }}
+            onSuccess={(token) => {
+              setCaptchaToken(token);
+            }}
+          />
           {/* Sign Up button */}
           <button
             type="submit"

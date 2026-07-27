@@ -12,10 +12,13 @@ class UserRegister(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=6, description="Plaintext password, min 6 characters")
     role: UserRole = Field(UserRole.POLICE_OFFICER, description="Role of the user, must be ADMIN or POLICE_OFFICER")
+    turnstile_token: str
 
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+    turnstile_token: str
+
 
 class UserResponse(BaseModel):
     id: int

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas.user import UserRegister, UserLogin, UserResponse, Token
@@ -6,22 +6,36 @@ from app.services.auth_service import register_user, authenticate_user
 from app.utils.jwt_utils import create_access_token
 from app.routes.deps import get_current_user, RoleChecker
 from app.models.user import User
+from app.utils.turnstile import verify_turnstile
 
 router = APIRouter()
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-def register(user_data: UserRegister, db: Session = Depends(get_db)):
+async def register(user_data: UserRegister, db: Session = Depends(get_db)):
     """
     Registers a new user (POLICE_OFFICER or ADMIN).
     """
+
+    if not await verify_turnstile(user_data.turnstile_token):
+        raise HTTPException(
+            status_code=400,
+            detail="CAPTCHA verification failed"
+        )
     user = register_user(db, user_data)
     return user
 
 @router.post("/login", response_model=Token)
-def login(login_data: UserLogin, db: Session = Depends(get_db)):
+async def login(login_data: UserLogin, db: Session = Depends(get_db)):
     """
     Authenticates user credentials and returns a JWT access token.
     """
+
+    if not await verify_turnstile(login_data.turnstile_token):
+        raise HTTPException(
+            status_code=400,
+            detail="CAPTCHA verification failed"
+        )
+    
     user = authenticate_user(db, login_data)
     
     # Create access token with subject claim as email and custom claim for role

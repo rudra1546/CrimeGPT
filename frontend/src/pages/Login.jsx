@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Shield, Mail, Lock, RefreshCw } from 'lucide-react';
+import { Turnstile } from "@marsidev/react-turnstile";
 
 const Login = () => {
+  const [captchaToken, setCaptchaToken] = useState("");
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -14,14 +16,18 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    if (!captchaToken) {
+      setError("Please complete CAPTCHA verification.");
+      return;
+    }
     setSubmitting(true);
     try {
-      await login(email, password);
+      await login(email, password, captchaToken);
       navigate('/dashboard');
     } catch (err) {
       console.error(err);
       setError(
-        err._parsedMessage || 
+        err._parsedMessage ||
         'Authorization failed. Please check credentials and try again.'
       );
     } finally {
@@ -87,7 +93,16 @@ const Login = () => {
               />
             </div>
           </div>
-
+          <Turnstile
+            siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
+            options={{
+              appearance: "always",
+              execution: "render"
+            }}
+            onSuccess={(token) => {
+              setCaptchaToken(token);
+            }}
+          />
           {/* Sign In button */}
           <button
             type="submit"
