@@ -17,7 +17,7 @@ router = APIRouter(dependencies=[Depends(RoleChecker(["ADMIN", "POLICE_OFFICER",
 def create(
     case_data: CaseCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(RoleChecker(["POLICE_OFFICER"]))
 ):
     """
     Registers a new case file and details.
@@ -511,49 +511,6 @@ class ShoReviewRequest(BaseModel):
 class AssignOfficerRequest(BaseModel):
     investigating_officer: str
 
-@router.post("/{case_id}/close", response_model=CaseResponse)
-def close_case(
-    case_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """
-    Closes an active case file. Restricted strictly to SHO role.
-    """
-    if current_user.role != "SHO":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only Station House Officers (SHO) can close cases.")
-
-    from app.models.case import Case
-    from app.models.timeline import CaseTimeline
-    
-    case = db.query(Case).filter(Case.id == case_id).first()
-    if not case:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Case {case_id} not found.")
-
-    if case.status == "closed":
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Case is already closed.")
-
-    case.status = "closed"
-    
-    tl = CaseTimeline(
-        case_id=case_id,
-        event_name="Case Closed",
-        description=f"Case officially closed by SHO {current_user.name}.",
-        created_by=current_user.id
-    )
-    db.add(tl)
-    
-    log_audit(
-        db,
-        user_id=current_user.id,
-        user_name=current_user.name,
-        action="Close Case",
-        details=f"Closed Case FIR No. {case.fir_number} at Police Station {case.police_station}"
-    )
-
-    db.commit()
-    db.refresh(case)
-    return case_service.get_case_by_id(db, case_id)
 
 @router.post("/{case_id}/submit-for-review", response_model=CaseResponse)
 def submit_for_review(
@@ -782,18 +739,61 @@ def get_sho_station_analytics(
         "case_distribution": case_distribution
     }
 
+@router.post("/{case_id}/close", response_model=CaseResponse)
+def close_case(
+    case_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(RoleChecker(["ADMIN", "SHO"]))
+):
+    """
+    Closes an active case file. Allowed for ADMIN and SHO roles.
+    """
+    from datetime import datetime
+    from app.models.case import Case
+    from app.models.timeline import CaseTimeline
+
+    case = db.query(Case).filter(Case.id == case_id).first()
+    if not case:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Case {case_id} not found.")
+
+    case.status = "closed"
+    if hasattr(case, "closed_by"):
+        case.closed_by = current_user.id
+    if hasattr(case, "closed_at"):
+        case.closed_at = datetime.utcnow()
+
+    role_title = "Admin" if current_user.role == "ADMIN" else "SHO"
+    tl = CaseTimeline(
+        case_id=case_id,
+        event_name="Case Closed",
+        description=f"Case closed by {role_title} {current_user.name}.",
+        created_by=current_user.id
+    )
+    db.add(tl)
+
+    log_audit(
+        db,
+        user_id=current_user.id,
+        user_name=current_user.name,
+        action="Close Case",
+        details=f"Closed Case FIR No. {case.fir_number}"
+    )
+
+    db.commit()
+    db.refresh(case)
+    return case_service.get_case_by_id(db, case_id)
+
+
 @router.post("/{case_id}/reopen", response_model=CaseResponse)
 def reopen_case(
     case_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(RoleChecker(["ADMIN"]))
 ):
     """
-    Reopens a closed case file. Restricted strictly to SHO role.
+    Reopens a closed case file. Restricted strictly to ADMIN role.
     """
-    if current_user.role != "SHO":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only Station House Officers (SHO) can reopen closed cases.")
-
+    from datetime import datetime
     from app.models.case import Case
     from app.models.timeline import CaseTimeline
 
@@ -802,11 +802,15 @@ def reopen_case(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Case {case_id} not found.")
 
     case.status = "active"
+    if hasattr(case, "reopened_by"):
+        case.reopened_by = current_user.id
+    if hasattr(case, "reopened_at"):
+        case.reopened_at = datetime.utcnow()
 
     tl = CaseTimeline(
         case_id=case_id,
         event_name="Case Reopened",
-        description=f"Case reopened by SHO {current_user.name}.",
+        description=f"Case reopened by Admin {current_user.name}.",
         created_by=current_user.id
     )
     db.add(tl)

@@ -191,6 +191,10 @@ class CaseResponse(BaseModel):
     incident_date: datetime
     status: str
     created_by: int
+    closed_by: int | None = None
+    closed_at: datetime | None = None
+    reopened_by: int | None = None
+    reopened_at: datetime | None = None
     details: CaseDetailsResponse | None = None
     case_details: CaseDetailsResponse | None = None
     evidence: list[EvidenceResponse] = []

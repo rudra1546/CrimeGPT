@@ -80,7 +80,7 @@ print("CORS ORIGINS:", origins)
 # Automatically create database tables (for development convenience)
 Base.metadata.create_all(bind=engine)
 
-# Ensure accused_mobile_number column exists in suspects table
+# Ensure optional migration columns exist in tables
 try:
     from sqlalchemy import text
     with engine.connect() as conn:
@@ -88,6 +88,30 @@ try:
         conn.commit()
 except Exception:
     pass
+
+try:
+    from sqlalchemy import text
+    from app.database import DATABASE_URL
+    with engine.begin() as conn:
+        if DATABASE_URL.startswith("sqlite"):
+            cursor_cs = conn.execute(text("PRAGMA table_info(cases)"))
+            cols_cs = [row[1] for row in cursor_cs.fetchall()]
+            if cols_cs:
+                if "closed_by" not in cols_cs:
+                    conn.execute(text("ALTER TABLE cases ADD COLUMN closed_by INTEGER;"))
+                if "closed_at" not in cols_cs:
+                    conn.execute(text("ALTER TABLE cases ADD COLUMN closed_at DATETIME;"))
+                if "reopened_by" not in cols_cs:
+                    conn.execute(text("ALTER TABLE cases ADD COLUMN reopened_by INTEGER;"))
+                if "reopened_at" not in cols_cs:
+                    conn.execute(text("ALTER TABLE cases ADD COLUMN reopened_at DATETIME;"))
+        else:
+            conn.execute(text("ALTER TABLE cases ADD COLUMN IF NOT EXISTS closed_by INTEGER REFERENCES users(id);"))
+            conn.execute(text("ALTER TABLE cases ADD COLUMN IF NOT EXISTS closed_at TIMESTAMP;"))
+            conn.execute(text("ALTER TABLE cases ADD COLUMN IF NOT EXISTS reopened_by INTEGER REFERENCES users(id);"))
+            conn.execute(text("ALTER TABLE cases ADD COLUMN IF NOT EXISTS reopened_at TIMESTAMP;"))
+except Exception as e:
+    logger.warning(f"Startup migration helper warning: {e}")
 
 # Register routers
 app.include_router(auth_router, prefix="/api/auth", tags=["Authentication"])

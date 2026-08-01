@@ -13,9 +13,15 @@ class Case(Base):
     incident_date = Column(DateTime, nullable=False)
     status = Column(String, default="active", nullable=False)
     created_by = Column(Integer, ForeignKey("users.id"), nullable=False)
+    closed_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    closed_at = Column(DateTime, nullable=True)
+    reopened_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    reopened_at = Column(DateTime, nullable=True)
 
     # Relationships
-    creator = relationship("User", back_populates="cases")
+    creator = relationship("User", foreign_keys=[created_by], back_populates="cases")
+    closed_by_user = relationship("User", foreign_keys=[closed_by])
+    reopened_by_user = relationship("User", foreign_keys=[reopened_by])
     details = relationship("CaseDetails", uselist=False, back_populates="case", cascade="all, delete-orphan")
     documents = relationship("Document", back_populates="case", cascade="all, delete-orphan")
     evidence = relationship("Evidence", back_populates="case", cascade="all, delete-orphan")

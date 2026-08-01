@@ -2975,9 +2975,7 @@ const CaseDetails = () => {
 
               <div className="flex justify-end gap-3 pt-2">
                 {caseData?.status === 'closed' ? (
-                  <button onClick={handleReopenCase} className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white font-bold px-4 py-2 rounded-lg text-xs uppercase tracking-wider shadow-sm">
-                    Reopen Case (SHO Authority)
-                  </button>
+                  <span className="text-xs text-[#64748b] font-bold italic">This case is officially closed. Only Administrators can reopen cases.</span>
                 ) : (
                   <>
                     <button
@@ -3003,13 +3001,24 @@ const CaseDetails = () => {
           </div>
         ) : (
           <div className="pt-4 border-t border-[#e2e8f0] flex justify-end gap-3">
-            {caseData?.status === 'closed' ? (
-              <span className="text-xs text-[#64748b] font-bold italic">This case is officially closed by the SHO. Only the SHO can reopen cases.</span>
+            {user?.role === 'ADMIN' ? (
+              caseData?.status === 'closed' ? (
+                <button onClick={handleReopenCase} className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white font-bold px-4 py-2 rounded-lg text-xs uppercase tracking-wider shadow-sm">
+                  Reopen Case (Admin Authority)
+                </button>
+              ) : (
+                <button onClick={handleCloseCase} disabled={closingCase} className="bg-red-700 hover:bg-red-800 text-white font-bold px-4 py-2 rounded-lg text-xs uppercase tracking-wider shadow-sm flex items-center gap-2">
+                  <Lock className="w-4 h-4 text-white" />
+                  <span>{closingCase ? 'Closing...' : 'Close Case (Admin Authority)'}</span>
+                </button>
+              )
+            ) : caseData?.status === 'closed' ? (
+              <span className="text-xs text-[#64748b] font-bold italic">This case is officially closed. Only Administrators can reopen cases.</span>
             ) : caseData?.status === 'pending_sho_review' ? (
               <span className="text-xs text-amber-700 font-bold bg-amber-50 border border-amber-200 px-3 py-2 rounded uppercase tracking-wider">
                 Submitted for SHO Review (Read-Only)
               </span>
-            ) : (
+            ) : user?.role === 'POLICE_OFFICER' ? (
               <button
                 onClick={handleSubmitForShoReview}
                 disabled={submittingReview}
@@ -3018,7 +3027,7 @@ const CaseDetails = () => {
                 <Send className="w-4 h-4 text-[#b45309]" />
                 <span>{submittingReview ? 'Submitting...' : caseData?.status === 'revision_requested' ? 'Resubmit for SHO Review' : 'Submit for SHO Review'}</span>
               </button>
-            )}
+            ) : null}
           </div>
         )}
       </div>

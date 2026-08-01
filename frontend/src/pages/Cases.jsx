@@ -94,7 +94,7 @@ const Cases = () => {
           <h1 className="text-xl font-black tracking-wide text-[#1e293b] uppercase">National Case Registry</h1>
           <p className="text-xs text-[#64748b] mt-1">Index of registered FIRs, ongoing investigations, and legal records.</p>
         </div>
-        {!['ADMIN', 'LEGAL_ADVISOR'].includes(user?.role) && (
+        {user?.role === 'POLICE_OFFICER' && (
           <Link 
             to="/cases/create"
             className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white font-bold px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 hover:-translate-y-0.5 transition-all text-xs uppercase tracking-wider shadow-sm"

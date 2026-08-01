@@ -20,13 +20,8 @@ const CreateCase = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // Redirect Administrators away from Create Case route
-  if (user?.role === 'ADMIN') {
-    return <Navigate to="/admin" replace />;
-  }
-
-  // Redirect Legal Advisors away from Create Case route
-  if (user?.role === 'LEGAL_ADVISOR') {
+  // Only Police Officers (POLICE_OFFICER) are authorized to create new cases
+  if (user?.role !== 'POLICE_OFFICER') {
     return <Navigate to="/dashboard" replace />;
   }
   

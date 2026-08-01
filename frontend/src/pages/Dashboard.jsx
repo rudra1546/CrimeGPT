@@ -202,7 +202,7 @@ const Dashboard = () => {
         <div className="space-y-4 lg:col-span-1">
           <h3 className="text-[10px] font-extrabold text-[#64748b] uppercase tracking-widest">Portal Operations</h3>
           <div className="grid grid-cols-1 gap-3">
-            {!['ADMIN', 'LEGAL_ADVISOR'].includes(user?.role) && (
+            {user?.role === 'POLICE_OFFICER' && (
               <Link to="/cases/create" className="group bg-[#ffffff] border border-[#e2e8f0] p-4.5 rounded-lg hover:border-[#2563eb] transition-all flex items-center gap-4 shadow-sm">
                 <div className="p-2.5 bg-[#eff6ff] border border-[#bfdbfe] rounded-lg text-[#1e3a8a] group-hover:bg-[#1e3a8a] group-hover:text-white transition-all">
                   <FilePlus className="w-5 h-5" />

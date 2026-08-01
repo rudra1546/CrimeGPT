@@ -17,4 +17,4 @@ class User(Base):
     last_login_at = Column(DateTime, nullable=True)
 
     # Relationships
-    cases = relationship("Case", back_populates="creator")
+    cases = relationship("Case", back_populates="creator", foreign_keys="Case.created_by")

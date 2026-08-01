@@ -38,6 +38,14 @@ try:
             if cols_cs:
                 if "crime_category" not in cols_cs:
                     conn.execute(text("ALTER TABLE cases ADD COLUMN crime_category TEXT"))
+                if "closed_by" not in cols_cs:
+                    conn.execute(text("ALTER TABLE cases ADD COLUMN closed_by INTEGER"))
+                if "closed_at" not in cols_cs:
+                    conn.execute(text("ALTER TABLE cases ADD COLUMN closed_at DATETIME"))
+                if "reopened_by" not in cols_cs:
+                    conn.execute(text("ALTER TABLE cases ADD COLUMN reopened_by INTEGER"))
+                if "reopened_at" not in cols_cs:
+                    conn.execute(text("ALTER TABLE cases ADD COLUMN reopened_at DATETIME"))
             
             # Check SQLite table info for evidence
             cursor_ev = conn.execute(text("PRAGMA table_info(evidence)"))
@@ -86,6 +94,22 @@ try:
                 pass
             try:
                 conn.execute(text("ALTER TABLE cases ADD COLUMN crime_category TEXT"))
+            except Exception:
+                pass
+            try:
+                conn.execute(text("ALTER TABLE cases ADD COLUMN IF NOT EXISTS closed_by INTEGER REFERENCES users(id)"))
+            except Exception:
+                pass
+            try:
+                conn.execute(text("ALTER TABLE cases ADD COLUMN IF NOT EXISTS closed_at TIMESTAMP"))
+            except Exception:
+                pass
+            try:
+                conn.execute(text("ALTER TABLE cases ADD COLUMN IF NOT EXISTS reopened_by INTEGER REFERENCES users(id)"))
+            except Exception:
+                pass
+            try:
+                conn.execute(text("ALTER TABLE cases ADD COLUMN IF NOT EXISTS reopened_at TIMESTAMP"))
             except Exception:
                 pass
             try:
