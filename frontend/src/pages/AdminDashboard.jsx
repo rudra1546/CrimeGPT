@@ -16,7 +16,6 @@ import {
   Eye,
   Shield,
   X,
-  UserPlus,
   Trash2,
   History,
   FileCheck

@@ -11,7 +11,9 @@ import GenerateDocument from './pages/GenerateDocument';
 import DocumentHistory from './pages/DocumentHistory';
 import AdminDashboard from './pages/AdminDashboard';
 import AIAssistant from './pages/AIAssistant';
+import StationAnalytics from './pages/StationAnalytics';
 import Navbar from './components/Navbar';
+import VoiceAssistantWidget from './components/VoiceAssistantWidget';
 
 // private route wrapper to verify JWT token and layout Navbar
 const PrivateRoute = ({ children }) => {
@@ -31,11 +33,12 @@ const PrivateRoute = ({ children }) => {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#f8fafc] w-full">
+    <div className="flex h-screen overflow-hidden bg-[#f8fafc] w-full relative">
       <Navbar />
       <main className="flex-1 min-w-0 overflow-y-auto bg-[#f8fafc] pt-14 lg:pt-0">
         {children}
       </main>
+      <VoiceAssistantWidget />
     </div>
   );
 };
@@ -56,6 +59,7 @@ const AppContent = () => {
       <Route path="/documents" element={<PrivateRoute><DocumentHistory /></PrivateRoute>} />
       <Route path="/documents/generate" element={<PrivateRoute><GenerateDocument /></PrivateRoute>} />
       <Route path="/assistant" element={<PrivateRoute><AIAssistant /></PrivateRoute>} />
+      <Route path="/sho/analytics" element={<PrivateRoute><StationAnalytics /></PrivateRoute>} />
 
 
 

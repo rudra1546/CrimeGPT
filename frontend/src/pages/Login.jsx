@@ -36,7 +36,45 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex flex-col justify-center items-center px-4">
+    <div className="min-h-screen bg-[#f8fafc] flex flex-col justify-center items-center px-4 relative">
+      {/* Full-screen glassy server connection overlay */}
+      {submitting && (
+        <div className="fixed inset-0 bg-[#f8fafc]/85 backdrop-blur-md z-50 flex flex-col items-center justify-center p-4">
+          <div className="bg-[#ffffff]/95 border border-[#e2e8f0] p-8 rounded-2xl shadow-xl max-w-sm w-full text-center space-y-6 relative overflow-hidden">
+            {/* Buffering animation ring with central CrimeGPT logo */}
+            <div className="relative flex justify-center items-center my-3">
+              {/* Outer rotating ring */}
+              <div className="w-20 h-20 rounded-full border-4 border-[#1e3a8a]/15 border-t-[#1e3a8a] border-r-[#2563eb] animate-spin" />
+              
+              {/* Subtle pulsing background effect */}
+              <div className="absolute w-16 h-16 rounded-full bg-[#eff6ff] animate-ping opacity-30" />
+              
+              {/* Center CrimeGPT Logo */}
+              <div className="absolute w-12 h-12 bg-[#eff6ff] rounded-xl flex items-center justify-center border border-[#bfdbfe] shadow-sm">
+                <Shield className="w-6 h-6 text-[#1e3a8a]" />
+              </div>
+            </div>
+
+            {/* Main Text & Subtitle */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-black text-[#1e293b] uppercase tracking-wider">
+                Connecting to server...
+              </h3>
+              <p className="text-xs text-[#64748b] font-medium leading-relaxed">
+                Please wait while we wake up the services
+              </p>
+            </div>
+
+            {/* Subtle animated indicator dots */}
+            <div className="flex justify-center items-center gap-1.5 pt-1">
+              <div className="w-2 h-2 rounded-full bg-[#1e3a8a] animate-bounce [animation-delay:-0.3s]" />
+              <div className="w-2 h-2 rounded-full bg-[#2563eb] animate-bounce [animation-delay:-0.15s]" />
+              <div className="w-2 h-2 rounded-full bg-[#b45309] animate-bounce" />
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="w-full max-w-md bg-[#ffffff] border border-[#e2e8f0] p-8 rounded-xl shadow-sm">
         {/* Brand Header */}
         <div className="text-center mb-8">
@@ -67,10 +105,11 @@ const Login = () => {
                 id="login-email"
                 type="email"
                 required
+                disabled={submitting}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="officer@department.gov"
-                className="w-full bg-[#ffffff] border border-[#e2e8f0] hover:border-[#2563eb] focus:border-[#2563eb] text-[#1e293b] placeholder-[#64748b]/60 pl-9 pr-4 py-2.5 rounded-lg text-xs outline-none focus:ring-1 focus:ring-[#2563eb] transition-all"
+                className="w-full bg-[#ffffff] border border-[#e2e8f0] hover:border-[#2563eb] focus:border-[#2563eb] text-[#1e293b] placeholder-[#64748b]/60 pl-9 pr-4 py-2.5 rounded-lg text-xs outline-none focus:ring-1 focus:ring-[#2563eb] transition-all disabled:opacity-50"
               />
             </div>
           </div>
@@ -86,10 +125,11 @@ const Login = () => {
                 id="login-password"
                 type="password"
                 required
+                disabled={submitting}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••••••"
-                className="w-full bg-[#ffffff] border border-[#e2e8f0] hover:border-[#2563eb] focus:border-[#2563eb] text-[#1e293b] placeholder-[#64748b]/60 pl-9 pr-4 py-2.5 rounded-lg text-xs outline-none focus:ring-1 focus:ring-[#2563eb] transition-all"
+                className="w-full bg-[#ffffff] border border-[#e2e8f0] hover:border-[#2563eb] focus:border-[#2563eb] text-[#1e293b] placeholder-[#64748b]/60 pl-9 pr-4 py-2.5 rounded-lg text-xs outline-none focus:ring-1 focus:ring-[#2563eb] transition-all disabled:opacity-50"
               />
             </div>
           </div>

@@ -4,7 +4,7 @@ from app.models.user import User
 from app.schemas.user import UserRegister, UserLogin
 from app.utils.security import hash_password, verify_password
 
-from datetime import datetime
+from datetime import datetime, timezone
 from app.models.user_audit_log import UserAuditLog
 
 def register_user(db: Session, user_data: UserRegister) -> User:
@@ -30,7 +30,7 @@ def register_user(db: Session, user_data: UserRegister) -> User:
         password_hash=hashed,
         role=user_data.role.value,  # store string representation
         status="ACTIVE",
-        created_at=datetime.utcnow()
+        created_at=datetime.now(timezone.utc)
     )
     
     db.add(new_user)
@@ -47,7 +47,7 @@ def register_user(db: Session, user_data: UserRegister) -> User:
         status_after_action="ACTIVE",
         performed_by="Self Registration",
         details="Account created via portal registration",
-        timestamp=datetime.utcnow()
+        timestamp=datetime.now(timezone.utc)
     )
     db.add(audit)
     db.commit()
@@ -84,7 +84,7 @@ def authenticate_user(db: Session, login_data: UserLogin) -> User:
         )
         
     # Update last login timestamp
-    user.last_login_at = datetime.utcnow()
+    user.last_login_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(user)
 

@@ -501,6 +501,16 @@ def record_evidence_movement(
 def get_evidence_movement_history(evidence_id: int, db: Session = Depends(get_db)):
     return db.query(EvidenceMovement).filter(EvidenceMovement.evidence_id == evidence_id).order_by(EvidenceMovement.timestamp.asc()).all()
 
+from pydantic import BaseModel
+from sqlalchemy import func
+
+class ShoReviewRequest(BaseModel):
+    action: str  # "approve" | "request_revision"
+    remarks: str | None = None
+
+class AssignOfficerRequest(BaseModel):
+    investigating_officer: str
+
 @router.post("/{case_id}/close", response_model=CaseResponse)
 def close_case(
     case_id: int,
@@ -508,8 +518,11 @@ def close_case(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Closes an active case file after completing mandatory checklist validation.
+    Closes an active case file. Restricted strictly to SHO role.
     """
+    if current_user.role != "SHO":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only Station House Officers (SHO) can close cases.")
+
     from app.models.case import Case
     from app.models.timeline import CaseTimeline
     
@@ -517,16 +530,15 @@ def close_case(
     if not case:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Case {case_id} not found.")
 
-    if case.status.lower() == "closed":
+    if case.status == "closed":
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Case is already closed.")
 
     case.status = "closed"
     
-    # Add timeline event
     tl = CaseTimeline(
         case_id=case_id,
         event_name="Case Closed",
-        description=f"Case officially closed by {current_user.name} ({current_user.role}). All checklist requirements verified or marked N/A.",
+        description=f"Case officially closed by SHO {current_user.name}.",
         created_by=current_user.id
     )
     db.add(tl)
@@ -543,6 +555,233 @@ def close_case(
     db.refresh(case)
     return case_service.get_case_by_id(db, case_id)
 
+@router.post("/{case_id}/submit-for-review", response_model=CaseResponse)
+def submit_for_review(
+    case_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Submits a case dossier for supervisory SHO review.
+    """
+    from app.models.case import Case
+    from app.models.timeline import CaseTimeline
+
+    case = db.query(Case).filter(Case.id == case_id).first()
+    if not case:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Case {case_id} not found.")
+
+    if case.status == "closed":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot submit a closed case for review.")
+
+    case.status = "pending_sho_review"
+
+    tl = CaseTimeline(
+        case_id=case_id,
+        event_name="Submitted for SHO Review",
+        description=f"Case FIR No. {case.fir_number} submitted for supervisory review by {current_user.name} ({current_user.role}).",
+        created_by=current_user.id
+    )
+    db.add(tl)
+
+    log_audit(
+        db,
+        user_id=current_user.id,
+        user_name=current_user.name,
+        action="Submit Case for SHO Review",
+        details=f"Submitted Case FIR No. {case.fir_number} for SHO review"
+    )
+
+    db.commit()
+    db.refresh(case)
+    return case_service.get_case_by_id(db, case_id)
+
+@router.post("/{case_id}/sho-review", response_model=CaseResponse)
+def sho_review(
+    case_id: int,
+    req: ShoReviewRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Performs supervisory review on a case. Restricted strictly to SHO role.
+    """
+    if current_user.role != "SHO":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only Station House Officers (SHO) can perform case reviews.")
+
+    from app.models.case import Case
+    from app.models.timeline import CaseTimeline
+
+    case = db.query(Case).filter(Case.id == case_id).first()
+    if not case:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Case {case_id} not found.")
+
+    action_type = req.action.lower().strip()
+    remarks_str = f" | Remarks: {req.remarks}" if req.remarks else ""
+
+    if action_type == "approve":
+        case.status = "closed"
+        event_title = "Case Approved & Closed by SHO"
+        desc = f"SHO {current_user.name} approved the investigation and officially closed Case FIR No. {case.fir_number}{remarks_str}."
+    elif action_type in ["request_revision", "reject"]:
+        case.status = "revision_requested"
+        event_title = "SHO Requested Revisions"
+        desc = f"SHO {current_user.name} requested revisions for Case FIR No. {case.fir_number}{remarks_str}."
+    else:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid review action. Use 'approve' or 'request_revision'.")
+
+    tl = CaseTimeline(
+        case_id=case_id,
+        event_name=event_title,
+        description=desc,
+        created_by=current_user.id
+    )
+    db.add(tl)
+
+    log_audit(
+        db,
+        user_id=current_user.id,
+        user_name=current_user.name,
+        action=f"SHO Review ({action_type})",
+        details=f"SHO review decision '{action_type}' recorded for Case FIR No. {case.fir_number}{remarks_str}"
+    )
+
+    db.commit()
+    db.refresh(case)
+    return case_service.get_case_by_id(db, case_id)
+
+@router.post("/{case_id}/assign", response_model=CaseResponse)
+def assign_investigating_officer(
+    case_id: int,
+    req: AssignOfficerRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Assigns or reassigns an investigating officer to a case file. Restricted strictly to SHO role.
+    """
+    if current_user.role != "SHO":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only Station House Officers (SHO) can assign or reassign cases.")
+
+    from app.models.case import Case
+    from app.models.case_details import CaseDetails
+    from app.models.timeline import CaseTimeline
+
+    case = db.query(Case).filter(Case.id == case_id).first()
+    if not case:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Case {case_id} not found.")
+
+    details = db.query(CaseDetails).filter(CaseDetails.case_id == case_id).first()
+    if not details:
+        details = CaseDetails(case_id=case_id, investigating_officer=req.investigating_officer)
+        db.add(details)
+    else:
+        details.investigating_officer = req.investigating_officer
+
+    tl = CaseTimeline(
+        case_id=case_id,
+        event_name="Investigating Officer Assigned",
+        description=f"SHO {current_user.name} assigned Officer '{req.investigating_officer}' to Case FIR No. {case.fir_number}.",
+        created_by=current_user.id
+    )
+    db.add(tl)
+
+    log_audit(
+        db,
+        user_id=current_user.id,
+        user_name=current_user.name,
+        action="Assign Case Officer",
+        details=f"Assigned Case FIR No. {case.fir_number} to Officer {req.investigating_officer}"
+    )
+
+    db.commit()
+    db.refresh(case)
+    return case_service.get_case_by_id(db, case_id)
+
+@router.get("/sho/pending-reviews", response_model=list[CaseResponse])
+def get_pending_sho_reviews(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Retrieves all cases awaiting SHO supervisory approval. Restricted strictly to SHO role.
+    """
+    if current_user.role != "SHO":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only Station House Officers (SHO) can view pending reviews.")
+
+    from app.models.case import Case
+    return db.query(Case).filter(Case.status == "pending_sho_review").all()
+
+@router.get("/sho/officers")
+def get_station_officers(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Retrieves list of active police officers for case assignment. Restricted strictly to SHO role.
+    """
+    if current_user.role != "SHO":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only Station House Officers (SHO) can view officer directory.")
+
+    officers = db.query(User).filter(User.role.in_(["POLICE_OFFICER", "SHO"]), User.status == "ACTIVE").all()
+    return [
+        {
+            "id": u.id,
+            "name": u.name, 
+            "email": u.email, 
+            "role": u.role, 
+            # "station": u.station
+        } 
+        for u in officers
+        ]
+
+@router.get("/sho/analytics")
+def get_sho_station_analytics(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Retrieves comprehensive station statistics and officer workload metrics. Restricted strictly to SHO role.
+    """
+    if current_user.role != "SHO":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only Station House Officers (SHO) can view station analytics.")
+
+    from app.models.case import Case
+    from app.models.case_details import CaseDetails
+
+    total_cases = db.query(Case).count()
+    active_cases = db.query(Case).filter(Case.status == "active").count()
+    pending_reviews = db.query(Case).filter(Case.status == "pending_sho_review").count()
+    revision_requested = db.query(Case).filter(Case.status == "revision_requested").count()
+    closed_cases = db.query(Case).filter(Case.status == "closed").count()
+
+    # Officer Workload Breakdown
+    workload_counts = (
+        db.query(CaseDetails.investigating_officer, func.count(Case.id))
+        .join(Case, Case.id == CaseDetails.case_id)
+        .group_by(CaseDetails.investigating_officer)
+        .all()
+    )
+
+    workload = [
+        {"officer_name": officer or "Unassigned", "case_count": count}
+        for officer, count in workload_counts
+    ]
+
+    # Category breakdown
+    category_counts = db.query(Case.crime_type, func.count(Case.id)).group_by(Case.crime_type).all()
+    case_distribution = [{"name": cat or "Unknown", "value": cnt} for cat, cnt in category_counts]
+
+    return {
+        "total_cases": total_cases,
+        "active_cases": active_cases,
+        "pending_reviews": pending_reviews,
+        "revision_requested": revision_requested,
+        "closed_cases": closed_cases,
+        "workload": workload,
+        "case_distribution": case_distribution
+    }
+
 @router.post("/{case_id}/reopen", response_model=CaseResponse)
 def reopen_case(
     case_id: int,
@@ -550,10 +789,10 @@ def reopen_case(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Reopens a closed case file. Restricted to ADMIN users only.
+    Reopens a closed case file. Restricted strictly to SHO role.
     """
-    if current_user.role != "ADMIN":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only Administrative Officers (ADMIN) can reopen closed cases.")
+    if current_user.role != "SHO":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only Station House Officers (SHO) can reopen closed cases.")
 
     from app.models.case import Case
     from app.models.timeline import CaseTimeline
@@ -564,11 +803,10 @@ def reopen_case(
 
     case.status = "active"
 
-    # Add timeline event
     tl = CaseTimeline(
         case_id=case_id,
         event_name="Case Reopened",
-        description=f"Case reopened by Administrative Officer {current_user.name}.",
+        description=f"Case reopened by SHO {current_user.name}.",
         created_by=current_user.id
     )
     db.add(tl)

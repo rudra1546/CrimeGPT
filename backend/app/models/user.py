@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 from app.database import Base
 
 class User(Base):
@@ -13,7 +13,7 @@ class User(Base):
     role = Column(String, default="POLICE_OFFICER", nullable=False)
     police_station = Column(String, default="Central Police Station", nullable=True)
     status = Column(String, default="ACTIVE", nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=True)
     last_login_at = Column(DateTime, nullable=True)
 
     # Relationships

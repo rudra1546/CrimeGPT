@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 from app.database import Base
 
 class EvidenceMovement(Base):
@@ -13,7 +13,7 @@ class EvidenceMovement(Base):
     to_officer = Column(String, nullable=False)
     to_officer_badge = Column(String, nullable=True)
     transfer_reason = Column(String, nullable=True)
-    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     remarks = Column(Text, nullable=True)
 
     # Relationships

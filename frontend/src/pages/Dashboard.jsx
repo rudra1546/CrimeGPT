@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+import { formatDateTime } from '../utils/dateFormatter';
 import {
   Briefcase,
   Clock,
@@ -32,6 +34,7 @@ import {
 const CHART_COLORS = ['#1e3a8a', '#2563eb', '#b45309', '#0284c7', '#475569', '#d97706'];
 
 const Dashboard = () => {
+  const { user } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -199,15 +202,17 @@ const Dashboard = () => {
         <div className="space-y-4 lg:col-span-1">
           <h3 className="text-[10px] font-extrabold text-[#64748b] uppercase tracking-widest">Portal Operations</h3>
           <div className="grid grid-cols-1 gap-3">
-            <Link to="/cases/create" className="group bg-[#ffffff] border border-[#e2e8f0] p-4.5 rounded-lg hover:border-[#2563eb] transition-all flex items-center gap-4 shadow-sm">
-              <div className="p-2.5 bg-[#eff6ff] border border-[#bfdbfe] rounded-lg text-[#1e3a8a] group-hover:bg-[#1e3a8a] group-hover:text-white transition-all">
-                <FilePlus className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="text-xs font-black text-[#1e293b] group-hover:text-[#1e3a8a] uppercase transition-colors">Register New FIR</h4>
-                <p className="text-[10px] text-[#64748b] mt-0.5">Log new reports and victim details.</p>
-              </div>
-            </Link>
+            {!['ADMIN', 'LEGAL_ADVISOR'].includes(user?.role) && (
+              <Link to="/cases/create" className="group bg-[#ffffff] border border-[#e2e8f0] p-4.5 rounded-lg hover:border-[#2563eb] transition-all flex items-center gap-4 shadow-sm">
+                <div className="p-2.5 bg-[#eff6ff] border border-[#bfdbfe] rounded-lg text-[#1e3a8a] group-hover:bg-[#1e3a8a] group-hover:text-white transition-all">
+                  <FilePlus className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-black text-[#1e293b] group-hover:text-[#1e3a8a] uppercase transition-colors">Register New FIR</h4>
+                  <p className="text-[10px] text-[#64748b] mt-0.5">Log new reports and victim details.</p>
+                </div>
+              </Link>
+            )}
             <Link to="/documents/generate" className="group bg-[#ffffff] border border-[#e2e8f0] p-4.5 rounded-lg hover:border-[#2563eb] transition-all flex items-center gap-4 shadow-sm">
               <div className="p-2.5 bg-[#eff6ff] border border-[#bfdbfe] rounded-lg text-[#1e3a8a] group-hover:bg-[#1e3a8a] group-hover:text-white transition-all">
                 <Compass className="w-5 h-5" />
@@ -249,7 +254,7 @@ const Dashboard = () => {
                   <div className="flex-1 space-y-0.5">
                     <div className="flex justify-between">
                       <span className="font-bold text-[#1e293b]">{act.event_name}</span>
-                      <span className="text-[9px] text-[#64748b] font-bold">{new Date(act.timestamp).toLocaleDateString()}</span>
+                      <span className="text-[9px] text-[#64748b] font-bold">{formatDateTime(act.timestamp)}</span>
                     </div>
                     <p className="text-[11px] text-[#64748b] leading-normal">{act.description}</p>
                     <div className="text-[9px] text-[#64748b]/80 font-bold flex items-center gap-2">

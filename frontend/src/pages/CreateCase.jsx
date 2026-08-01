@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import LegalSectionSelector from '../components/LegalSectionSelector';
@@ -19,6 +19,16 @@ import {
 const CreateCase = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  // Redirect Administrators away from Create Case route
+  if (user?.role === 'ADMIN') {
+    return <Navigate to="/admin" replace />;
+  }
+
+  // Redirect Legal Advisors away from Create Case route
+  if (user?.role === 'LEGAL_ADVISOR') {
+    return <Navigate to="/dashboard" replace />;
+  }
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');

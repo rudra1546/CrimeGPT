@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session, joinedload, selectinload
 from fastapi import HTTPException, status
 from app.models.case import Case
@@ -439,7 +439,7 @@ def regenerate_document(db: Session, document_id: int, user_id: int) -> Document
     # 7. Update content and uploader
     db_doc.generated_content = content_payload
     db_doc.created_by = user_id
-    db_doc.created_date = datetime.utcnow()
+    db_doc.created_date = datetime.now(timezone.utc)
     
     # 8. Log in CaseTimeline
     from app.models.timeline import CaseTimeline

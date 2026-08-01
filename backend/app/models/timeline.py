@@ -10,7 +10,7 @@ class CaseTimeline(Base):
     case_id = Column(Integer, ForeignKey("cases.id", ondelete="CASCADE"), nullable=False)
     event_name = Column(String, nullable=False)
     description = Column(String, nullable=False)
-    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     created_by = Column(Integer, ForeignKey("users.id"), nullable=False)
 
     # Relationships

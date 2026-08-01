@@ -12,7 +12,7 @@ class Evidence(Base):
     file_type = Column(String, nullable=False)
     file_path = Column(String, nullable=False)
     uploaded_by = Column(Integer, ForeignKey("users.id"), nullable=False)
-    uploaded_date = Column(DateTime, default=datetime.utcnow)
+    uploaded_date = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     # Detailed physical and digital evidence properties (nullable for backward compatibility)
     evidence_type = Column(String, nullable=True) # e.g. Physical, Digital, Document, Weapon

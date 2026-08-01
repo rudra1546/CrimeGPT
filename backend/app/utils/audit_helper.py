@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from app.models.audit_log import AuditLog
-from datetime import datetime
+from datetime import datetime, timezone
 
 def log_audit(db: Session, user_id: int | None, user_name: str, action: str, details: str | None = None):
     """
@@ -11,7 +11,7 @@ def log_audit(db: Session, user_id: int | None, user_name: str, action: str, det
             user_id=user_id,
             user_name=user_name,
             action=action,
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
             details=details
         )
         db.add(log_entry)

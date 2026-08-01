@@ -11,6 +11,7 @@ import {
   LogOut, 
   User,
   Shield,
+  ShieldCheck,
   Search,
   Wifi,
   WifiOff,
@@ -42,7 +43,8 @@ const Navbar = () => {
   const menuItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Cases Inventory', path: '/cases', icon: Briefcase },
-    { name: 'Create New Case', path: '/cases/create', icon: PlusCircle },
+    ...(!['ADMIN', 'LEGAL_ADVISOR'].includes(user?.role) ? [{ name: 'Create New Case', path: '/cases/create', icon: PlusCircle }] : []),
+    ...(user?.role === 'SHO' ? [{ name: 'Station Control & Reviews', path: '/sho/analytics', icon: ShieldCheck }] : []),
     { name: 'Document Generator', path: '/documents/generate', icon: FileText },
     { name: 'Document Registry', path: '/documents', icon: FileText },
     { name: 'Legal Reference Assistant', path: '/assistant', icon: MessageSquare },

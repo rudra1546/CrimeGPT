@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
+import { formatDateTime } from '../utils/dateFormatter';
 import DocumentPreview from '../components/DocumentPreview';
 import { 
   FileText, 
@@ -189,7 +190,7 @@ const DocumentHistory = () => {
                     <td className="py-4 px-4 font-black"># {doc.id}</td>
                     <td className="py-4 px-4 font-black text-[#1e293b]">{doc.fir_number}</td>
                     <td className="py-4 px-4 uppercase text-[10px] text-[#64748b]">{doc.document_type?.replace('_', ' ')}</td>
-                    <td className="py-4 px-4 text-[#64748b] font-medium">{new Date(doc.created_date).toLocaleString()}</td>
+                    <td className="py-4 px-4 text-[#64748b] font-medium">{formatDateTime(doc.created_date)}</td>
                     <td className="py-4 px-4">
                       <div className="flex justify-center items-center gap-2">
                         <button

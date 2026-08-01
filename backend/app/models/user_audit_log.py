@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime
-from datetime import datetime
+from datetime import datetime, timezone
 from app.database import Base
 
 class UserAuditLog(Base):
@@ -14,4 +14,4 @@ class UserAuditLog(Base):
     status_after_action = Column(String, nullable=False)  # ACTIVE, INACTIVE, DELETED
     performed_by = Column(String, default="System", nullable=False)
     details = Column(String, nullable=True)
-    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)

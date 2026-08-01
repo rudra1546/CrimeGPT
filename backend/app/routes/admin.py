@@ -98,7 +98,7 @@ class UpdateUserStatusRequest(BaseModel):
 class UpdateUserRoleRequest(BaseModel):
     role: str
 
-from datetime import datetime
+from datetime import datetime, timezone
 from app.models.user_audit_log import UserAuditLog
 
 @router.get("/users")
@@ -203,7 +203,7 @@ def update_user_status(
         status_after_action=new_status,
         performed_by=current_user.name if current_user else "Admin",
         details=f"Account status updated to {new_status}",
-        timestamp=datetime.utcnow()
+        timestamp=datetime.now(timezone.utc)
     )
     db.add(audit)
     db.commit()
@@ -238,7 +238,7 @@ def update_user_role(
         status_after_action=user.status,
         performed_by=current_user.name if current_user else "Admin",
         details=f"Clearance role changed from {old_role} to {new_role}",
-        timestamp=datetime.utcnow()
+        timestamp=datetime.now(timezone.utc)
     )
     db.add(audit)
     db.commit()
@@ -276,7 +276,7 @@ def delete_user(
         status_after_action="DELETED",
         performed_by=current_user.name if current_user else "Admin",
         details=f"User account deleted by Admin",
-        timestamp=datetime.utcnow()
+        timestamp=datetime.now(timezone.utc)
     )
     db.add(audit)
     db.commit()

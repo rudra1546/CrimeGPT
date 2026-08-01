@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+import { formatDate } from '../utils/dateFormatter';
 import { 
   Search, 
   Filter, 
@@ -11,6 +13,7 @@ import {
 } from 'lucide-react';
 
 const Cases = () => {
+  const { user } = useAuth();
   const [cases, setCases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -55,6 +58,20 @@ const Cases = () => {
     }
   };
 
+  const formatStatusBadge = (statusStr) => {
+    switch (statusStr?.toLowerCase()) {
+      case 'pending_sho_review':
+        return <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider bg-amber-50 text-amber-700 border border-amber-200">Pending SHO Review</span>;
+      case 'revision_requested':
+        return <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider bg-orange-50 text-orange-700 border border-orange-200">Revision Requested</span>;
+      case 'closed':
+        return <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider bg-slate-100 text-slate-700 border border-slate-200">Closed</span>;
+      case 'active':
+      default:
+        return <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">Active</span>;
+    }
+  };
+
   // Filter and Search logic
   const filteredCases = cases.filter((c) => {
     const matchesSearch = 
@@ -77,13 +94,15 @@ const Cases = () => {
           <h1 className="text-xl font-black tracking-wide text-[#1e293b] uppercase">National Case Registry</h1>
           <p className="text-xs text-[#64748b] mt-1">Index of registered FIRs, ongoing investigations, and legal records.</p>
         </div>
-        <Link 
-          to="/cases/create"
-          className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white font-bold px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 hover:-translate-y-0.5 transition-all text-xs uppercase tracking-wider shadow-sm"
-        >
-          <Plus className="w-4 h-4 text-[#b45309]" />
-          <span>Register New Case</span>
-        </Link>
+        {!['ADMIN', 'LEGAL_ADVISOR'].includes(user?.role) && (
+          <Link 
+            to="/cases/create"
+            className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white font-bold px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 hover:-translate-y-0.5 transition-all text-xs uppercase tracking-wider shadow-sm"
+          >
+            <Plus className="w-4 h-4 text-[#b45309]" />
+            <span>Register New Case</span>
+          </Link>
+        )}
       </div>
 
       {error && (
@@ -122,8 +141,10 @@ const Cases = () => {
             aria-label="Filter cases by status"
           >
             <option value="All">All Investigation Statuses</option>
-            <option value="Active">Active Case files</option>
-            <option value="Closed">Closed / Resolved</option>
+            <option value="active">Active Cases</option>
+            <option value="pending_sho_review">Pending SHO Review</option>
+            <option value="revision_requested">Revision Requested</option>
+            <option value="closed">Closed / Resolved</option>
           </select>
         </div>
       </div>
@@ -156,16 +177,10 @@ const Cases = () => {
                     <td className="py-4 px-4 text-[#1e293b] font-medium">{c.crime_type}</td>
                     <td className="py-4 px-4 text-[#64748b]">{c.police_station}</td>
                     <td className="py-4 px-4 text-[#64748b] font-medium">
-                      {new Date(c.incident_date).toLocaleDateString()}
+                      {formatDate(c.incident_date)}
                     </td>
                     <td className="py-4 px-4">
-                      <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider ${
-                        c.status.toLowerCase() === 'active' 
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
-                          : 'bg-slate-100 text-slate-700 border border-slate-200'
-                      }`}>
-                        {c.status}
-                      </span>
+                      {formatStatusBadge(c.status)}
                     </td>
                     <td className="py-4 px-4">
                       <div className="flex justify-center items-center gap-3">

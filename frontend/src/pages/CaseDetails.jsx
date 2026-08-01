@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { addMutation } from '../services/IndexedDBStore';
+import { formatDateTime, formatDate } from '../utils/dateFormatter';
 import DocumentPreview from '../components/DocumentPreview';
 import LegalSectionSelector from '../components/LegalSectionSelector';
 import { EVIDENCE_CATEGORIES } from '../data/evidenceCategories';
@@ -187,6 +188,85 @@ const CaseDetails = () => {
     }
   };
 
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [shoRemarks, setShoRemarks] = useState('');
+  const [shoReviewing, setShoReviewing] = useState(false);
+  const [reassignOfficerName, setReassignOfficerName] = useState('');
+  const [reassigning, setReassigning] = useState(false);
+  const [stationOfficers, setStationOfficers] = useState([]);
+
+  useEffect(() => {
+    if (user?.role === 'SHO') {
+      api.get('/cases/sho/officers').then(res => setStationOfficers(res.data || [])).catch(() => {});
+    }
+  }, [user]);
+
+  const formatStatusLabel = (statusStr) => {
+    switch (statusStr?.toLowerCase()) {
+      case 'pending_sho_review':
+        return 'Pending SHO Review';
+      case 'revision_requested':
+        return 'Revision Requested';
+      case 'closed':
+        return 'Closed';
+      case 'active':
+      default:
+        return 'Active';
+    }
+  };
+
+  const handleSubmitForShoReview = async () => {
+    if (!window.confirm(`Submit Case FIR No. ${caseData.fir_number} for supervisory SHO review? The dossier will become read-only until reviewed.`)) return;
+    setSubmittingReview(true);
+    try {
+      const res = await api.post(`/cases/${id}/submit-for-review`);
+      setCaseData(res.data);
+      alert("Case dossier submitted for SHO review successfully.");
+    } catch (err) {
+      console.error(err);
+      alert(err?.response?.data?.detail || "Submission failed.");
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  const handleShoReviewAction = async (actionType) => {
+    setShoReviewing(true);
+    try {
+      const res = await api.post(`/cases/${id}/sho-review`, {
+        action: actionType,
+        remarks: shoRemarks
+      });
+      setCaseData(res.data);
+      alert(`Supervisory review processed: ${actionType === 'approve' ? 'Approved & Closed' : 'Revision Requested'}.`);
+      setShoRemarks('');
+    } catch (err) {
+      console.error(err);
+      alert(err?.response?.data?.detail || "Review processing failed.");
+    } finally {
+      setShoReviewing(false);
+    }
+  };
+
+  const handleReassignOfficer = async (e) => {
+    if (e) e.preventDefault();
+    if (!reassignOfficerName) return;
+    setReassigning(true);
+    try {
+      const res = await api.post(`/cases/${id}/assign`, {
+        investigating_officer: reassignOfficerName
+      });
+      setCaseData(res.data);
+      alert(`Case successfully assigned to Officer ${reassignOfficerName}.`);
+      setReassignOfficerName('');
+    } catch (err) {
+      console.error(err);
+      alert(err?.response?.data?.detail || "Reassignment failed.");
+    } finally {
+      setReassigning(false);
+    }
+  };
+
   const handleCloseCase = async () => {
     if (!window.confirm(`Confirm official closure of Case FIR No. ${caseData.fir_number}? Closed cases become read-only for investigating officers.`)) return;
     setClosingCase(true);
@@ -196,7 +276,7 @@ const CaseDetails = () => {
       alert("Case dossier officially closed.");
     } catch (err) {
       console.error(err);
-      alert(err._parsedMessage || "Failed to close case.");
+      alert(err?.response?.data?.detail || err._parsedMessage || "Failed to close case.");
     } finally {
       setClosingCase(false);
     }
@@ -210,7 +290,7 @@ const CaseDetails = () => {
       alert("Case dossier reopened successfully.");
     } catch (err) {
       console.error(err);
-      alert(err._parsedMessage || "Failed to reopen case.");
+      alert(err?.response?.data?.detail || err._parsedMessage || "Failed to reopen case.");
     }
   };
 
@@ -923,22 +1003,27 @@ const CaseDetails = () => {
               Investigation Workspace — FIR No. {caseData?.fir_number}
             </h1>
             <p className="text-[10px] font-bold text-[#64748b] mt-1 uppercase tracking-wider">
-              {caseData?.police_station} station • {caseData?.crime_type} • Status: {caseData?.status}
+              {caseData?.police_station} station • {caseData?.crime_type} • Status: {formatStatusLabel(caseData?.status)}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {caseData?.status?.toLowerCase() === 'closed' && (
+          {((caseData?.status === 'pending_sho_review' || caseData?.status === 'closed') && user?.role !== 'SHO') && (
             <span className="bg-red-50 text-red-700 border border-red-200 px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
               <Lock className="w-3 h-3" />
-              <span>Read-Only</span>
+              <span>Read-Only ({formatStatusLabel(caseData?.status)})</span>
             </span>
           )}
-          <span className={`px-2.5 py-1 rounded text-[10px] font-extrabold uppercase tracking-wider ${caseData?.status?.toLowerCase() === 'active'
-              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-              : 'bg-slate-100 text-[#1e293b] border border-[#e2e8f0]'
+          <span className={`px-2.5 py-1 rounded text-[10px] font-extrabold uppercase tracking-wider ${
+              caseData?.status === 'active'
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : caseData?.status === 'pending_sho_review'
+                ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                : caseData?.status === 'revision_requested'
+                ? 'bg-orange-50 text-orange-700 border border-orange-200'
+                : 'bg-slate-100 text-[#1e293b] border border-[#e2e8f0]'
             }`}>
-            {caseData?.status} Dossier
+            {formatStatusLabel(caseData?.status)} Dossier
           </span>
         </div>
       </div>
@@ -1093,7 +1178,7 @@ const CaseDetails = () => {
                 </div>
                 <div className="border-t border-[#e2e8f0] pt-2">
                   <span className="text-[10px] font-extrabold text-[#64748b] uppercase tracking-wider block">Incident Occurrence Date</span>
-                  <span className="text-xs font-bold text-[#1e293b]">{new Date(caseData.incident_date).toLocaleString()}</span>
+                  <span className="text-xs font-bold text-[#1e293b]">{formatDateTime(caseData.incident_date)}</span>
                 </div>
                 <div className="border-t border-[#e2e8f0] pt-2">
                   <span className="text-[10px] font-extrabold text-[#64748b] uppercase tracking-wider block">Spot / Scene Location</span>
@@ -1273,7 +1358,7 @@ const CaseDetails = () => {
                       </div>
                       <div className="flex justify-between border-t border-[#e2e8f0] pt-2.5">
                         <span className="text-[#64748b] font-bold uppercase text-[9px]">Incident Date</span>
-                        <span className="font-bold text-[#1e293b]">{new Date(caseData.incident_date).toLocaleString()}</span>
+                        <span className="font-bold text-[#1e293b]">{formatDateTime(caseData.incident_date)}</span>
                       </div>
                     </div>
                   </div>
@@ -1922,7 +2007,7 @@ const CaseDetails = () => {
                               <p className="font-bold text-[#1e293b]">Evidence Seized &amp; Indexed</p>
                               <p className="text-[10px] text-[#64748b] font-bold">
                                 Officer: {ev.collecting_officer || ev.officer_remarks || 'N/A'} •{' '}
-                                {ev.uploaded_date ? new Date(ev.uploaded_date).toLocaleString() : (ev.recovery_date || 'Date N/A')}
+                                {ev.uploaded_date ? formatDateTime(ev.uploaded_date) : (ev.recovery_date || 'Date N/A')}
                               </p>
                             </div>
                           </div>
@@ -1942,7 +2027,7 @@ const CaseDetails = () => {
                                   <p className="text-[10px] text-[#64748b] font-bold">
                                     From: {move.from_officer} ({move.from_officer_badge || 'No badge'})
                                     ➔ To: {move.to_officer} ({move.to_officer_badge || 'No badge'})
-                                    • {new Date(move.timestamp).toLocaleString()}
+                                    • {formatDateTime(move.timestamp)}
                                   </p>
                                   {move.remarks && <p className="text-[10px] text-[#1e293b] leading-normal italic bg-[#eff6ff] p-2 border border-[#bfdbfe] rounded">"{move.remarks}"</p>}
                                 </div>
@@ -2276,7 +2361,7 @@ const CaseDetails = () => {
                                 {t.due_date && (
                                   <>
                                     <span>•</span>
-                                    <span>Due: {new Date(t.due_date).toLocaleDateString()}</span>
+                                    <span>Due: {formatDate(t.due_date)}</span>
                                   </>
                                 )}
                               </div>
@@ -2386,7 +2471,7 @@ const CaseDetails = () => {
                     <div className="space-y-1 bg-[#ffffff] p-4 border border-[#e2e8f0] rounded-lg max-w-2xl shadow-sm">
                       <div className="flex justify-between items-center">
                         <span className="text-xs font-black text-[#1e293b] uppercase">{mile.event_name}</span>
-                        <span className="text-[9px] text-[#64748b] font-bold">{new Date(mile.timestamp).toLocaleString()}</span>
+                        <span className="text-[9px] text-[#64748b] font-bold">{formatDateTime(mile.timestamp)}</span>
                       </div>
                       <p className="text-xs text-[#64748b] leading-relaxed">{mile.description}</p>
                     </div>
@@ -2451,7 +2536,7 @@ const CaseDetails = () => {
                             </span>
                             <span className="text-[11px] font-black text-[#1e293b] block truncate">Draft #{doc.id}</span>
                           </div>
-                          <span className="text-[9px] text-[#64748b] font-bold">{new Date(doc.created_date).toLocaleDateString()}</span>
+                          <span className="text-[9px] text-[#64748b] font-bold">{formatDate(doc.created_date)}</span>
                         </div>
 
                         {/* Action Buttons Row */}
@@ -2845,23 +2930,97 @@ const CaseDetails = () => {
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="pt-4 border-t border-[#e2e8f0] flex justify-end gap-3">
-          {caseData?.status?.toLowerCase() === 'closed' ? (
-            user?.role === 'ADMIN' ? (
-              <button onClick={handleReopenCase} className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white font-bold px-4 py-2.5 rounded-lg text-xs uppercase tracking-wider shadow-sm">
-                Reopen Case (Admin Clearance)
-              </button>
+        {/* Action Buttons & Supervisory Review Panel */}
+        {user?.role === 'SHO' ? (
+          <div className="pt-4 border-t border-[#e2e8f0] space-y-4">
+            <div className="bg-[#f8fafc] border border-[#e2e8f0] p-4 rounded-lg space-y-3">
+              <h4 className="text-xs font-black text-[#1e293b] uppercase tracking-wider flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-[#1e3a8a]" />
+                <span>SHO Supervisory Review & Assignment Control</span>
+              </h4>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Officer Reassignment */}
+                <form onSubmit={handleReassignOfficer} className="flex items-center gap-2">
+                  <select
+                    value={reassignOfficerName}
+                    onChange={(e) => setReassignOfficerName(e.target.value)}
+                    className="flex-1 bg-[#ffffff] border border-[#e2e8f0] text-[#1e293b] p-2 rounded text-xs outline-none focus:border-[#2563eb]"
+                  >
+                    <option value="">-- Reassign Officer --</option>
+                    {stationOfficers.map((o) => (
+                      <option key={o.id} value={o.name}>{o.name} ({o.role})</option>
+                    ))}
+                  </select>
+                  <button
+                    type="submit"
+                    disabled={reassigning || !reassignOfficerName}
+                    className="bg-[#1e3a8a] text-white font-bold px-3 py-2 rounded text-xs uppercase tracking-wider disabled:opacity-50"
+                  >
+                    Assign
+                  </button>
+                </form>
+
+                {/* Review Remarks */}
+                <div>
+                  <textarea
+                    rows={2}
+                    value={shoRemarks}
+                    onChange={(e) => setShoRemarks(e.target.value)}
+                    placeholder="Enter supervisory review remarks / directives..."
+                    className="w-full bg-[#ffffff] border border-[#e2e8f0] text-[#1e293b] p-2 rounded text-xs outline-none focus:border-[#2563eb]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2">
+                {caseData?.status === 'closed' ? (
+                  <button onClick={handleReopenCase} className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white font-bold px-4 py-2 rounded-lg text-xs uppercase tracking-wider shadow-sm">
+                    Reopen Case (SHO Authority)
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      disabled={shoReviewing}
+                      onClick={() => handleShoReviewAction('request_revision')}
+                      className="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 font-bold px-4 py-2 rounded-lg text-xs uppercase tracking-wider"
+                    >
+                      Request Revisions
+                    </button>
+                    <button
+                      type="button"
+                      disabled={shoReviewing}
+                      onClick={() => handleShoReviewAction('approve')}
+                      className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-5 py-2 rounded-lg text-xs uppercase tracking-wider shadow-sm"
+                    >
+                      Approve & Close Case
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="pt-4 border-t border-[#e2e8f0] flex justify-end gap-3">
+            {caseData?.status === 'closed' ? (
+              <span className="text-xs text-[#64748b] font-bold italic">This case is officially closed by the SHO. Only the SHO can reopen cases.</span>
+            ) : caseData?.status === 'pending_sho_review' ? (
+              <span className="text-xs text-amber-700 font-bold bg-amber-50 border border-amber-200 px-3 py-2 rounded uppercase tracking-wider">
+                Submitted for SHO Review (Read-Only)
+              </span>
             ) : (
-              <span className="text-xs text-[#64748b] font-bold italic">Only Administrative Officers (ADMIN) can reopen closed cases.</span>
-            )
-          ) : (
-            <button onClick={handleCloseCase} disabled={closingCase} className="bg-red-700 hover:bg-red-800 text-white font-bold px-5 py-2.5 rounded-lg text-xs uppercase tracking-wider flex items-center gap-2 shadow-sm">
-              <Lock className="w-4 h-4" />
-              <span>{closingCase ? 'Closing Case...' : 'Officially Close Case'}</span>
-            </button>
-          )}
-        </div>
+              <button
+                onClick={handleSubmitForShoReview}
+                disabled={submittingReview}
+                className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white font-bold px-5 py-2.5 rounded-lg text-xs uppercase tracking-wider flex items-center gap-2 shadow-sm"
+              >
+                <Send className="w-4 h-4 text-[#b45309]" />
+                <span>{submittingReview ? 'Submitting...' : caseData?.status === 'revision_requested' ? 'Resubmit for SHO Review' : 'Submit for SHO Review'}</span>
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )}
