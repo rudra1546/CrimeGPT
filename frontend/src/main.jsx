@@ -8,8 +8,8 @@ import Maintenance from './maintenance/Maintenance.jsx'
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
-      {/* <Maintenance /> */}
-      <App />
+      <Maintenance />
+      {/* <App /> */}
     </BrowserRouter>
   </React.StrictMode>,
 )
