@@ -33,6 +33,7 @@ from app.routes.audit import router as audit_router
 from app.routes.legal_advisor import router as legal_advisor_router
 from app.routes.crimes import router as crimes_router
 from app.routes.investigation import router as investigation_router
+from app.routes.notifications import router as notifications_router
 
 # Load environment variables from .env
 load_dotenv(override=True)
@@ -125,6 +126,7 @@ app.include_router(tasks_router, prefix="/api/tasks", tags=["Investigation Tasks
 app.include_router(audit_router, prefix="/api/audit", tags=["Audit Log"])
 app.include_router(legal_advisor_router, prefix="/api/legal-advisor", tags=["Legal Advisor"])
 app.include_router(crimes_router, prefix="/api/crimes", tags=["Crimes"])
+app.include_router(notifications_router, prefix="/api/notifications", tags=["Notifications"])
 app.include_router(investigation_router)
 
 

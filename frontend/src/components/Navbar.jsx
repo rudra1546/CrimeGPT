@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { registerSyncListeners } from '../services/OfflineSyncManager';
+import NotificationBell from './NotificationBell';
 import { 
   LayoutDashboard, 
   Briefcase, 
@@ -87,7 +88,7 @@ const Navbar = () => {
 
       {/* Network Connectivity Status Indicator */}
       <div className="px-4 py-2 bg-[#ffffff] border-b border-[#e2e8f0] flex items-center justify-between text-[10px] font-bold text-[#64748b]">
-        <span className="flex items-center gap-1">
+        <span className="flex items-center gap-1.5">
           {networkStatus === 'online' ? (
             <>
               <Wifi className="w-3.5 h-3.5 text-emerald-600" />
@@ -105,7 +106,10 @@ const Navbar = () => {
             </>
           )}
         </span>
-        <span className="text-[9px] text-[#64748b]/80 uppercase">{user?.role?.toLowerCase()}</span>
+        <div className="flex items-center gap-2">
+          <NotificationBell compact={true} />
+          <span className="text-[9px] text-[#64748b]/80 uppercase">{user?.role?.toLowerCase()}</span>
+        </div>
       </div>
 
       {/* Global Search Bar */}
@@ -207,9 +211,12 @@ const Navbar = () => {
             <span className="text-xs font-black uppercase text-[#1e293b]">CrimeGPT Portal</span>
           </div>
         </div>
-        <span className="text-[10px] font-bold text-[#1e3a8a] bg-[#eff6ff] border border-[#bfdbfe] px-2 py-0.5 rounded uppercase">
-          {user?.role}
-        </span>
+        <div className="flex items-center gap-2">
+          <NotificationBell compact={true} />
+          <span className="text-[10px] font-bold text-[#1e3a8a] bg-[#eff6ff] border border-[#bfdbfe] px-2 py-0.5 rounded uppercase">
+            {user?.role}
+          </span>
+        </div>
       </header>
 
       {/* Desktop Sidebar (Visible >= lg) */}

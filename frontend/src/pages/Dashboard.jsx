@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { formatDateTime } from '../utils/dateFormatter';
+import { useNotifications } from '../context/NotificationContext';
+import NotificationBell from '../components/NotificationBell';
+import PendingCasePopup from '../components/PendingCasePopup';
 import {
   Briefcase,
   Clock,
@@ -35,6 +38,7 @@ const CHART_COLORS = ['#1e3a8a', '#2563eb', '#b45309', '#0284c7', '#475569', '#d
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { fetchSummary } = useNotifications();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -54,7 +58,8 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchDashboardStats();
-  }, []);
+    fetchSummary();
+  }, [fetchSummary]);
 
   if (loading) {
     return (
@@ -89,9 +94,12 @@ const Dashboard = () => {
             Real-time analytics, category distributions, case trends, and operational statistics.
           </p>
         </div>
-        <div className="flex items-center gap-2 text-xs bg-[#ffffff] border border-[#e2e8f0] px-4 py-2 rounded-lg text-[#1e293b] font-bold shadow-sm">
-          <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
-          <span className="text-emerald-700">SYSTEM ONLINE</span>
+        <div className="flex items-center gap-2.5">
+          <NotificationBell />
+          <div className="flex items-center gap-2 text-xs bg-[#ffffff] border border-[#e2e8f0] px-4 py-2 rounded-lg text-[#1e293b] font-bold shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
+            <span className="text-emerald-700">SYSTEM ONLINE</span>
+          </div>
         </div>
       </div>
 
@@ -273,6 +281,9 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Overdue Pending Case Reminder Popup */}
+      <PendingCasePopup />
     </div>
   );
 };
