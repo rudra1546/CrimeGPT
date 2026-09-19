@@ -60,6 +60,39 @@ def create_case(db: Session, case_data: CaseCreate, user_id: int) -> Case:
     db.add(db_details)
     db.flush()
 
+    # Mint canonical Evidence records from initial case registration
+    if details_data and details_data.evidence_details:
+        ev_list = details_data.evidence_details
+        if isinstance(ev_list, str):
+            try:
+                ev_list = json.loads(ev_list)
+            except Exception:
+                ev_list = []
+        if isinstance(ev_list, list):
+            from app.models.evidence import Evidence
+            from datetime import datetime
+            for ev_item in ev_list:
+                item_dict = ev_item.model_dump() if hasattr(ev_item, 'model_dump') else (ev_item if isinstance(ev_item, dict) else {})
+                parsed_ev_date = None
+                rec_date_str = item_dict.get("recovery_date") or item_dict.get("collection_date")
+                if rec_date_str:
+                    try:
+                        parsed_ev_date = datetime.fromisoformat(str(rec_date_str).replace("Z", "+00:00"))
+                    except Exception:
+                        pass
+
+                db_ev = Evidence(
+                    case_id=db_case.id,
+                    evidence_type=item_dict.get("evidence_type") or "Physical Weapon/Object",
+                    description=item_dict.get("description"),
+                    collection_location=item_dict.get("recovered_from") or item_dict.get("collection_location"),
+                    collection_date=parsed_ev_date,
+                    collecting_officer=item_dict.get("officer_remarks") or item_dict.get("collecting_officer"),
+                    uploaded_by=user_id
+                )
+                db.add(db_ev)
+            db.flush()
+
     # Add CaseTimeline event
     from app.models.timeline import CaseTimeline
     db_timeline = CaseTimeline(

@@ -13,7 +13,10 @@ import {
   Trash2,
   Paperclip,
   Users,
-  FileText
+  FileText,
+  Image,
+  Film,
+  Music
 } from 'lucide-react';
 
 const CreateCase = () => {
@@ -137,7 +140,17 @@ const CreateCase = () => {
   };
 
   const handleAddEvidenceItem = () => {
-    setEvidenceItems(prev => [...prev, { evidence_type: 'Physical', description: '', recovered_from: '', recovery_date: '', uploaded_file: '', officer_remarks: '' }]);
+    setEvidenceItems(prev => [
+      ...prev,
+      {
+        evidence_type: evidenceCategories[0] || 'Physical Weapon/Object',
+        description: '',
+        recovered_from: '',
+        recovery_date: '',
+        officer_remarks: '',
+        attachments: []
+      }
+    ]);
   };
 
   const handleEvidenceItemChange = (index, field, value) => {
@@ -148,6 +161,45 @@ const CreateCase = () => {
 
   const handleRemoveEvidenceItem = (index) => {
     setEvidenceItems(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAddAttachment = (evidenceIndex) => {
+    const updated = [...evidenceItems];
+    const currentAttachments = updated[evidenceIndex].attachments || [];
+    updated[evidenceIndex].attachments = [
+      ...currentAttachments,
+      {
+        id: 'att-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
+        media_type: 'image',
+        file: null,
+        description: ''
+      }
+    ];
+    setEvidenceItems(updated);
+  };
+
+  const handleAttachmentChange = (evidenceIndex, attachmentIndex, field, value) => {
+    const updated = [...evidenceItems];
+    updated[evidenceIndex].attachments[attachmentIndex][field] = value;
+    setEvidenceItems(updated);
+  };
+
+  const handleRemoveAttachment = (evidenceIndex, attachmentIndex) => {
+    const updated = [...evidenceItems];
+    updated[evidenceIndex].attachments = updated[evidenceIndex].attachments.filter((_, idx) => idx !== attachmentIndex);
+    setEvidenceItems(updated);
+  };
+
+  const handleAttachmentFileChange = (evidenceIndex, attachmentIndex, file) => {
+    if (!file) return;
+    const maxBytes = 50 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      alert(`File "${file.name}" (${(file.size / (1024 * 1024)).toFixed(1)} MB) exceeds the maximum allowed upload limit of 50 MB. Please select a smaller file.`);
+      return;
+    }
+    const updated = [...evidenceItems];
+    updated[evidenceIndex].attachments[attachmentIndex].file = file;
+    setEvidenceItems(updated);
   };
 
   const handleSubmit = async (e) => {
@@ -180,7 +232,44 @@ const CreateCase = () => {
     console.log("CASE CREATION PAYLOAD:", payload);
 
     try {
-      await api.post('/cases/', payload);
+      const caseRes = await api.post('/cases/', payload);
+      const createdCase = caseRes.data;
+      const caseId = createdCase.id;
+
+      // Process supporting media attachments for evidence items
+      for (let i = 0; i < evidenceItems.length; i++) {
+        const ev = evidenceItems[i];
+        const validAttachments = (ev.attachments || []).filter(a => a.file);
+        if (validAttachments.length > 0) {
+          const formData = new FormData();
+          validAttachments.forEach(att => {
+            formData.append('files', att.file);
+          });
+          formData.append('evidence_type', ev.evidence_type || 'Physical Weapon/Object');
+          formData.append('description', ev.description || '');
+          formData.append('collection_location', ev.recovered_from || '');
+          formData.append('collection_date', ev.recovery_date || new Date().toISOString());
+          formData.append('collecting_officer', ev.officer_remarks || '');
+          const metadata = validAttachments.map(att => ({
+            media_type: att.media_type,
+            description: att.description || ''
+          }));
+          formData.append('attachments_metadata', JSON.stringify(metadata));
+
+          const matchingEv = (createdCase.evidence || []).find(e => 
+            (e.description === ev.description || !ev.description) && 
+            (e.collection_location === ev.recovered_from || !ev.recovered_from)
+          );
+          if (matchingEv) {
+            formData.append('evidence_id', matchingEv.id);
+          }
+
+          await api.post(`/cases/${caseId}/evidence`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
+        }
+      }
+
       navigate('/cases');
     } catch (err) {
       console.error(err);
@@ -754,6 +843,91 @@ const CreateCase = () => {
                         onChange={(e) => handleEvidenceItemChange(idx, 'description', e.target.value)}
                         className={`${inputClass} h-16`}
                       />
+                    </div>
+
+                    {/* Supporting Media (Optional) */}
+                    <div className="md:col-span-2 pt-3 border-t border-[#e2e8f0] space-y-3">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-1.5">
+                          <Image className="w-3.5 h-3.5 text-[#1e3a8a]" />
+                          <span className="text-[10px] font-black text-[#1e293b] uppercase tracking-wider">
+                            Supporting Media (Optional)
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleAddAttachment(idx)}
+                          className="bg-[#eff6ff] hover:bg-[#dbeafe] text-[#1e3a8a] border border-[#bfdbfe] text-[10px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 transition-all uppercase shadow-xs"
+                        >
+                          <Plus className="w-3 h-3 text-[#1e3a8a]" />
+                          <span>+ Add Supporting Media</span>
+                        </button>
+                      </div>
+
+                      {/* Repeatable Attachment Rows */}
+                      {(ev.attachments || []).length > 0 && (
+                        <div className="space-y-2.5">
+                          {ev.attachments.map((att, attIdx) => (
+                            <div key={att.id || attIdx} className="p-3 bg-white border border-[#e2e8f0] rounded-lg space-y-2 shadow-xs">
+                              <div className="flex justify-between items-center">
+                                <span className="text-[9px] font-bold text-[#64748b] uppercase tracking-wider">
+                                  Attachment #{attIdx + 1}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveAttachment(idx, attIdx)}
+                                  className="text-red-600 hover:text-red-700 p-1 hover:bg-red-50 rounded"
+                                  title="Remove attachment"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              </div>
+
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                                <div>
+                                  <label className="block text-[9px] font-bold text-[#64748b] uppercase mb-0.5">Media Type</label>
+                                  <select
+                                    value={att.media_type}
+                                    onChange={(e) => handleAttachmentChange(idx, attIdx, 'media_type', e.target.value)}
+                                    className={inputClass}
+                                  >
+                                    <option value="image">Image</option>
+                                    <option value="audio">Audio</option>
+                                    <option value="video">Video</option>
+                                  </select>
+                                </div>
+
+                                <div>
+                                  <label className="block text-[9px] font-bold text-[#64748b] uppercase mb-0.5">File Upload</label>
+                                  <input
+                                    type="file"
+                                    accept={
+                                      att.media_type === 'image'
+                                        ? "image/*"
+                                        : att.media_type === 'audio'
+                                        ? "audio/*"
+                                        : "video/*"
+                                    }
+                                    onChange={(e) => handleAttachmentFileChange(idx, attIdx, e.target.files[0])}
+                                    className="w-full text-[10px] text-[#64748b] border border-[#e2e8f0] bg-[#ffffff] rounded-lg px-2 py-1 focus:ring-1 focus:ring-[#2563eb] file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-bold file:bg-[#eff6ff] file:text-[#1e3a8a]"
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="block text-[9px] font-bold text-[#64748b] uppercase mb-0.5">Description (Optional)</label>
+                                  <input
+                                    type="text"
+                                    placeholder="e.g. Front view of weapon, 911 audio..."
+                                    value={att.description}
+                                    onChange={(e) => handleAttachmentChange(idx, attIdx, 'description', e.target.value)}
+                                    className={inputClass}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

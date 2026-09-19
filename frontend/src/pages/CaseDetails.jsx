@@ -6,6 +6,7 @@ import { addMutation } from '../services/IndexedDBStore';
 import { formatDateTime, formatDate } from '../utils/dateFormatter';
 import DocumentPreview from '../components/DocumentPreview';
 import LegalSectionSelector from '../components/LegalSectionSelector';
+import EvidenceAttachmentCard from '../components/EvidenceAttachmentCard';
 import { EVIDENCE_CATEGORIES } from '../data/evidenceCategories';
 import {
   ChevronLeft,
@@ -32,7 +33,13 @@ import {
   ShieldCheck,
   Eye,
   FileSpreadsheet,
-  FileText
+  FileText,
+  Image as ImageIcon,
+  Music,
+  Film,
+  File as FileIcon,
+  X,
+  Maximize2
 } from 'lucide-react';
 
 const CaseDetails = () => {
@@ -134,6 +141,67 @@ const CaseDetails = () => {
 
   const [selectedEvidenceForTransfer, setSelectedEvidenceForTransfer] = useState(null);
   const [newTransfer, setNewTransfer] = useState({ from_officer: '', from_officer_badge: '', to_officer: '', to_officer_badge: '', transfer_reason: '', remarks: '' });
+
+  // Repeatable Supporting Media state
+  const [evidenceAttachments, setEvidenceAttachments] = useState([]);
+  const [selectedEvidenceForMedia, setSelectedEvidenceForMedia] = useState(null);
+  const [existingItemAttachments, setExistingItemAttachments] = useState([]);
+  const [uploadingMoreMedia, setUploadingMoreMedia] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null);
+  const [deletingAttachmentId, setDeletingAttachmentId] = useState(null);
+  const [deletingEvidenceId, setDeletingEvidenceId] = useState(null);
+
+  const addAttachmentRow = () => {
+    setEvidenceAttachments(prev => [
+      ...prev,
+      { id: Date.now() + Math.random(), media_type: 'image', file: null, description: '' }
+    ]);
+  };
+
+  const updateAttachmentRow = (rowId, field, value) => {
+    if (field === 'file' && value) {
+      const maxBytes = 50 * 1024 * 1024;
+      if (value.size > maxBytes) {
+        alert(`File "${value.name}" (${(value.size / (1024 * 1024)).toFixed(1)} MB) exceeds the 50 MB upload limit. Please select a smaller file.`);
+        return;
+      }
+    }
+    setEvidenceAttachments(prev => prev.map(row => row.id === rowId ? { ...row, [field]: value } : row));
+  };
+
+  const removeAttachmentRow = (rowId) => {
+    setEvidenceAttachments(prev => prev.filter(row => row.id !== rowId));
+  };
+
+  const addMoreMediaRow = () => {
+    setExistingItemAttachments(prev => [
+      ...prev,
+      { id: Date.now() + Math.random(), media_type: 'image', file: null, description: '' }
+    ]);
+  };
+
+  const updateMoreMediaRow = (rowId, field, value) => {
+    if (field === 'file' && value) {
+      const maxBytes = 50 * 1024 * 1024;
+      if (value.size > maxBytes) {
+        alert(`File "${value.name}" (${(value.size / (1024 * 1024)).toFixed(1)} MB) exceeds the 50 MB upload limit. Please select a smaller file.`);
+        return;
+      }
+    }
+    setExistingItemAttachments(prev => prev.map(row => row.id === rowId ? { ...row, [field]: value } : row));
+  };
+
+  const removeMoreMediaRow = (rowId) => {
+    setExistingItemAttachments(prev => prev.filter(row => row.id !== rowId));
+  };
+
+  const formatFileSize = (bytes) => {
+    if (!bytes || bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
 
   // Investigation tasks
   const [tasks, setTasks] = useState([]);
@@ -693,14 +761,35 @@ const CaseDetails = () => {
   // 4. Evidence Upload & Chain of Custody CRUD
   const handleAddEvidence = async (e) => {
     e.preventDefault();
-    if (!evidenceFile) {
-      alert('Please select a file to upload as evidence.');
+    const validAttachments = evidenceAttachments.filter(a => a.file);
+    if (!evidenceFile && validAttachments.length === 0 && !newEvidence.description) {
+      alert('Please provide an item description, a primary file, or at least one supporting media attachment.');
       return;
     }
     setUploadingEvidence(true);
 
     const formData = new FormData();
-    formData.append('file', evidenceFile);
+    formData.append('evidence_type', newEvidence.file_type);
+    formData.append('description', newEvidence.description || '');
+    formData.append('collection_location', newEvidence.collection_location || '');
+    formData.append('collecting_officer', newEvidence.collecting_officer || '');
+
+    if (evidenceFile) {
+      formData.append('file', evidenceFile);
+    }
+
+    const metaList = [];
+    validAttachments.forEach(att => {
+      formData.append('files', att.file);
+      metaList.push({
+        media_type: att.media_type,
+        description: att.description || ''
+      });
+    });
+
+    if (metaList.length > 0) {
+      formData.append('attachments_metadata', JSON.stringify(metaList));
+    }
 
     try {
       const uploadRes = await api.post(`/cases/${id}/evidence`, formData, {
@@ -717,7 +806,7 @@ const CaseDetails = () => {
           description: newEvidence.description,
           recovered_from: newEvidence.collection_location,
           recovery_date: new Date().toLocaleDateString(),
-          uploaded_file: uploadedRecord.file_name,
+          uploaded_file: uploadedRecord.file_name || (validAttachments[0]?.file?.name) || 'evidence_attachment',
           officer_remarks: newEvidence.collecting_officer
         }
       ];
@@ -733,14 +822,126 @@ const CaseDetails = () => {
       });
 
       setShowEvidenceForm(false);
-      setNewEvidence({ file_name: '', file_type: 'Physical', description: '', collection_location: '', collecting_officer: '' });
+      setNewEvidence({ file_name: '', file_type: EVIDENCE_CATEGORIES[0] || 'Physical Weapon/Object', description: '', collection_location: '', collecting_officer: '' });
       setEvidenceFile(null);
+      setEvidenceAttachments([]);
       fetchAllCaseData();
+      alert('Evidence item and supporting media indexed successfully.');
     } catch (err) {
       console.error(err);
-      alert('Evidence upload failed.');
+      alert(err.response?.data?.detail || 'Evidence upload failed.');
     } finally {
       setUploadingEvidence(false);
+    }
+  };
+
+  const handleUploadMoreMedia = async (e) => {
+    e.preventDefault();
+    if (!selectedEvidenceForMedia) return;
+    const validAttachments = existingItemAttachments.filter(a => a.file);
+    if (validAttachments.length === 0) {
+      alert('Please select at least one supporting media file.');
+      return;
+    }
+    setUploadingMoreMedia(true);
+
+    const formData = new FormData();
+    formData.append('evidence_id', selectedEvidenceForMedia.id);
+    formData.append('evidence_type', selectedEvidenceForMedia.evidence_type || selectedEvidenceForMedia.file_type || 'Physical Weapon/Object');
+    formData.append('description', selectedEvidenceForMedia.description || '');
+
+    const metaList = [];
+    validAttachments.forEach(att => {
+      formData.append('files', att.file);
+      metaList.push({
+        media_type: att.media_type,
+        description: att.description || ''
+      });
+    });
+    formData.append('attachments_metadata', JSON.stringify(metaList));
+
+    try {
+      await api.post(`/cases/${id}/evidence`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setSelectedEvidenceForMedia(null);
+      setExistingItemAttachments([]);
+      fetchAllCaseData();
+      alert('Supporting media attached successfully.');
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.detail || 'Failed uploading supporting media.');
+    } finally {
+      setUploadingMoreMedia(false);
+    }
+  };
+
+  const handleDeleteAttachment = async (evidenceId, attachmentId, fileName) => {
+    if (!window.confirm(`Confirm safe deletion of supporting file "${fileName}"? This will unlink and permanently remove the object from storage.`)) return;
+    setDeletingAttachmentId(attachmentId);
+    try {
+      await api.delete(`/cases/${id}/evidence/${evidenceId}/attachments/${attachmentId}`);
+      fetchAllCaseData();
+      alert('Attachment deleted successfully.');
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.detail || 'Failed to delete attachment.');
+    } finally {
+      setDeletingAttachmentId(null);
+    }
+  };
+
+  const handleDeleteEvidence = async (evidenceId, evidenceName) => {
+    if (!window.confirm(`Confirm safe deletion of Evidence Item #${evidenceId} ("${evidenceName || 'Item'}") and all its supporting media files?`)) return;
+    setDeletingEvidenceId(evidenceId);
+    try {
+      await api.delete(`/cases/${id}/evidence/${evidenceId}`);
+      fetchAllCaseData();
+      alert('Evidence item and associated attachments deleted successfully.');
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.detail || 'Failed to delete evidence item.');
+    } finally {
+      setDeletingEvidenceId(null);
+    }
+  };
+
+  const handleDownloadLegacyEvidence = async (evidenceId, fileName) => {
+    try {
+      const res = await api.get(`/cases/${id}/evidence/${evidenceId}/download`, { responseType: 'blob' });
+      if (res.data && res.data.type === 'application/json') {
+        const txt = await res.data.text();
+        let msg = 'Failed to download file.';
+        try {
+          const json = JSON.parse(txt);
+          msg = json.detail || msg;
+        } catch (_) {}
+        alert(`Download Error: ${msg}`);
+        return;
+      }
+      const tempUrl = URL.createObjectURL(res.data);
+      const link = document.createElement('a');
+      link.href = tempUrl;
+      link.download = fileName || 'evidence_file';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(tempUrl);
+    } catch (err) {
+      console.error('Legacy download failed:', err);
+      let errMsg = 'Failed to download file.';
+      if (err.response && err.response.data instanceof Blob) {
+        try {
+          const txt = await err.response.data.text();
+          const json = JSON.parse(txt);
+          if (json.detail) errMsg = json.detail;
+        } catch (_) {}
+      } else if (err.response?.data?.detail) {
+        errMsg = err.response.data.detail;
+      } else if (err._parsedMessage) {
+        errMsg = err._parsedMessage;
+      }
+      alert(`Download Error: ${errMsg}`);
     }
   };
 
@@ -1756,70 +1957,173 @@ const CaseDetails = () => {
             </div>
 
             {showEvidenceForm && (
-              <form onSubmit={handleAddEvidence} className="p-5 border border-[#e2e8f0] rounded-lg bg-[#ffffff] grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label htmlFor="ev-type" className={labelClass}>Evidence Type</label>
-                  <select
-                    id="ev-type"
-                    value={newEvidence.file_type}
-                    onChange={(e) => setNewEvidence({ ...newEvidence, file_type: e.target.value })}
-                    className={inputClass}
-                  >
-                    {evidenceCategories.map((cat) => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
+              <form onSubmit={handleAddEvidence} className="p-5 border border-[#e2e8f0] rounded-lg bg-[#ffffff] space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label htmlFor="ev-type" className={labelClass}>Evidence Type</label>
+                    <select
+                      id="ev-type"
+                      value={newEvidence.file_type}
+                      onChange={(e) => setNewEvidence({ ...newEvidence, file_type: e.target.value })}
+                      className={inputClass}
+                    >
+                      {evidenceCategories.map((cat) => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label htmlFor="ev-io" className={labelClass}>Collecting Officer</label>
+                    <input
+                      id="ev-io"
+                      type="text"
+                      value={newEvidence.collecting_officer}
+                      onChange={(e) => setNewEvidence({ ...newEvidence, collecting_officer: e.target.value })}
+                      className={inputClass}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label htmlFor="ev-spot" className={labelClass}>Collection Spot Location</label>
+                    <input
+                      id="ev-spot"
+                      type="text"
+                      value={newEvidence.collection_location}
+                      onChange={(e) => setNewEvidence({ ...newEvidence, collection_location: e.target.value })}
+                      className={inputClass}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label htmlFor="ev-file" className={labelClass}>Primary File (Optional)</label>
+                    <input
+                      id="ev-file"
+                      type="file"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file && file.size > 50 * 1024 * 1024) {
+                          alert(`File "${file.name}" exceeds the 50 MB upload limit. Please select a smaller file.`);
+                          e.target.value = '';
+                          return;
+                        }
+                        setEvidenceFile(file);
+                        setNewEvidence({ ...newEvidence, file_name: file?.name || '' });
+                      }}
+                      className="w-full text-xs text-[#64748b] border border-[#e2e8f0] bg-[#ffffff] rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-[#2563eb]"
+                    />
+                  </div>
+                  <div className="space-y-1 md:col-span-2">
+                    <label htmlFor="ev-desc" className={labelClass}>Item Description</label>
+                    <textarea
+                      id="ev-desc"
+                      value={newEvidence.description}
+                      onChange={(e) => setNewEvidence({ ...newEvidence, description: e.target.value })}
+                      className={`${inputClass} h-16`}
+                      placeholder="Enter physical state, packaging, and marking labels..."
+                      required
+                    />
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <label htmlFor="ev-io" className={labelClass}>Collecting Officer</label>
-                  <input
-                    id="ev-io"
-                    type="text"
-                    value={newEvidence.collecting_officer}
-                    onChange={(e) => setNewEvidence({ ...newEvidence, collecting_officer: e.target.value })}
-                    className={inputClass}
-                    required
-                  />
+
+                {/* Supporting Media Section */}
+                <div className="pt-3 border-t border-[#e2e8f0] space-y-3">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h4 className="text-xs font-black text-[#1e293b] uppercase tracking-wider flex items-center gap-1.5">
+                        <ImageIcon className="w-3.5 h-3.5 text-[#1e3a8a]" />
+                        <span>Supporting Media (Optional)</span>
+                      </h4>
+                      <p className="text-[10px] text-[#64748b]">Attach supporting photos, crime scene videos, or audio statements (Max 50 MB per file).</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={addAttachmentRow}
+                      className="bg-[#eff6ff] hover:bg-[#dbeafe] text-[#1e3a8a] border border-[#bfdbfe] px-3 py-1.5 rounded-lg text-[10px] font-bold flex items-center gap-1 uppercase transition-all shadow-sm"
+                    >
+                      <Plus className="w-3 h-3 text-[#1e3a8a]" />
+                      <span>+ Add Supporting Media</span>
+                    </button>
+                  </div>
+
+                  {evidenceAttachments.length > 0 ? (
+                    <div className="space-y-3">
+                      {evidenceAttachments.map((attRow, idx) => (
+                        <div key={attRow.id} className="p-3.5 bg-[#f8fafc] border border-[#e2e8f0] rounded-lg space-y-2.5">
+                          <div className="flex justify-between items-center">
+                            <span className="text-[10px] font-black text-[#1e3a8a] uppercase tracking-wider flex items-center gap-1">
+                              {attRow.media_type === 'image' && <ImageIcon className="w-3 h-3" />}
+                              {attRow.media_type === 'audio' && <Music className="w-3 h-3" />}
+                              {attRow.media_type === 'video' && <Film className="w-3 h-3" />}
+                              <span>Attachment #{idx + 1}</span>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => removeAttachmentRow(attRow.id)}
+                              className="text-red-600 hover:text-red-800 text-[10px] font-bold flex items-center gap-1 p-1 hover:bg-red-50 rounded"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                              <span>Remove</span>
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                            <div>
+                              <label className="text-[10px] font-bold text-[#64748b] uppercase block mb-1">Media Type</label>
+                              <select
+                                value={attRow.media_type}
+                                onChange={(e) => updateAttachmentRow(attRow.id, 'media_type', e.target.value)}
+                                className={inputClass}
+                              >
+                                <option value="image">Image / Photo (JPEG, PNG, WEBP)</option>
+                                <option value="audio">Audio Recording (MP3, WAV, M4A)</option>
+                                <option value="video">Video Recording (MP4, WEBM, MOV)</option>
+                              </select>
+                            </div>
+
+                            <div>
+                              <label className="text-[10px] font-bold text-[#64748b] uppercase block mb-1">Select File</label>
+                              <input
+                                type="file"
+                                accept={
+                                  attRow.media_type === 'image'
+                                    ? 'image/jpeg,image/png,image/webp,image/gif'
+                                    : attRow.media_type === 'audio'
+                                    ? 'audio/mpeg,audio/wav,audio/m4a,audio/aac,audio/ogg'
+                                    : 'video/mp4,video/webm,video/quicktime'
+                                }
+                                onChange={(e) => updateAttachmentRow(attRow.id, 'file', e.target.files[0])}
+                                className="w-full text-xs text-[#64748b] border border-[#e2e8f0] bg-[#ffffff] rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-[#2563eb]"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="text-[10px] font-bold text-[#64748b] uppercase block mb-1">Description / Notes</label>
+                              <input
+                                type="text"
+                                value={attRow.description}
+                                onChange={(e) => updateAttachmentRow(attRow.id, 'description', e.target.value)}
+                                placeholder="E.g. Front view of seized weapon, close up marking"
+                                className={inputClass}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-3 border border-dashed border-[#e2e8f0] rounded-lg text-center text-[10px] text-[#64748b] italic">
+                      No supporting media rows added. Click "+ Add Supporting Media" above to upload photos, audio, or video files for this evidence item.
+                    </div>
+                  )}
                 </div>
-                <div className="space-y-1">
-                  <label htmlFor="ev-spot" className={labelClass}>Collection Spot Location</label>
-                  <input
-                    id="ev-spot"
-                    type="text"
-                    value={newEvidence.collection_location}
-                    onChange={(e) => setNewEvidence({ ...newEvidence, collection_location: e.target.value })}
-                    className={inputClass}
-                    required
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label htmlFor="ev-file" className={labelClass}>Upload File Link</label>
-                  <input
-                    id="ev-file"
-                    type="file"
-                    onChange={(e) => {
-                      setEvidenceFile(e.target.files[0]);
-                      setNewEvidence({ ...newEvidence, file_name: e.target.files[0]?.name || '' });
-                    }}
-                    className="w-full text-xs text-[#64748b] border border-[#e2e8f0] bg-[#ffffff] rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-[#2563eb]"
-                    required
-                  />
-                </div>
-                <div className="space-y-1 md:col-span-2">
-                  <label htmlFor="ev-desc" className={labelClass}>Item Description</label>
-                  <textarea
-                    id="ev-desc"
-                    value={newEvidence.description}
-                    onChange={(e) => setNewEvidence({ ...newEvidence, description: e.target.value })}
-                    className={`${inputClass} h-16`}
-                    placeholder="Enter physical state, packaging, and marking labels..."
-                    required
-                  />
-                </div>
-                <div className="md:col-span-2 flex justify-end gap-2">
+
+                <div className="flex justify-end gap-2 pt-3 border-t border-[#e2e8f0]">
                   <button
                     type="button"
-                    onClick={() => setShowEvidenceForm(false)}
+                    onClick={() => {
+                      setShowEvidenceForm(false);
+                      setEvidenceAttachments([]);
+                    }}
                     className={secondaryBtn}
                   >
                     Cancel
@@ -1827,7 +2131,7 @@ const CaseDetails = () => {
                   <button
                     type="submit"
                     disabled={uploadingEvidence}
-                    className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white px-5 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 uppercase shadow-sm"
+                    className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white px-5 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 uppercase shadow-sm disabled:opacity-50"
                   >
                     {uploadingEvidence && <Loader2 className="w-3.5 h-3.5 animate-spin text-[#b45309]" />}
                     <span>Index Locker</span>
@@ -1943,31 +2247,60 @@ const CaseDetails = () => {
                           <span>{ev.file_name || ev.description || 'Evidence Item'}</span>
                         </h4>
                       </div>
-                      {/* Only show action buttons for DB-uploaded evidence */}
-                      {!ev._fromDetails && (
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => setSelectedEvidenceForTransfer(ev)}
-                            className="bg-[#1e3a8a] text-white hover:bg-[#1e3a8a]/90 border border-transparent px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-sm"
-                          >
-                            Transfer Property
-                          </button>
-                          <a
-                            href={`${api.defaults.baseURL}/cases/${id}/evidence/${ev.id}/download`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="bg-[#ffffff] hover:bg-[#eff6ff] border border-[#e2e8f0] text-[#1e293b] px-3 py-1.5 rounded-lg text-[10px] font-bold flex items-center gap-1"
-                          >
-                            <Download className="w-3.5 h-3.5 text-[#1e3a8a]" />
-                            <span>Download File</span>
-                          </a>
-                        </div>
-                      )}
-                      {ev._fromDetails && (
-                        <span className="text-[9px] bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded font-bold uppercase tracking-wide">
-                          From FIR Details
-                        </span>
-                      )}
+                      {/* Action buttons */}
+                      <div className="flex flex-wrap items-center gap-2">
+                        {!ev._fromDetails && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedEvidenceForMedia(ev);
+                                setExistingItemAttachments([{ id: Date.now(), media_type: 'image', file: null, description: '' }]);
+                              }}
+                              className="bg-[#ffffff] hover:bg-[#eff6ff] border border-[#bfdbfe] text-[#1e3a8a] px-2.5 py-1.5 rounded-lg text-[10px] font-bold flex items-center gap-1 shadow-sm"
+                            >
+                              <Plus className="w-3 h-3 text-[#1e3a8a]" />
+                              <span>+ Add Media</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedEvidenceForTransfer(ev)}
+                              className="bg-[#1e3a8a] text-white hover:bg-[#1e3a8a]/90 border border-transparent px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-sm"
+                            >
+                              Transfer Property
+                            </button>
+                            {ev.file_path && (
+                              <button
+                                type="button"
+                                onClick={() => handleDownloadLegacyEvidence(ev.id, ev.file_name)}
+                                className="bg-[#ffffff] hover:bg-[#eff6ff] border border-[#e2e8f0] text-[#1e293b] px-3 py-1.5 rounded-lg text-[10px] font-bold flex items-center gap-1"
+                              >
+                                <Download className="w-3.5 h-3.5 text-[#1e3a8a]" />
+                                <span>Primary File</span>
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteEvidence(ev.id, ev.file_name || ev.description)}
+                              disabled={deletingEvidenceId === ev.id}
+                              className="text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 px-2.5 py-1.5 rounded-lg text-[10px] font-bold flex items-center gap-1 disabled:opacity-50"
+                              title="Delete this evidence item and its attachments"
+                            >
+                              {deletingEvidenceId === ev.id ? (
+                                <Loader2 className="w-3 h-3 animate-spin text-red-700" />
+                              ) : (
+                                <Trash2 className="w-3 h-3" />
+                              )}
+                              <span>Delete</span>
+                            </button>
+                          </>
+                        )}
+                        {ev._fromDetails && (
+                          <span className="text-[9px] bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded font-bold uppercase tracking-wide">
+                            From FIR Details
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
@@ -2018,7 +2351,7 @@ const CaseDetails = () => {
                               <div key={move.id} className="relative pt-1.5 border-t border-[#e2e8f0]">
                                 <span className="absolute -left-[21px] top-3 w-2 h-2 rounded-full bg-[#1e3a8a] border border-white"></span>
                                 <div className="space-y-1">
-                                  <p className="font-bold text-[#1e293b] flex flex-wrap gap-1.5 items-center">
+                                   <p className="font-bold text-[#1e293b] flex flex-wrap gap-1.5 items-center">
                                     <span>Transferred Property</span>
                                     <span className="bg-[#eff6ff] text-[#1e3a8a] border border-[#bfdbfe] px-1.5 py-0.5 rounded text-[9px] font-bold">
                                       {move.transfer_reason}
@@ -2043,6 +2376,44 @@ const CaseDetails = () => {
                         </div>
                       </div>
                     </div>
+
+                    {/* Attached Media Section (Supporting Images, Audio, Video) */}
+                    {ev.attachments && ev.attachments.length > 0 && (
+                      <div className="p-4 bg-[#f8fafc] border-t border-[#e2e8f0] space-y-3">
+                        <div className="flex justify-between items-center">
+                          <h5 className="text-[10px] font-extrabold text-[#1e3a8a] uppercase tracking-widest flex items-center gap-1.5">
+                            <ImageIcon className="w-3.5 h-3.5 text-[#1e3a8a]" />
+                            <span>Attached Supporting Media ({ev.attachments.length})</span>
+                          </h5>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedEvidenceForMedia(ev);
+                              setExistingItemAttachments([{ id: Date.now(), media_type: 'image', file: null, description: '' }]);
+                            }}
+                            className="text-[#1e3a8a] hover:text-[#1e3a8a]/80 text-[10px] font-bold flex items-center gap-1"
+                          >
+                            <Plus className="w-3 h-3" />
+                            <span>Add More Media</span>
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                          {ev.attachments.map((att) => (
+                            <EvidenceAttachmentCard
+                              key={att.id}
+                              caseId={id}
+                              evidenceId={ev.id}
+                              att={att}
+                              onPreviewImage={(preview) => setPreviewImage(preview)}
+                              onDeleteAttachment={handleDeleteAttachment}
+                              isDeleting={deletingAttachmentId === att.id}
+                              formatFileSize={formatFileSize}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))
               ) : (
@@ -3034,6 +3405,198 @@ const CaseDetails = () => {
     </div>
   )}
       </div>
+      {/* Modal: Add Supporting Media to Existing Evidence Item */}
+      {selectedEvidenceForMedia && (
+        <div className="fixed inset-0 bg-[#1e293b]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <form
+            onSubmit={handleUploadMoreMedia}
+            className="bg-[#ffffff] border border-[#e2e8f0] w-full max-w-2xl rounded-lg shadow-xl overflow-hidden space-y-4 max-h-[90vh] flex flex-col"
+          >
+            <div className="bg-[#ffffff] px-5 py-4 border-b border-[#e2e8f0] flex justify-between items-center">
+              <div>
+                <h3 className="text-xs font-black text-[#1e293b] uppercase tracking-widest">
+                  Attach Supporting Media — Item #{selectedEvidenceForMedia.id}
+                </h3>
+                <p className="text-[10px] text-[#64748b]">
+                  {selectedEvidenceForMedia.evidence_type || 'Evidence'} • {selectedEvidenceForMedia.file_name || selectedEvidenceForMedia.description}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedEvidenceForMedia(null);
+                  setExistingItemAttachments([]);
+                }}
+                className="text-[#64748b] hover:text-[#1e293b] p-1"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4 overflow-y-auto flex-1 text-xs">
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-bold text-[#64748b] uppercase tracking-wider">
+                  Supporting Media Files (Max 50 MB per file)
+                </span>
+                <button
+                  type="button"
+                  onClick={addMoreMediaRow}
+                  className="bg-[#eff6ff] hover:bg-[#dbeafe] text-[#1e3a8a] border border-[#bfdbfe] px-2.5 py-1 rounded text-[10px] font-bold flex items-center gap-1 uppercase transition-all shadow-sm"
+                >
+                  <Plus className="w-3 h-3 text-[#1e3a8a]" />
+                  <span>+ Add Another File</span>
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {existingItemAttachments.map((attRow, idx) => (
+                  <div key={attRow.id} className="p-3 bg-[#f8fafc] border border-[#e2e8f0] rounded-lg space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-black text-[#1e3a8a] uppercase tracking-wider flex items-center gap-1">
+                        {attRow.media_type === 'image' && <ImageIcon className="w-3 h-3" />}
+                        {attRow.media_type === 'audio' && <Music className="w-3 h-3" />}
+                        {attRow.media_type === 'video' && <Film className="w-3 h-3" />}
+                        <span>Media File #{idx + 1}</span>
+                      </span>
+                      {existingItemAttachments.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeMoreMediaRow(attRow.id)}
+                          className="text-red-600 hover:text-red-800 text-[10px] font-bold flex items-center gap-1"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          <span>Remove</span>
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <div>
+                        <label className="text-[10px] font-bold text-[#64748b] uppercase block mb-0.5">Media Type</label>
+                        <select
+                          value={attRow.media_type}
+                          onChange={(e) => updateMoreMediaRow(attRow.id, 'media_type', e.target.value)}
+                          className={inputClass}
+                        >
+                          <option value="image">Image (JPEG, PNG, WEBP)</option>
+                          <option value="audio">Audio (MP3, WAV, M4A)</option>
+                          <option value="video">Video (MP4, WEBM, MOV)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-bold text-[#64748b] uppercase block mb-0.5">File</label>
+                        <input
+                          type="file"
+                          accept={
+                            attRow.media_type === 'image'
+                              ? 'image/jpeg,image/png,image/webp,image/gif'
+                              : attRow.media_type === 'audio'
+                              ? 'audio/mpeg,audio/wav,audio/m4a,audio/aac,audio/ogg'
+                              : 'video/mp4,video/webm,video/quicktime'
+                          }
+                          onChange={(e) => updateMoreMediaRow(attRow.id, 'file', e.target.files[0])}
+                          className="w-full text-xs text-[#64748b] border border-[#e2e8f0] bg-[#ffffff] rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-[#2563eb]"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-bold text-[#64748b] uppercase block mb-0.5">Description</label>
+                        <input
+                          type="text"
+                          value={attRow.description}
+                          onChange={(e) => updateMoreMediaRow(attRow.id, 'description', e.target.value)}
+                          placeholder="E.g. Closeup photo, Audio statement"
+                          className={inputClass}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-[#f8fafc] p-4 border-t border-[#e2e8f0] flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedEvidenceForMedia(null);
+                  setExistingItemAttachments([]);
+                }}
+                className={secondaryBtn}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={uploadingMoreMedia}
+                className="bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white font-bold px-4 py-2 rounded-lg text-xs flex items-center gap-1.5 uppercase tracking-wider shadow-sm disabled:opacity-50"
+              >
+                {uploadingMoreMedia && <Loader2 className="w-3.5 h-3.5 animate-spin text-[#b45309]" />}
+                <span>Upload &amp; Attach</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Modal: Fullscreen Image Preview */}
+      {previewImage && (
+        <div
+          className="fixed inset-0 bg-[#0f172a]/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div
+            className="bg-[#ffffff] rounded-xl max-w-4xl w-full overflow-hidden shadow-2xl border border-[#e2e8f0] flex flex-col max-h-[90vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-3.5 bg-[#f8fafc] border-b border-[#e2e8f0] flex justify-between items-center">
+              <div>
+                <h3 className="text-xs font-black text-[#1e293b] uppercase tracking-wider flex items-center gap-1.5">
+                  <ImageIcon className="w-3.5 h-3.5 text-[#1e3a8a]" />
+                  <span>{previewImage.title || 'Evidence Image Preview'}</span>
+                </h3>
+                {previewImage.description && (
+                  <p className="text-[11px] text-[#64748b] italic mt-0.5">{previewImage.description}</p>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const link = document.createElement('a');
+                    link.href = previewImage.url;
+                    link.download = previewImage.title || 'evidence_image';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }}
+                  className="bg-[#ffffff] hover:bg-[#eff6ff] border border-[#e2e8f0] text-[#1e293b] px-3 py-1.5 rounded-lg text-[10px] font-bold flex items-center gap-1 shadow-sm"
+                >
+                  <Download className="w-3.5 h-3.5 text-[#1e3a8a]" />
+                  <span>Download</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewImage(null)}
+                  className="p-1.5 rounded-lg bg-[#ffffff] border border-[#e2e8f0] text-[#64748b] hover:text-[#1e293b]"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-4 overflow-auto flex items-center justify-center bg-slate-900/95 flex-1 min-h-[300px]">
+              <img
+                src={previewImage.url}
+                alt={previewImage.title}
+                className="max-h-[72vh] max-w-full object-contain rounded shadow"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

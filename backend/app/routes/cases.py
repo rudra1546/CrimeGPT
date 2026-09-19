@@ -131,26 +131,63 @@ def delete(
     return {"message": f"Case with ID {case_id} has been successfully deleted."}
 
 import os
-import shutil
-from fastapi import File, UploadFile
+import uuid
+from datetime import datetime, timezone
+from fastapi import File, UploadFile, Form
 from fastapi.responses import FileResponse
 from app.models.evidence import Evidence
-from app.schemas.evidence import EvidenceResponse
+from app.models.evidence_attachment import EvidenceAttachment
+from app.schemas.evidence import EvidenceResponse, EvidenceAttachmentResponse
+from app.services import supabase_storage
+from app.routes.deps import get_current_user_flexible
+from app.utils.reconcile_deletions import run_reconciliation
 
 UPLOAD_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
     "uploaded_evidence"
 )
 
+def _detect_media_type(mime: str | None, filename: str) -> str:
+    mime = (mime or "").lower()
+    ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+    if mime.startswith("image/") or ext in ["jpg", "jpeg", "png", "webp", "gif", "svg", "bmp"]:
+        return "image"
+    if mime.startswith("audio/") or ext in ["mp3", "wav", "ogg", "m4a", "aac", "flac"]:
+        return "audio"
+    if mime.startswith("video/") or ext in ["mp4", "webm", "mov", "avi", "mkv"]:
+        return "video"
+    return "document"
+
+@router.get("/config/upload-limits")
+async def get_upload_limits():
+    """
+    Returns effective upload limits in bytes and MB based on app configuration and bucket settings.
+    """
+    limit_bytes = await supabase_storage.get_effective_upload_limit()
+    return {
+        "max_upload_size_bytes": limit_bytes,
+        "max_upload_size_mb": round(limit_bytes / (1024 * 1024), 1),
+        "bucket": supabase_storage.get_bucket_name()
+    }
+
 @router.post("/{case_id}/evidence", response_model=EvidenceResponse, status_code=status.HTTP_201_CREATED)
-def upload_evidence(
+async def upload_evidence(
     case_id: int,
-    file: UploadFile = File(...),
+    files: list[UploadFile] = File(default=[]),
+    file: UploadFile | None = File(None),
+    evidence_type: str = Form("Physical Weapon/Object"),
+    description: str | None = Form(None),
+    collection_location: str | None = Form(None),
+    collection_date: str | None = Form(None),
+    collecting_officer: str | None = Form(None),
+    evidence_id: int | None = Form(None),
+    attachments_metadata: str | None = Form("[]"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
-    Upload a physical evidence file (PDF, Image, Document) linked to a Case.
+    Upload evidence metadata and repeatable supporting media (images, audio, video) to Supabase Storage.
+    Preserves full backward compatibility with legacy single-file callers.
     """
     case = case_service.get_case_by_id(db, case_id)
     if not case:
@@ -159,51 +196,160 @@ def upload_evidence(
             detail=f"Case with ID {case_id} not found."
         )
 
-    # Save to dynamic local path
-    case_upload_dir = os.path.join(UPLOAD_DIR, str(case_id))
-    os.makedirs(case_upload_dir, exist_ok=True)
-    
-    file_path = os.path.join(case_upload_dir, file.filename)
+    # Gather files
+    all_files: list[UploadFile] = []
+    if file and file.filename:
+        all_files.append(file)
+    if files:
+        all_files.extend([f for f in files if f.filename])
 
-    try:
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-        
+    # Parse metadata
+    meta_list = []
+    if attachments_metadata:
+        try:
+            parsed = json.loads(attachments_metadata)
+            if isinstance(parsed, list):
+                meta_list = parsed
+        except Exception:
+            meta_list = []
+
+    # Get or create Evidence record
+    if evidence_id:
+        db_evidence = db.query(Evidence).filter(
+            Evidence.id == evidence_id,
+            Evidence.case_id == case_id
+        ).first()
+        if not db_evidence:
+            raise HTTPException(status_code=404, detail=f"Evidence #{evidence_id} not found.")
+        if description and not db_evidence.description:
+            db_evidence.description = description
+        if collection_location and not db_evidence.collection_location:
+            db_evidence.collection_location = collection_location
+        if collecting_officer and not db_evidence.collecting_officer:
+            db_evidence.collecting_officer = collecting_officer
+    else:
+        parsed_date = None
+        if collection_date:
+            try:
+                parsed_date = datetime.fromisoformat(collection_date.replace("Z", "+00:00"))
+            except Exception:
+                parsed_date = datetime.now(timezone.utc)
+
         db_evidence = Evidence(
             case_id=case_id,
-            file_name=file.filename,
-            file_type=file.content_type,
-            file_path=os.path.relpath(file_path, UPLOAD_DIR),
+            evidence_type=evidence_type or "Physical Weapon/Object",
+            description=description,
+            collection_location=collection_location,
+            collection_date=parsed_date,
+            collecting_officer=collecting_officer,
             uploaded_by=current_user.id
         )
         db.add(db_evidence)
         db.flush()
 
-        # Add CaseTimeline event
+    uploaded_paths = []
+    try:
+        for idx, ufile in enumerate(all_files):
+            meta = meta_list[idx] if idx < len(meta_list) else {}
+            meta_type = meta.get("media_type") or _detect_media_type(ufile.content_type, ufile.filename)
+            meta_desc = meta.get("description") or ""
+
+            uuid_hex = uuid.uuid4().hex[:12]
+            clean_name = "".join(c for c in ufile.filename if c.isalnum() or c in "._- ")
+            storage_path = f"cases/{case_id}/evidence_{db_evidence.id}/{uuid_hex}_{clean_name}"
+
+            # Stream to Supabase Storage
+            upload_result = await supabase_storage.upload_file_stream(storage_path, ufile)
+            uploaded_paths.append(storage_path)
+
+            att = EvidenceAttachment(
+                evidence_id=db_evidence.id,
+                case_id=case_id,
+                media_type=meta_type,
+                file_name=ufile.filename,
+                storage_path=storage_path,
+                file_type=upload_result["file_type"],
+                file_size=upload_result["file_size"],
+                description=meta_desc,
+                status="active",
+                uploaded_by=current_user.id
+            )
+            db.add(att)
+
+            # Populate legacy fields on evidence if not yet set
+            if not db_evidence.file_name:
+                db_evidence.file_name = ufile.filename
+                db_evidence.file_type = upload_result["file_type"]
+                db_evidence.file_path = storage_path
+
         from app.models.timeline import CaseTimeline
         db_timeline = CaseTimeline(
             case_id=case_id,
             event_name="Evidence Collected",
-            description=f"Evidence file '{file.filename}' was uploaded to the locker.",
+            description=f"Evidence item '{db_evidence.evidence_type}' recorded with {len(all_files)} supporting attachment(s).",
             created_by=current_user.id
         )
         db.add(db_timeline)
+
+        log_audit(
+            db,
+            user_id=current_user.id,
+            user_name=current_user.name,
+            action="UPLOAD_EVIDENCE",
+            details=f"Case FIR No. {case.fir_number} | Recorded evidence #{db_evidence.id} with {len(all_files)} file(s)."
+        )
 
         db.commit()
         db.refresh(db_evidence)
         return db_evidence
     except Exception as e:
-        if os.path.exists(file_path):
-            os.remove(file_path)
+        db.rollback()
+        # Compensating cleanup for any files uploaded in this batch
+        for p in uploaded_paths:
+            try:
+                deleted_ok = await supabase_storage.delete_files([p])
+                if not deleted_ok:
+                    raise RuntimeError("Supabase Storage delete_files returned failure status")
+            except Exception as cleanup_err:
+                import logging
+                logging.getLogger("crimegpt.storage").critical(
+                    f"[ORPHAN_STORAGE_CLEANUP_FAILED] Path: {p} | Error: {cleanup_err}"
+                )
+                # Safeguard 2: Durably record uncertain Storage path in PostgreSQL for background reconciliation
+                try:
+                    orphan_att = EvidenceAttachment(
+                        evidence_id=db_evidence.id if (db_evidence and getattr(db_evidence, 'id', None)) else None,
+                        case_id=case_id,
+                        media_type="unknown",
+                        file_name=p.split("/")[-1],
+                        storage_path=p,
+                        file_type="application/octet-stream",
+                        file_size=None,
+                        description="Uncertain upload outcome - compensating cleanup failed",
+                        status="pending_deletion",
+                        deletion_requested_at=datetime.now(timezone.utc),
+                        deletion_retry_count=1,
+                        deletion_error=f"Compensating deletion failed: {str(cleanup_err)}",
+                        uploaded_by=current_user.id
+                    )
+                    db.add(orphan_att)
+                    db.commit()
+                except Exception as db_err:
+                    logging.getLogger("crimegpt.storage").critical(
+                        f"[DURABLE_ORPHAN_RECORD_FAILED] Path: {p} | Error: {db_err}"
+                    )
+
+        if isinstance(e, HTTPException):
+            raise e
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to save evidence file: {str(e)}"
+            detail=f"Failed to process evidence uploads: {str(e)}"
         )
 
 @router.get("/{case_id}/evidence", response_model=list[EvidenceResponse])
 def list_evidence(case_id: int, db: Session = Depends(get_db)):
     """
-    List all evidence records linked to a Case.
+    List all evidence records linked to a Case, with active attachments.
     """
     case = case_service.get_case_by_id(db, case_id)
     if not case:
@@ -211,12 +357,173 @@ def list_evidence(case_id: int, db: Session = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Case with ID {case_id} not found."
         )
-    return db.query(Evidence).filter(Evidence.case_id == case_id).all()
+    evidence_items = db.query(Evidence).filter(Evidence.case_id == case_id).all()
+    # Filter out attachments with status == 'deleted'
+    for ev in evidence_items:
+        if hasattr(ev, 'attachments') and ev.attachments:
+            ev.attachments = [a for a in ev.attachments if a.status != 'deleted']
+    return evidence_items
+
+@router.get("/{case_id}/evidence/{evidence_id}/attachments/{attachment_id}/stream")
+async def stream_attachment(
+    case_id: int,
+    evidence_id: int,
+    attachment_id: int,
+    token: str | None = None,
+    current_user: User = Depends(get_current_user_flexible),
+    db: Session = Depends(get_db)
+):
+    """
+    Streams media content (image/audio/video) inline directly from Supabase Storage.
+    Supports either Authorization header or short-lived scoped '?token=<token>' ticket for native HTML5 media tags.
+    """
+    # Verify ticket scope if query parameter token was used
+    if hasattr(current_user, "_current_token_payload"):
+        payload = current_user._current_token_payload
+        if payload.get("type") == "media_ticket":
+            if payload.get("case_id") != case_id or payload.get("attachment_id") != attachment_id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Media stream ticket is not valid for this case attachment."
+                )
+
+    # Verify case exists
+    case = case_service.get_case_by_id(db, case_id)
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found.")
+
+    # Verify evidence item exists and belongs to case
+    ev = db.query(Evidence).filter(
+        Evidence.id == evidence_id,
+        Evidence.case_id == case_id
+    ).first()
+    if not ev:
+        raise HTTPException(status_code=404, detail="Evidence item not found for this case.")
+
+    att = db.query(EvidenceAttachment).filter(
+        EvidenceAttachment.id == attachment_id,
+        EvidenceAttachment.evidence_id == evidence_id,
+        EvidenceAttachment.case_id == case_id,
+        EvidenceAttachment.status != "deleted"
+    ).first()
+
+    if not att:
+        raise HTTPException(status_code=404, detail="Attachment not found or has been deleted.")
+
+    return await supabase_storage.stream_storage_file(
+        storage_path=att.storage_path,
+        media_type=att.file_type,
+        filename=att.file_name,
+        download=False
+    )
+
+@router.get("/{case_id}/evidence/{evidence_id}/attachments/{attachment_id}/download")
+async def download_attachment(
+    case_id: int,
+    evidence_id: int,
+    attachment_id: int,
+    token: str | None = None,
+    current_user: User = Depends(get_current_user_flexible),
+    db: Session = Depends(get_db)
+):
+    """
+    Downloads an attachment file from Supabase Storage with Content-Disposition: attachment.
+    """
+    if hasattr(current_user, "_current_token_payload"):
+        payload = current_user._current_token_payload
+        if payload.get("type") == "media_ticket":
+            if payload.get("case_id") != case_id or payload.get("attachment_id") != attachment_id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Media ticket is not valid for this case attachment."
+                )
+
+    # Verify case exists
+    case = case_service.get_case_by_id(db, case_id)
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found.")
+
+    # Verify evidence item exists and belongs to case
+    ev = db.query(Evidence).filter(
+        Evidence.id == evidence_id,
+        Evidence.case_id == case_id
+    ).first()
+    if not ev:
+        raise HTTPException(status_code=404, detail="Evidence item not found for this case.")
+
+    att = db.query(EvidenceAttachment).filter(
+        EvidenceAttachment.id == attachment_id,
+        EvidenceAttachment.evidence_id == evidence_id,
+        EvidenceAttachment.case_id == case_id,
+        EvidenceAttachment.status != "deleted"
+    ).first()
+
+    if not att:
+        raise HTTPException(status_code=404, detail="Attachment not found or has been deleted.")
+
+    return await supabase_storage.stream_storage_file(
+        storage_path=att.storage_path,
+        media_type=att.file_type,
+        filename=att.file_name,
+        download=True
+    )
+
+@router.post("/{case_id}/evidence/{evidence_id}/attachments/{attachment_id}/ticket")
+def create_attachment_media_ticket(
+    case_id: int,
+    evidence_id: int,
+    attachment_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Creates a 120-second scoped media ticket for HTML5 media tags.
+    Mitigates query-string logging risks by using single-purpose, short-lived tokens.
+    """
+    att = db.query(EvidenceAttachment).filter(
+        EvidenceAttachment.id == attachment_id,
+        EvidenceAttachment.evidence_id == evidence_id,
+        EvidenceAttachment.case_id == case_id,
+        EvidenceAttachment.status != "deleted"
+    ).first()
+
+    if not att:
+        raise HTTPException(status_code=404, detail="Attachment not found.")
+
+    from app.utils.jwt_utils import create_media_ticket
+    ticket = create_media_ticket(current_user.email, case_id, attachment_id, expires_seconds=120)
+    return {"ticket": ticket, "expires_in": 120}
+
+@router.get("/{case_id}/evidence/{evidence_id}/attachments/{attachment_id}/signed-url")
+async def get_attachment_signed_url(
+    case_id: int,
+    evidence_id: int,
+    attachment_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Generates a 60-second time-limited Supabase signed URL for direct private media viewing.
+    """
+    att = db.query(EvidenceAttachment).filter(
+        EvidenceAttachment.id == attachment_id,
+        EvidenceAttachment.evidence_id == evidence_id,
+        EvidenceAttachment.case_id == case_id,
+        EvidenceAttachment.status != "deleted"
+    ).first()
+
+    if not att:
+        raise HTTPException(status_code=404, detail="Attachment not found.")
+
+    signed_url = await supabase_storage.create_signed_url(att.storage_path, expires_in=60)
+    return {"signed_url": signed_url, "expires_in": 60}
+
 
 @router.get("/{case_id}/evidence/{evidence_id}/download")
-def download_evidence(case_id: int, evidence_id: int, db: Session = Depends(get_db)):
+async def download_evidence(case_id: int, evidence_id: int, db: Session = Depends(get_db)):
     """
-    Download a physical evidence file securely under user role verification.
+    Legacy download endpoint. Streams from Supabase Storage if storage_path is present,
+    or falls back to local disk for older legacy files.
     """
     evidence = db.query(Evidence).filter(
         Evidence.id == evidence_id,
@@ -229,11 +536,21 @@ def download_evidence(case_id: int, evidence_id: int, db: Session = Depends(get_
             detail=f"Evidence with ID {evidence_id} not found for Case {case_id}."
         )
     
-    full_path = os.path.join(UPLOAD_DIR, evidence.file_path)
-    if not os.path.exists(full_path):
+    # If storage_path matches Supabase pattern
+    if evidence.file_path and evidence.file_path.startswith("cases/"):
+        return await supabase_storage.stream_storage_file(
+            storage_path=evidence.file_path,
+            media_type=evidence.file_type or "application/octet-stream",
+            filename=evidence.file_name or "evidence_file",
+            download=True
+        )
+
+    # Fallback to local disk for legacy files
+    full_path = os.path.join(UPLOAD_DIR, evidence.file_path) if evidence.file_path else None
+    if not full_path or not os.path.exists(full_path):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Physical file not found on disk."
+            detail="Physical file not found on disk or storage."
         )
         
     return FileResponse(
@@ -242,34 +559,143 @@ def download_evidence(case_id: int, evidence_id: int, db: Session = Depends(get_
         media_type=evidence.file_type
     )
 
+@router.delete("/{case_id}/evidence/{evidence_id}/attachments/{attachment_id}", status_code=status.HTTP_200_OK)
+async def delete_attachment(
+    case_id: int,
+    evidence_id: int,
+    attachment_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Durable safe deletion of a single attachment.
+    Verifies ownership -> marks pending_deletion -> deletes from Supabase Storage -> marks deleted.
+    """
+    case = case_service.get_case_by_id(db, case_id)
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found.")
+
+    att = db.query(EvidenceAttachment).filter(
+        EvidenceAttachment.id == attachment_id,
+        EvidenceAttachment.evidence_id == evidence_id,
+        EvidenceAttachment.case_id == case_id
+    ).first()
+
+    if not att or att.status == "deleted":
+        raise HTTPException(status_code=404, detail="Attachment not found or already deleted.")
+
+    # Phase 1: Durable state transition in PostgreSQL
+    att.status = "pending_deletion"
+    att.deletion_requested_at = datetime.now(timezone.utc)
+    db.commit()
+
+    # Phase 2: Storage deletion call
+    storage_deleted = await supabase_storage.delete_files([att.storage_path])
+
+    # Phase 3: Finalize status
+    if storage_deleted:
+        att.status = "deleted"
+        att.deleted_at = datetime.now(timezone.utc)
+        att.deletion_error = None
+        db.commit()
+
+        log_audit(
+            db,
+            user_id=current_user.id,
+            user_name=current_user.name,
+            action="DELETE_EVIDENCE_ATTACHMENT",
+            details=f"Case FIR No. {case.fir_number} | Deleted attachment {att.file_name} from Evidence #{evidence_id}"
+        )
+        return {"message": "Attachment deleted successfully.", "attachment_id": attachment_id}
+    else:
+        att.deletion_retry_count += 1
+        att.deletion_error = "Supabase Storage deletion returned failure status"
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Storage deletion failed. Database record preserved in pending_deletion for retry."
+        )
+
 @router.delete("/{case_id}/evidence/{evidence_id}", status_code=status.HTTP_200_OK)
-def delete_evidence(case_id: int, evidence_id: int, db: Session = Depends(get_db)):
+async def delete_evidence(
+    case_id: int,
+    evidence_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """
-    Permanently delete an evidence file from disk and database records.
+    Durable safe deletion of an entire evidence record and all its attachments.
     """
+    case = case_service.get_case_by_id(db, case_id)
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found.")
+
     evidence = db.query(Evidence).filter(
         Evidence.id == evidence_id,
         Evidence.case_id == case_id
     ).first()
-    
+
     if not evidence:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Evidence with ID {evidence_id} not found for Case {case_id}."
-        )
-        
-    full_path = os.path.join(UPLOAD_DIR, evidence.file_path)
-    try:
-        if os.path.exists(full_path):
-            os.remove(full_path)
-        db.delete(evidence)
+        raise HTTPException(status_code=404, detail="Evidence not found.")
+
+    active_atts = [a for a in evidence.attachments if a.status != 'deleted']
+    if active_atts:
+        # Phase 1: Mark all active attachments as pending_deletion
+        for a in active_atts:
+            a.status = "pending_deletion"
+            a.deletion_requested_at = datetime.now(timezone.utc)
         db.commit()
-        return {"message": f"Evidence file {evidence.file_name} successfully purged."}
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete evidence file: {str(e)}"
-        )
+
+        # Phase 2: Delete from Supabase Storage
+        paths = [a.storage_path for a in active_atts]
+        storage_deleted = await supabase_storage.delete_files(paths)
+
+        if not storage_deleted:
+            for a in active_atts:
+                a.deletion_retry_count += 1
+                a.deletion_error = "Storage batch delete returned failure"
+            db.commit()
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Storage deletion failed for one or more attachments. Records preserved in pending_deletion for retry."
+            )
+
+        # Phase 3: Mark attachments as deleted
+        for a in active_atts:
+            a.status = "deleted"
+            a.deleted_at = datetime.now(timezone.utc)
+        db.commit()
+
+    # Legacy local disk cleanup if file existed
+    if evidence.file_path and not evidence.file_path.startswith("cases/"):
+        full_path = os.path.join(UPLOAD_DIR, evidence.file_path)
+        if os.path.exists(full_path):
+            try:
+                os.remove(full_path)
+            except Exception:
+                pass
+
+    db.delete(evidence)
+    db.commit()
+
+    log_audit(
+        db,
+        user_id=current_user.id,
+        user_name=current_user.name,
+        action="DELETE_EVIDENCE",
+        details=f"Case FIR No. {case.fir_number} | Deleted evidence record #{evidence_id} with {len(active_atts)} attachment(s)."
+    )
+    return {"message": f"Evidence record #{evidence_id} successfully deleted."}
+
+@router.post("/admin/reconcile-deletions")
+async def trigger_reconciliation(
+    current_user: User = Depends(RoleChecker(["ADMIN", "SHO"]))
+):
+    """
+    Protected administrative endpoint to reconcile attachments in pending_deletion state.
+    """
+    result = await run_reconciliation()
+    return result
 
 from app.schemas.timeline import CaseTimelineCreate, CaseTimelineResponse
 from app.models.timeline import CaseTimeline

@@ -23,14 +23,33 @@ class EvidenceMovementCreate(BaseModel):
     transfer_reason: str | None = None
     remarks: str | None = None
 
+class EvidenceAttachmentResponse(BaseModel):
+    id: int
+    evidence_id: int | None = None
+    case_id: int
+    media_type: str
+    file_name: str
+    storage_path: str
+    file_type: str
+    file_size: int | None = None
+    description: str | None = None
+    status: str = "active"
+    deletion_requested_at: datetime | None = None
+    deleted_at: datetime | None = None
+    uploaded_by: int | None = None
+    uploaded_at: datetime | None = None
+
+    class Config:
+        from_attributes = True
+
 class EvidenceResponse(BaseModel):
     id: int
     case_id: int
-    file_name: str
-    file_type: str
-    file_path: str
-    uploaded_by: int
-    uploaded_date: datetime
+    file_name: str | None = None
+    file_type: str | None = None
+    file_path: str | None = None
+    uploaded_by: int | None = None
+    uploaded_date: datetime | None = None
     evidence_type: str | None = None
     description: str | None = None
     collection_date: datetime | None = None
@@ -39,6 +58,7 @@ class EvidenceResponse(BaseModel):
     images_json: str | None = None
     documents_json: str | None = None
     movement_history: list[EvidenceMovementResponse] = []
+    attachments: list[EvidenceAttachmentResponse] = []
 
     class Config:
         from_attributes = True

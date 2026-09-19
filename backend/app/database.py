@@ -140,6 +140,22 @@ try:
                 conn.execute(text("ALTER TABLE evidence ADD COLUMN documents_json TEXT"))
             except Exception:
                 pass
+    # Execute versioned migrations from migrations directory
+    migrations_dir = os.path.join(os.path.dirname(__file__), "migrations")
+    if os.path.exists(migrations_dir):
+        migration_files = sorted([f for f in os.listdir(migrations_dir) if f.endswith(".sql") and "rollback" not in f.lower()])
+        if migration_files and not DATABASE_URL.startswith("sqlite"):
+            raw_conn = engine.raw_connection()
+            try:
+                raw_conn.autocommit = True
+                with raw_conn.cursor() as cur:
+                    for mfile in migration_files:
+                        mpath = os.path.join(migrations_dir, mfile)
+                        with open(mpath, "r", encoding="utf-8") as mf:
+                            sql_text = mf.read()
+                        cur.execute(sql_text)
+            finally:
+                raw_conn.close()
 except Exception as e:
     import logging
     logging.getLogger("crimegpt.database").warning(f"Startup migration warning: {e}")

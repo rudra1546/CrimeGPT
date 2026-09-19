@@ -8,9 +8,9 @@ class Evidence(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     case_id = Column(Integer, ForeignKey("cases.id", ondelete="CASCADE"), nullable=False)
-    file_name = Column(String, nullable=False)
-    file_type = Column(String, nullable=False)
-    file_path = Column(String, nullable=False)
+    file_name = Column(String, nullable=True)
+    file_type = Column(String, nullable=True)
+    file_path = Column(String, nullable=True)
     uploaded_by = Column(Integer, ForeignKey("users.id"), nullable=False)
     uploaded_date = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
@@ -27,3 +27,4 @@ class Evidence(Base):
     case = relationship("Case", back_populates="evidence")
     uploader = relationship("User")
     movement_history = relationship("EvidenceMovement", back_populates="evidence", cascade="all, delete-orphan")
+    attachments = relationship("EvidenceAttachment", back_populates="evidence", cascade="all, delete-orphan", order_by="EvidenceAttachment.id.asc()")

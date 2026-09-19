@@ -38,3 +38,35 @@ def decode_access_token(token: str) -> dict:
     except jwt.PyJWTError:
         # Token is invalid (signature failure, structure failure, etc.)
         return None
+
+def create_media_ticket(user_email: str, case_id: int, attachment_id: int, expires_seconds: int = 120) -> str:
+    """
+    Generate a short-lived (120s), single-attachment scoped ticket
+    for safe HTML5 media streaming without exposing master JWT access tokens in query parameters.
+    """
+    payload = {
+        "sub": user_email,
+        "type": "media_ticket",
+        "case_id": case_id,
+        "attachment_id": attachment_id,
+        "exp": datetime.now(timezone.utc) + timedelta(seconds=expires_seconds)
+    }
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+def decode_media_ticket(token: str, expected_case_id: int | None = None, expected_attachment_id: int | None = None) -> dict | None:
+    """
+    Decode and validate a scoped media ticket.
+    Checks signature, expiration, ticket type, and matches case/attachment IDs if provided.
+    """
+    payload = decode_access_token(token)
+    if not payload:
+        return None
+    if payload.get("type") != "media_ticket":
+        return None
+    if expected_case_id is not None and payload.get("case_id") != expected_case_id:
+        return None
+    if expected_attachment_id is not None and payload.get("attachment_id") != expected_attachment_id:
+        return None
+    return payload
+
+

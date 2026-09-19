@@ -13,9 +13,10 @@ from app.models.audit_log import AuditLog
 from app.models.user_audit_log import UserAuditLog
 
 from app.models.investigation import InvestigationRecord
+from app.models.evidence_attachment import EvidenceAttachment
 
 __all__ = [
-    "User", "Case", "CaseDetails", "Document", "Evidence", "CaseTimeline",
+    "User", "Case", "CaseDetails", "Document", "Evidence", "EvidenceAttachment", "CaseTimeline",
     "Witness", "Suspect", "InvestigationTask", "EvidenceMovement", "AuditLog", "UserAuditLog", "InvestigationRecord"
 ]
 
