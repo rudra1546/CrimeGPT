@@ -3,13 +3,13 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { registerSyncListeners } from '../services/OfflineSyncManager';
 import NotificationBell from './NotificationBell';
-import { 
-  LayoutDashboard, 
-  Briefcase, 
-  PlusCircle, 
-  FileText, 
-  MessageSquare, 
-  LogOut, 
+import {
+  LayoutDashboard,
+  Briefcase,
+  PlusCircle,
+  FileText,
+  MessageSquare,
+  LogOut,
   User,
   Shield,
   ShieldCheck,
@@ -24,7 +24,7 @@ const Navbar = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   const [searchQuery, setSearchQuery] = useState('');
   const [networkStatus, setNetworkStatus] = useState(navigator.onLine ? 'online' : 'offline');
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -87,8 +87,11 @@ const Navbar = () => {
       </div>
 
       {/* Network Connectivity Status Indicator */}
-      <div className="px-4 py-2 bg-[#ffffff] border-b border-[#e2e8f0] flex items-center justify-between text-[10px] font-bold text-[#64748b]">
-        <span className="flex items-center gap-1.5">
+      <div className="px-4 py-2 bg-[#ffffff] border-b border-[#e2e8f0] flex items-center justify-center text-[10px] font-bold text-[#64748b]">
+        <span className="flex items-center gap-2">
+          <span className="text-[#475569]">System Status</span>
+
+          <span className="text-[#cbd5e1]">•</span>
           {networkStatus === 'online' ? (
             <>
               <Wifi className="w-3.5 h-3.5 text-emerald-600" />
@@ -106,10 +109,10 @@ const Navbar = () => {
             </>
           )}
         </span>
-        <div className="flex items-center gap-2">
+        {/* <div className="flex items-center gap-2">
           <NotificationBell compact={true} />
           <span className="text-[9px] text-[#64748b]/80 uppercase">{user?.role?.toLowerCase()}</span>
-        </div>
+        </div> */}
       </div>
 
       {/* Global Search Bar */}
@@ -139,11 +142,10 @@ const Navbar = () => {
               key={item.path}
               to={item.path}
               onClick={() => setIsMobileOpen(false)}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold uppercase transition-all ${
-                isActive 
-                  ? 'bg-[#eff6ff] text-[#1e3a8a] border border-[#bfdbfe] shadow-sm font-black' 
-                  : 'text-[#64748b] border border-transparent hover:bg-[#f8fafc] hover:text-[#1e293b]'
-              }`}
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold uppercase transition-all ${isActive
+                ? 'bg-[#eff6ff] text-[#1e3a8a] border border-[#bfdbfe] shadow-sm font-black'
+                : 'text-[#64748b] border border-transparent hover:bg-[#f8fafc] hover:text-[#1e293b]'
+                }`}
             >
               <Icon className={`w-4 h-4 ${isActive ? 'text-[#1e3a8a]' : ''}`} />
               <span>{item.name}</span>
@@ -156,11 +158,10 @@ const Navbar = () => {
             <Link
               to="/admin"
               onClick={() => setIsMobileOpen(false)}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold uppercase transition-all ${
-                location.pathname === '/admin' 
-                  ? 'bg-[#eff6ff] text-[#1e3a8a] border border-[#bfdbfe] font-black' 
-                  : 'text-[#1e293b] border border-transparent hover:bg-[#f8fafc]'
-              }`}
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold uppercase transition-all ${location.pathname === '/admin'
+                ? 'bg-[#eff6ff] text-[#1e3a8a] border border-[#bfdbfe] font-black'
+                : 'text-[#1e293b] border border-transparent hover:bg-[#f8fafc]'
+                }`}
             >
               <Shield className="w-4 h-4 text-[#b45309]" />
               <span>Admin Dashboard</span>
@@ -182,7 +183,7 @@ const Navbar = () => {
             </span>
           </div>
         </div>
-        
+
         <button
           onClick={handleLogout}
           className="w-full flex items-center justify-center gap-1.5 bg-[#ffffff] hover:bg-[#f8fafc] text-[#1e293b] border border-[#e2e8f0] py-1.5 rounded-lg text-xs transition-all font-bold"

@@ -155,11 +155,10 @@ const NotificationBell = ({ compact = false }) => {
         aria-label={`CrimeGPT Notifications (${pendingTotal} pending cases, ${summary?.recent_activity_count ?? 0} activities)`}
         aria-haspopup="true"
         aria-expanded={isOpen}
-        className={`relative flex items-center justify-center rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]/20 ${
-          compact
-            ? 'p-1 text-[#64748b] hover:text-[#1e293b] hover:bg-[#eff6ff]'
-            : 'px-3 py-2 bg-[#ffffff] border border-[#e2e8f0] text-[#1e293b] hover:bg-[#f8fafc] hover:border-[#bfdbfe] shadow-sm text-xs font-bold'
-        } ${isOpen ? 'bg-[#eff6ff] text-[#1e3a8a] border-[#bfdbfe]' : ''}`}
+        className={`relative flex items-center justify-center rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]/20 ${compact
+          ? 'p-1 text-[#64748b] hover:text-[#1e293b] hover:bg-[#eff6ff]'
+          : 'px-3 py-2 bg-[#ffffff] border border-[#e2e8f0] text-[#1e293b] hover:bg-[#f8fafc] hover:border-[#bfdbfe] shadow-sm text-xs font-bold'
+          } ${isOpen ? 'bg-[#eff6ff] text-[#1e3a8a] border-[#bfdbfe]' : ''}`}
       >
         <div className="relative flex items-center gap-1.5">
           <Bell className={`${compact ? 'w-4 h-4' : 'w-4 h-4'} text-[#1e3a8a]`} />
@@ -235,21 +234,19 @@ const NotificationBell = ({ compact = false }) => {
             <button
               type="button"
               onClick={() => setActiveTab('pending')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg transition-all ${
-                activeTab === 'pending'
-                  ? 'bg-[#eff6ff] text-[#1e3a8a] border border-[#bfdbfe] font-black'
-                  : 'text-[#64748b] hover:text-[#1e293b] hover:bg-[#f8fafc]'
-              }`}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg transition-all ${activeTab === 'pending'
+                ? 'bg-[#eff6ff] text-[#1e3a8a] border border-[#bfdbfe] font-black'
+                : 'text-[#64748b] hover:text-[#1e293b] hover:bg-[#f8fafc]'
+                }`}
             >
               <Clock className="w-3.5 h-3.5" />
               <span>Pending Cases</span>
               {pendingTotal > 0 && (
                 <span
-                  className={`text-[9px] px-1.5 py-0.2 rounded-full font-black ${
-                    hasUrgent
-                      ? 'bg-red-100 text-red-700 border border-red-200'
-                      : 'bg-[#bfdbfe] text-[#1e3a8a]'
-                  }`}
+                  className={`text-[9px] px-1.5 py-0.2 rounded-full font-black ${hasUrgent
+                    ? 'bg-red-100 text-red-700 border border-red-200'
+                    : 'bg-[#bfdbfe] text-[#1e3a8a]'
+                    }`}
                 >
                   {pendingTotal}
                 </span>
@@ -259,11 +256,10 @@ const NotificationBell = ({ compact = false }) => {
             <button
               type="button"
               onClick={() => setActiveTab('activity')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg transition-all ${
-                activeTab === 'activity'
-                  ? 'bg-[#eff6ff] text-[#1e3a8a] border border-[#bfdbfe] font-black'
-                  : 'text-[#64748b] hover:text-[#1e293b] hover:bg-[#f8fafc]'
-              }`}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg transition-all ${activeTab === 'activity'
+                ? 'bg-[#eff6ff] text-[#1e3a8a] border border-[#bfdbfe] font-black'
+                : 'text-[#64748b] hover:text-[#1e293b] hover:bg-[#f8fafc]'
+                }`}
             >
               <Activity className="w-3.5 h-3.5" />
               <span>Recent Activity</span>
