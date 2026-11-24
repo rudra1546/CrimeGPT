@@ -59,7 +59,7 @@ def handle_gemini_exception(e: Exception, action_name: str = "generation"):
 def generate_document(prompt: str) -> str:
     """
     Delegates document generation to the centralized AI service layer
-    (supporting Groq primary model with automatic Ollama fallback).
+    (delegating to Groq primary model: openai/gpt-oss-120b).
     """
     from app.services.ai_service import generate_ai_response
     return generate_ai_response(prompt=prompt)

@@ -13,7 +13,7 @@ env/
 *.db
 *.sqlite3
 crimegpt_production.log
-
+/backend/data/generated_docs/
 # Uploaded files
 uploaded_evidence/
 

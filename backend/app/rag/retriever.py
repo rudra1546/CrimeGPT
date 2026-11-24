@@ -297,8 +297,8 @@ def retrieve_context(query: str, k: int = None) -> str:
 
 def answer_query_with_rag(query: str, k: int = None) -> dict:
     """
-    Answers a query utilizing context retrieved from vector store and Ollama local model.
-    Enforces strict legal grounding rules, pre-Ollama section validation, and confidence score logic.
+    Answers a query utilizing context retrieved from vector store and Groq LLM provider.
+    Enforces strict legal grounding rules, pre-LLM section validation, and confidence score logic.
     """
     logger.info(f"\n[RAG]\nQuestion received:\n\"{query}\"")
     
@@ -308,7 +308,9 @@ def answer_query_with_rag(query: str, k: int = None) -> dict:
     context, candidate_sources = retrieve_context_with_metadata(query, k=k)
 
     insufficient_msg = "The uploaded legal references do not contain sufficient information to answer this question."
-    model_name = os.getenv("OLLAMA_MODEL", "qwen2.5:3b")
+    model_name = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b").strip()
+    if model_name in ["llama-3.3-70b-versatile", "llama-3.1-70b-versatile"]:
+        model_name = "openai/gpt-oss-120b"
 
     if not context or not context.strip():
         logger.info("[RAG] No context chunks retrieved. Returning insufficient information response.")
@@ -379,7 +381,7 @@ def answer_query_with_rag(query: str, k: int = None) -> dict:
     logger.info("[RAG] Sending query to AI Provider Service Layer...")
     answer_text = generate_ai_response(prompt=prompt, system_prompt=system_prompt)
     elapsed_time = round(time.time() - start_llm_time, 2)
-    logger.info(f"\n[OLLAMA]\nResponse time:\n{elapsed_time} seconds")
+    logger.info(f"\n[AI Provider - Groq]\nResponse time:\n{elapsed_time} seconds (model: '{model_name}')")
 
     # If fallback message triggered
     if insufficient_msg.lower() in answer_text.lower():

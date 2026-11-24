@@ -108,12 +108,15 @@ def upload_legal_document(file: UploadFile = File(...)):
 @router.post("/query")
 def query_legal_database(request: QueryRequest):
     """
-    Accepts an analytical query, retrieves relevant legal context from ChromaDB using local query embeddings,
-    and returns an Ollama-generated answer strictly grounded in retrieved context along with source citations.
+    Accepts an analytical query, retrieves relevant legal context from vector store using query embeddings,
+    and returns a Groq-generated answer strictly grounded in retrieved context along with source citations.
     """
     try:
         rag_result = answer_query_with_rag(request.query)
-        model_name = os.getenv("OLLAMA_MODEL", "qwen2.5:3b")
+        default_model = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b").strip()
+        if default_model in ["llama-3.3-70b-versatile", "llama-3.1-70b-versatile"]:
+            default_model = "openai/gpt-oss-120b"
+
         if isinstance(rag_result, dict):
             return {
                 "query": request.query,
@@ -122,7 +125,7 @@ def query_legal_database(request: QueryRequest):
                 "sources": rag_result.get("sources", []),
                 "matched_sections": rag_result.get("matched_sections", []),
                 "confidence": rag_result.get("confidence", "low"),
-                "model": rag_result.get("model", model_name)
+                "model": rag_result.get("model", default_model)
             }
         return {
             "query": request.query,
@@ -131,7 +134,7 @@ def query_legal_database(request: QueryRequest):
             "sources": [],
             "matched_sections": [],
             "confidence": "low",
-            "model": model_name
+            "model": default_model
         }
     except HTTPException as he:
         raise he
@@ -274,6 +277,8 @@ def query_legal_case_database(
             "case_id": request.case_id,
             "response": response
         }
+    except HTTPException as he:
+        raise he
     except Exception as e:
         logger.error(f"Contextual case query failed: {e}")
         raise HTTPException(
